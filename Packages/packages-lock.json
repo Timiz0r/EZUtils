@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "com.timiz0r.ezutils.packagemanager": {
+      "version": "file:../src/EZUtils.PackageManager",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.unity.collab-proxy": {
       "version": "1.10.2",
       "depth": 0,
