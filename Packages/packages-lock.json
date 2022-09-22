@@ -45,6 +45,13 @@
       "dependencies": {},
       "hash": "aca83a6ba054d4a97d3848f1937c28846fe6d018"
     },
+    "com.unity.nuget.newtonsoft-json": {
+      "version": "2.0.2",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
     "com.unity.test-framework": {
       "version": "1.1.29",
       "depth": 0,

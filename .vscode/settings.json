@@ -1,4 +1,5 @@
-﻿{
+{
+    "editor.rulers": [120, 130],
     "files.exclude":
     {
         "**/.DS_Store":true,

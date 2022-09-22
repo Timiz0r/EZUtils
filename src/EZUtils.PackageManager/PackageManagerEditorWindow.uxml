@@ -5,16 +5,16 @@
     xmlns:editor="UnityEditor.UIElements"
     xmlns:ezui="EZUtils.UIElements"
     xsi:schemaLocation="
-      UnityEngine.UIElements ../../../../../UIElementsSchema/UnityEngine.UIElements.fixed.xsd
-      UnityEditor.UIElements ../../../../../UIElementsSchema/UnityEditor.UIElements.xsd
-      EZUtils.UIElements ../../../../../UIElementsSchema/EZUtils.UIElements.xsd"
+      UnityEngine.UIElements ../../UIElementsSchema/UnityEngine.UIElements.fixed.xsd
+      UnityEditor.UIElements ../../UIElementsSchema/UnityEditor.UIElements.xsd
+      EZUtils.UIElements ../../UIElementsSchema/EZUtils.UIElements.xsd"
 >
   <VisualElement class="main-container">
     <Style src="PackageManagerEditorWindow.uss" />
 
     <!-- todo: toolbar -->
     <VisualElement class="top-controls">
-      <Button text="Refresh" />
+      <Button name="refreshPackages" text="Refresh" />
     </VisualElement>
 
     <ListView />

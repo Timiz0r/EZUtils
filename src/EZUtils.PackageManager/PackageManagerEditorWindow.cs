@@ -1,6 +1,7 @@
 namespace EZUtils.PackageManager
 {
     using System.Collections.Generic;
+    using System.Linq;
     using UnityEditor;
     using UnityEngine.UIElements;
 
@@ -19,28 +20,31 @@ namespace EZUtils.PackageManager
         public void CreateGUI()
         {
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
-                "Assets/EZUtils/PackageManager/src/EZUtils.PackageManager/PackageManagerEditorWindow.uxml");
+                "Packages/com.timiz0r.ezutils.packagemanager/PackageManagerEditorWindow.uxml");
             visualTree.CloneTree(rootVisualElement);
 
-            // ListView listView = rootVisualElement.Q<ListView>();
-            // List<string> items = new List<string>() { "florp" };
-            // listView.selectionType = SelectionType.None;
-            // listView.makeItem = () =>
-            // {
-            //     return new Button();
-            // };
-            // listView.bindItem = (e, i) =>
-            // {
-            //     Button b = (Button)e;
-            //     b.text = $"florp_{i}";
-            //     b.clicked += () =>
-            //     {
-            //         items.Add(b.text);
-            //         listView.Refresh();
-            //     };
-            // };
-            // listView.itemsSource = items;
-            // listView.Refresh();
+            ListView listView = rootVisualElement.Q<ListView>();
+            listView.selectionType = SelectionType.None;
+            listView.makeItem = () =>
+            {
+                return new Button();
+            };
+            listView.bindItem = (e, i) =>
+            {
+                Button b = (Button)e;
+                PackageInformation targetPackage = ((IReadOnlyList<PackageInformation>)listView.itemsSource)[i];
+                b.text = targetPackage.Name;
+            };
+            listView.Refresh();
+
+            PackageRepository packageRepo = new PackageRepository();
+            rootVisualElement.Q<Button>(name: "refreshPackages").clicked += async () =>
+            {
+                IReadOnlyList<PackageInformation> packages = await packageRepo.ListAsync();
+
+                listView.itemsSource = packages.ToArray();
+                // listView.Refresh();
+            };
         }
     }
 }
