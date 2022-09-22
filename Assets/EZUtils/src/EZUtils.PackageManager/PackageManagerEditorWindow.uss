@@ -1,0 +1,13 @@
+ListView {
+    /*do note that lack of height causes refresh to not work*/
+    height: 200px;
+    flex-grow: 1;
+}
+
+.main-container {
+    flex-grow: 1;
+}
+
+.top-controls {
+    flex-direction: row;
+}
