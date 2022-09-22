@@ -1,7 +1,9 @@
 namespace EZUtils.PackageManager
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
+    using EZUtils.PackageManager.UIElements;
     using UnityEditor;
     using UnityEngine.UIElements;
 
@@ -9,6 +11,7 @@ namespace EZUtils.PackageManager
     {
         //not working for some reason
         public VisualTreeAsset uxml;
+        private readonly PackageRepository packageRepository = new PackageRepository();
 
         [MenuItem("EZUtils/Package Manager", isValidateFunction: false, priority: 0)]
         public static void PackageManager()
@@ -24,27 +27,23 @@ namespace EZUtils.PackageManager
             visualTree.CloneTree(rootVisualElement);
 
             ListView listView = rootVisualElement.Q<ListView>();
-            listView.selectionType = SelectionType.None;
-            listView.makeItem = () =>
+            Action refresher = async () =>
             {
-                return new Button();
-            };
-            listView.bindItem = (e, i) =>
-            {
-                Button b = (Button)e;
-                PackageInformation targetPackage = ((IReadOnlyList<PackageInformation>)listView.itemsSource)[i];
-                b.text = targetPackage.Name;
-            };
-            listView.Refresh();
-
-            PackageRepository packageRepo = new PackageRepository();
-            rootVisualElement.Q<Button>(name: "refreshPackages").clicked += async () =>
-            {
-                IReadOnlyList<PackageInformation> packages = await packageRepo.ListAsync();
+                IReadOnlyList<PackageInformation> packages = await packageRepository.ListAsync();
 
                 listView.itemsSource = packages.ToArray();
-                // listView.Refresh();
             };
+
+            listView.selectionType = SelectionType.None;
+            listView.makeItem = () => new PackageInformationItem(packageRepository, refresher);
+            listView.bindItem = (e, i) =>
+            {
+                PackageInformationItem item = (PackageInformationItem)e;
+                PackageInformation targetPackage = ((IReadOnlyList<PackageInformation>)listView.itemsSource)[i];
+                item.Rebind(targetPackage);
+            };
+
+            rootVisualElement.Q<Button>(name: "refreshPackages").clicked += refresher;
         }
     }
 }

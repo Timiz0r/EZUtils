@@ -1,0 +1,42 @@
+.package-name {
+    white-space: normal;
+}
+.package-status {
+    -unity-font-style: italic;
+}
+
+.basic-package-information {
+    flex-grow: 1;
+}
+
+.package-information-row {
+    flex-direction: row;
+}
+
+.package-operation-row {
+    flex-direction: row;
+}
+
+.package-uninstalled  Button.package-modification-operation {
+    display: none;
+}
+.package-uninstalled Button.package-install {
+    display: flex;
+}
+
+.package-installed Button.package-modification-operation {
+    display: none;
+}
+.package-installed.package-upgrade-selected Button.package-upgrade {
+    display: flex;
+}
+.package-installed.package-downgrade-selected Button.package-downgrade {
+    display: flex;
+}
+
+Button#uninstallPackage {
+    display: none;
+}
+.package-installed Button#uninstallPackage {
+    display: flex;
+}

@@ -1,11 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text.RegularExpressions;
-
 namespace EZUtils.PackageManager
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Globalization;
+    using System.Linq;
+    using System.Text.RegularExpressions;
+
     public class PackageVersion : IComparable<PackageVersion>
     {
         private readonly IReadOnlyList<PreReleasePart> preReleaseParts = Array.Empty<PreReleasePart>();
@@ -23,7 +23,8 @@ namespace EZUtils.PackageManager
                 preReleaseParts = PreReleasePart.Parse(preRelease);
             }
 
-            hashcode = $"{major}.{minor}.{patch}-{preRelease}".GetHashCode();
+            FullVersion = $"{major}.{minor}.{patch}-{preRelease}";
+            hashcode = FullVersion.GetHashCode();
         }
 
         public int Major { get; }
@@ -31,23 +32,31 @@ namespace EZUtils.PackageManager
         public int Patch { get; }
         public string PreRelease { get; }
 
-        public static PackageVersion Parse(string version)
+        public string FullVersion { get; }
+
+        public static PackageVersion Parse(string version) => TryParse(version, out PackageVersion result)
+            ? result
+            : throw new InvalidOperationException($"Attempted to parse invalid version: {version}.");
+
+        public static bool TryParse(string version, out PackageVersion packageVersion)
         {
+            packageVersion = null;
+
             Match match = Regex.Match(version, @"^(\d+)\.(\d+)\.(\d+)(?:-(.+))$");
-            if (!match.Success) throw new InvalidOperationException($"Attempted to parse invalid version: {version}.");
+            if (!match.Success) return false;
 
             int major = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
             int minor = int.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture);
             int patch = int.Parse(match.Groups[3].Value, CultureInfo.InvariantCulture);
 
-            PackageVersion result = new PackageVersion(major, minor, patch, match.Groups[4].Value);
-            return result;
+            packageVersion = new PackageVersion(major, minor, patch, match.Groups[4].Value);
+            return true;
         }
 
         public int CompareTo(PackageVersion other)
         {
-            if (other == null) return 1;
-            if (this == other) return 0;
+            if (ReferenceEquals(other, null)) return 1;
+            if (ReferenceEquals(this, other)) return 0;
 
             return
                   Major.CompareTo(other.Major) is int ma && ma != 0 ? ma
@@ -66,6 +75,36 @@ namespace EZUtils.PackageManager
                     : preReleaseParts.Count.CompareTo(other.preReleaseParts.Count);
             }
         }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(this, obj))
+                return true;
+            if (ReferenceEquals(obj, null))
+                return false;
+
+            PackageVersion other = (PackageVersion)obj;
+            return CompareTo(other) == 0;
+        }
+
+        public override int GetHashCode() => hashcode;
+
+        public static bool operator ==(PackageVersion left, PackageVersion right)
+            => ReferenceEquals(left, null) ? ReferenceEquals(right, null) : left.Equals(right);
+
+        public static bool operator !=(PackageVersion left, PackageVersion right) => !(left == right);
+
+        public static bool operator <(PackageVersion left, PackageVersion right)
+            => left == null ? !ReferenceEquals(right, null) : left.CompareTo(right) < 0;
+
+        public static bool operator <=(PackageVersion left, PackageVersion right)
+            => ReferenceEquals(left, null) || left.CompareTo(right) <= 0;
+
+        public static bool operator >(PackageVersion left, PackageVersion right)
+            => !ReferenceEquals(left, null) && left.CompareTo(right) > 0;
+
+        public static bool operator >=(PackageVersion left, PackageVersion right)
+            => ReferenceEquals(left, null) ? ReferenceEquals(right, null) : left.CompareTo(right) >= 0;
 
         private class PreReleasePart : IComparable<PreReleasePart>
         {
@@ -107,51 +146,6 @@ namespace EZUtils.PackageManager
 
                 throw new InvalidOperationException("Somehow can't compare PreReleaseParts.");;
             }
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(this, obj))
-                return true;
-            if (ReferenceEquals(obj, null))
-                return false;
-
-            PackageVersion other = (PackageVersion)obj;
-            return this.CompareTo(other) == 0;
-        }
-
-        public override int GetHashCode() => hashcode;
-
-        public static bool operator ==(PackageVersion left, PackageVersion right)
-        {
-            if (ReferenceEquals(left, null))
-                return ReferenceEquals(right, null);
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(PackageVersion left, PackageVersion right)
-        {
-            return !(left == right);
-        }
-
-        public static bool operator <(PackageVersion left, PackageVersion right)
-        {
-            return ReferenceEquals(left, null) ? !ReferenceEquals(right, null) : left.CompareTo(right) < 0;
-        }
-
-        public static bool operator <=(PackageVersion left, PackageVersion right)
-        {
-            return ReferenceEquals(left, null) || left.CompareTo(right) <= 0;
-        }
-
-        public static bool operator >(PackageVersion left, PackageVersion right)
-        {
-            return !ReferenceEquals(left, null) && left.CompareTo(right) > 0;
-        }
-
-        public static bool operator >=(PackageVersion left, PackageVersion right)
-        {
-            return ReferenceEquals(left, null) ? ReferenceEquals(right, null) : left.CompareTo(right) >= 0;
         }
     }
 }

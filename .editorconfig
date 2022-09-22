@@ -1037,3 +1037,7 @@ dotnet_diagnostic.CA2235.severity = none
 dotnet_diagnostic.IDE0130.severity = none
 #ininstantiated internal classes. nice for uxml, and not important enough to care about otherwise
 dotnet_diagnostic.CA1812.severity = none
+# CA2007: Consider calling ConfigureAwait on the awaited task. no longer like doing this.
+dotnet_diagnostic.CA2007.severity = none
+#null check simplification. wrong c# version, so can't do `is null`
+dotnet_diagnostic.IDE0041.severity = none

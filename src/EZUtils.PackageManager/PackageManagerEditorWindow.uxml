@@ -17,6 +17,6 @@
       <Button name="refreshPackages" text="Refresh" />
     </VisualElement>
 
-    <ListView />
+    <ListView item-height="50" />
   </VisualElement>
 </UXML>

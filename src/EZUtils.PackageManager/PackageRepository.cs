@@ -32,6 +32,7 @@ namespace EZUtils.PackageManager
                 string name = (string)package["name"];
                 PackageVersion[] versions = package["versions"]
                     .Select(v => PackageVersion.Parse((string)v["version"]))
+                    .OrderByDescending(v => v)
                     .ToArray();
                 PackageVersion currentVersion = await GetCurrentlyUsedVersionAsync(name);
 
@@ -42,20 +43,30 @@ namespace EZUtils.PackageManager
             return results;
         }
 
+        internal Task SetVersionAsync(PackageInformation packageInformation, PackageVersion value) => throw new NotImplementedException();
+
         private static async Task<PackageVersion> GetCurrentlyUsedVersionAsync(string packageName)
         {
             IReadOnlyList<UPM.PackageInfo> packages = await UPMPackageClient.ListAsync(offlineMode: true);
             UPM.PackageInfo targetPackage = packages.FirstOrDefault(p => p.name == packageName);
 
-            PackageVersion result = targetPackage == null ? null : PackageVersion.Parse(targetPackage.version);
+            PackageVersion result = targetPackage == null
+                ? null
+                : PackageVersion.TryParse(targetPackage.version, out PackageVersion v)
+                    ? v
+                    //we're effectively saying that if we have an unknown version, we'll consider it not installed
+                    //installing will provide a known version, as well!
+                    : null;
             return result;
         }
+
+        internal Task RemoveAsync(PackageInformation packageInformation) => throw new NotImplementedException();
     }
 
     public static class UPMPackageClient
     {
         private static IRequestDescriptor currentRequest = null;
-        private static ConcurrentQueue<IRequestDescriptor> requestQueue = new ConcurrentQueue<IRequestDescriptor>();
+        private static readonly ConcurrentQueue<IRequestDescriptor> requestQueue = new ConcurrentQueue<IRequestDescriptor>();
         static UPMPackageClient()
         {
             EditorApplication.update += () =>
