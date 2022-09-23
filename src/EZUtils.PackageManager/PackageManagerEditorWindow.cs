@@ -3,6 +3,7 @@ namespace EZUtils.PackageManager
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using EZUtils.PackageManager.UIElements;
     using UnityEditor;
     using UnityEngine.UIElements;
@@ -27,15 +28,16 @@ namespace EZUtils.PackageManager
             visualTree.CloneTree(rootVisualElement);
 
             ListView listView = rootVisualElement.Q<ListView>();
-            Action refresher = async () =>
+            async Task Refresh()
             {
                 IReadOnlyList<PackageInformation> packages = await packageRepository.ListAsync();
 
                 listView.itemsSource = packages.ToArray();
-            };
+                listView.Refresh();
+            }
 
             listView.selectionType = SelectionType.None;
-            listView.makeItem = () => new PackageInformationItem(packageRepository, refresher);
+            listView.makeItem = () => new PackageInformationItem(packageRepository, async () => await Refresh());
             listView.bindItem = (e, i) =>
             {
                 PackageInformationItem item = (PackageInformationItem)e;
@@ -43,7 +45,11 @@ namespace EZUtils.PackageManager
                 item.Rebind(targetPackage);
             };
 
-            rootVisualElement.Q<Button>(name: "refreshPackages").clicked += refresher;
+            rootVisualElement.Q<Button>(name: "refreshPackages").clicked += async () => await Refresh();
+
+            packageRepository.CheckForScopedRegistry();
+
+            _ = Refresh();
         }
     }
 }

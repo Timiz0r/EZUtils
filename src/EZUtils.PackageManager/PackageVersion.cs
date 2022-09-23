@@ -61,7 +61,7 @@ namespace EZUtils.PackageManager
             return
                   Major.CompareTo(other.Major) is int ma && ma != 0 ? ma
                 : Minor.CompareTo(other.Minor) is int mi && mi != 0 ? mi
-                : Major.CompareTo(other.Patch) is int p && p != 0 ? p
+                : Patch.CompareTo(other.Patch) is int p && p != 0 ? p
                 : ComparePreReleaseParts();
 
             int ComparePreReleaseParts()

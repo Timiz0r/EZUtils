@@ -4,15 +4,15 @@ namespace EZUtils.PackageManager
 
     public class PackageInformation
     {
-        public PackageInformation(string name, PackageVersion selectedVersion, IReadOnlyList<PackageVersion> versions)
+        public PackageInformation(string name, PackageVersion installedVersion, IReadOnlyList<PackageVersion> versions)
         {
             Name = name;
-            SelectedVersion = selectedVersion;
+            InstalledVersion = installedVersion;
             Versions = versions;
         }
 
         public string Name { get; }
-        public PackageVersion SelectedVersion { get; }
+        public PackageVersion InstalledVersion { get; }
         public IReadOnlyList<PackageVersion> Versions { get; }
     }
 }
