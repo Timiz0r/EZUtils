@@ -1041,3 +1041,5 @@ dotnet_diagnostic.CA1812.severity = none
 dotnet_diagnostic.CA2007.severity = none
 #null check simplification. wrong c# version, so can't do `is null`
 dotnet_diagnostic.IDE0041.severity = none
+#this allows public and internal non-static methods to exist even if they dont access instance data
+dotnet_code_quality.CA1822.api_surface = private

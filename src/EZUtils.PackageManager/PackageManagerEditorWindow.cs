@@ -28,6 +28,8 @@ namespace EZUtils.PackageManager
             visualTree.CloneTree(rootVisualElement);
 
             ListView listView = rootVisualElement.Q<ListView>();
+            listView.selectionType = SelectionType.None;
+
             async Task Refresh()
             {
                 IReadOnlyList<PackageInformation> packages = await packageRepository.ListAsync();
@@ -36,7 +38,6 @@ namespace EZUtils.PackageManager
                 listView.Refresh();
             }
 
-            listView.selectionType = SelectionType.None;
             listView.makeItem = () => new PackageInformationItem(packageRepository, async () => await Refresh());
             listView.bindItem = (e, i) =>
             {
@@ -44,7 +45,6 @@ namespace EZUtils.PackageManager
                 PackageInformation targetPackage = ((IReadOnlyList<PackageInformation>)listView.itemsSource)[i];
                 item.Rebind(targetPackage);
             };
-
             rootVisualElement.Q<Button>(name: "refreshPackages").clicked += async () => await Refresh();
 
             packageRepository.CheckForScopedRegistry();

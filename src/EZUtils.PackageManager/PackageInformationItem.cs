@@ -44,8 +44,7 @@ namespace EZUtils.PackageManager.UIElements
                 await packageRepository.SetVersionAsync(packageInformation, versionPopup.value);
                 await refresher();
             }
-            this
-                .Query<Button>(className: "package-modification-operation")
+            this.Query<Button>(className: "package-modification-operation")
                 .ForEach(b => b.clicked += async () => await PackageOperation());
 
             this.Q<Button>(name: "uninstallPackage").clicked += async () =>
