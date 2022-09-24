@@ -1,12 +1,9 @@
 namespace EZUtils.PackageManager
 {
     using System;
-    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
-    using System.Threading.Tasks;
-    using EZUtils.PackageManager.UIElements;
     using UnityEditor;
     using UnityEngine.UIElements;
 
@@ -26,14 +23,16 @@ namespace EZUtils.PackageManager
                 "Packages/com.timiz0r.ezutils.packagemanager/BootstrapPackage/BootstrapPackageCreatorEditorWindow.uxml");
             visualTree.CloneTree(rootVisualElement);
 
-            File.Create(Path.Combine(EnsureFolderCreated("Assets/EZUtils/BootstrapPackage"), "Block.txt")).Dispose();
+            string generationRoot = EnsureFolderCreated("Assets/EZUtils/BootstrapPackage");
+
+            File.Create(Path.Combine(generationRoot, "Block.txt")).Dispose();
 
             rootVisualElement.Q<Button>().clicked += () =>
             {
                 string targetPackageName = rootVisualElement.Q<TextField>().value ?? throw new InvalidOperationException(
                     "Cannot create a bootstrap package without specifying a package name.");
 
-                string bootstrapPackageFolder = Path.Combine("Assets/EZUtils/BootstrapPackage", targetPackageName);
+                string bootstrapPackageFolder = Path.Combine(generationRoot, targetPackageName);
 
                 AssetDatabase.StartAssetEditing();
                 try
@@ -51,7 +50,7 @@ namespace EZUtils.PackageManager
                         pass2Package);
 
                     string pass1Package =
-                        Path.Combine(bootstrapPackageFolder, $"Install{targetPackageName}.unitypackage");
+                        Path.Combine(bootstrapPackageFolder, $"Install-{targetPackageName}.unitypackage");
                     AssetDatabase.ExportPackage(
                         new[]
                         {

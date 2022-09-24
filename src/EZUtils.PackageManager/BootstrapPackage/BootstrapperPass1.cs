@@ -19,6 +19,9 @@ namespace EZUtils.PackageManager
             IReadOnlyList<UPM.PackageInfo> existingPackages = await UPMPackageClient.ListAsync(offlineMode: true);
             if (!existingPackages.Any(p => p.name == "com.unity.nuget.newtonsoft-json"))
             {
+                //packagemanager depends on json lib
+                //tho so does vrcsdk, so prob wont hit this in practice
+                //we also prefer 2 because, at the time of writing, vrcsdk depends on it and not 3.
                 _ = await UPMPackageClient.AddAsync("com.unity.nuget.newtonsoft-json@2.0.2");
             }
 
