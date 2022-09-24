@@ -39,9 +39,9 @@ namespace EZUtils.PackageManager
                     return Task.CompletedTask;
                 }
 
-                PackageInformation targetPackage = packages.SingleOrDefault(p => p.Name == TargetPackageName);
+                PackageInformation targetPackage = packages.SingleOrDefault(p => p.Name == packageName);
                 if (targetPackage == null) throw new InvalidOperationException(
-                    $"Could not install package '{TargetPackageName}'.");
+                    $"Could not install package '{packageName}'.");
                 return repo.SetVersionAsync(targetPackage, targetPackage.Versions[0]);
             }
         }

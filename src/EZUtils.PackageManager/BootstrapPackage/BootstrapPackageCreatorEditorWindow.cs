@@ -42,10 +42,10 @@ namespace EZUtils.PackageManager
                     AssetDatabase.ExportPackage(
                         new[]
                         {
-                            CopyScript("PackageVersion.cs", "Pass2"),
-                            CopyScript("PackageRepository.cs", "Pass2"),
-                            CopyScript("PackageInformation.cs", "Pass2"),
-                            CopyBootstrapScript("BootstrapPackage/BootstrapperPass2.cs", "Pass2")
+                            CopyScript("PackageVersion.cs"),
+                            CopyScript("PackageRepository.cs"),
+                            CopyScript("PackageInformation.cs"),
+                            CopyBootstrapScript("BootstrapPackage/BootstrapperPass2.cs")
                         },
                         pass2Package);
 
@@ -54,8 +54,8 @@ namespace EZUtils.PackageManager
                     AssetDatabase.ExportPackage(
                         new[]
                         {
-                            CopyScript("UPMPackageClient.cs", "Pass1"),
-                            CopyBootstrapScript("BootstrapPackage/BootstrapperPass1.cs", "Pass1"),
+                            CopyScript("UPMPackageClient.cs"),
+                            CopyBootstrapScript("BootstrapPackage/BootstrapperPass1.cs"),
                             pass2Package
                         },
                         pass1Package);
@@ -66,10 +66,9 @@ namespace EZUtils.PackageManager
                     AssetDatabase.Refresh();
                 }
 
-                string CopyScript(string relativePath, string pass)
+                string CopyScript(string relativePath)
                 {
-                    string passFolder = EnsureFolderCreated(Path.Combine(bootstrapPackageFolder, pass));
-                    string destinationPath = Path.Combine(bootstrapPackageFolder, pass, Path.GetFileName(relativePath));
+                    string destinationPath = Path.Combine(bootstrapPackageFolder, Path.GetFileName(relativePath));
                     _ = AssetDatabase.CopyAsset(
                         Path.Combine("Packages/com.timiz0r.ezutils.packagemanager", relativePath),
                         destinationPath);
@@ -80,9 +79,9 @@ namespace EZUtils.PackageManager
                     return destinationPath;
                 }
 
-                string CopyBootstrapScript(string relativePath, string pass)
+                string CopyBootstrapScript(string relativePath)
                 {
-                    string bootstrapScriptPath = CopyScript(relativePath, pass);
+                    string bootstrapScriptPath = CopyScript(relativePath);
                     ReplaceContents(
                         bootstrapScriptPath,
                         ("const string TargetPackageName[^;]+;", $@"const string TargetPackageName = ""{targetPackageName}"";"));
