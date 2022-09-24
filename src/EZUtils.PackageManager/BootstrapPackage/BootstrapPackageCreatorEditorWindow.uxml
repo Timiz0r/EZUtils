@@ -12,7 +12,7 @@
   <VisualElement class="main-container">
     <Style src="BootstrapPackageCreatorEditorWindow.uss" />
 
-    <TextField label="Package name" />
+    <VisualElement class="package-picker-container" />
     <Button text="Create" />
   </VisualElement>
 </UXML>

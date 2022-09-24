@@ -1,11 +1,14 @@
 namespace EZUtils.PackageManager
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Text.RegularExpressions;
     using UnityEditor;
+    using UnityEditor.UIElements;
     using UnityEngine.UIElements;
+    using UPM = UnityEditor.PackageManager;
 
     public class BootstrapPackageCreatorEditorWindow : EditorWindow
     {
@@ -17,7 +20,7 @@ namespace EZUtils.PackageManager
             window.Show();
         }
 
-        public void CreateGUI()
+        public async void CreateGUI()
         {
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 "Packages/com.timiz0r.ezutils.packagemanager/BootstrapPackage/BootstrapPackageCreatorEditorWindow.uxml");
@@ -27,12 +30,21 @@ namespace EZUtils.PackageManager
 
             File.Create(Path.Combine(generationRoot, "Block.txt")).Dispose();
 
+            PackageRepository packageRepository = new PackageRepository();
+            IReadOnlyList<PackageInformation> packages = await packageRepository.ListAsync(showPreRelease: true);
+            List<string> packageNamesOfInterest = packages
+                .Select(p => p.Name)
+                .ToList();
+            PopupField<string> packagePicker =
+                new PopupField<string>(packageNamesOfInterest, packageNamesOfInterest.First(), n => n, n => n);
+            rootVisualElement.Q<VisualElement>(className: "package-picker-container").Add(packagePicker);
+
             rootVisualElement.Q<Button>().clicked += () =>
             {
-                string targetPackageName = rootVisualElement.Q<TextField>().value ?? throw new InvalidOperationException(
+                string targetPackageName = packagePicker.value ?? throw new InvalidOperationException(
                     "Cannot create a bootstrap package without specifying a package name.");
 
-                string bootstrapPackageFolder = Path.Combine(generationRoot, targetPackageName);
+                string bootstrapPackageFolder = EnsureFolderCreated(Path.Combine(generationRoot, targetPackageName));
 
                 AssetDatabase.StartAssetEditing();
                 try
@@ -68,10 +80,12 @@ namespace EZUtils.PackageManager
 
                 string CopyScript(string relativePath)
                 {
+                    string sourcePath = Path.Combine("Packages/com.timiz0r.ezutils.packagemanager", relativePath);
                     string destinationPath = Path.Combine(bootstrapPackageFolder, Path.GetFileName(relativePath));
-                    _ = AssetDatabase.CopyAsset(
-                        Path.Combine("Packages/com.timiz0r.ezutils.packagemanager", relativePath),
-                        destinationPath);
+                    if (!AssetDatabase.CopyAsset(sourcePath, destinationPath))
+                    {
+                        throw new InvalidOperationException($"Failed to copy '{sourcePath}' to '{destinationPath}'.");
+                    }
                     ReplaceContents(
                         destinationPath,
                         ("namespace EZUtils.PackageManager", $"namespace EZUtils.Bootstrap.{targetPackageName.Replace(".", "_")}"),
