@@ -28,11 +28,14 @@ namespace EZUtils.PackageManager
                 string name = (string)package["name"];
                 PackageVersion[] versions = package["versions"]
                     .Where(ver => ver["views"].Any(view => ((string)view["type"]) == "release"))
-                    .Where(ver => showPreRelease || !ver["views"].Any(view => ((string)view["name"]) == "Prerelease"))
                     .Select(v => PackageVersion.Parse((string)v["version"]))
                     .OrderByDescending(v => v)
                     .ToArray();
                 PackageVersion currentVersion = await GetCurrentlyUsedVersionAsync(versions, name);
+
+                //we specifically filter out prerelease here because, if a pre-release version is in use, we still
+                //want it in the result.
+                versions = versions.Where(v => showPreRelease || string.IsNullOrEmpty(v.PreRelease)).ToArray();
 
                 PackageInformation result = new PackageInformation(name, currentVersion, versions);
                 results.Add(result);
@@ -80,9 +83,10 @@ namespace EZUtils.PackageManager
             PackageVersion result = targetPackage == null
                 ? null
                 : PackageVersion.TryParse(targetPackage.version, out PackageVersion parsedVersion)
-                    ? versions.Single(v => v == parsedVersion)
                     //we're effectively saying that if we have an unknown version, we'll consider it not installed
+                    //either via the verson being unparsable, or via the version not existing in the repo (like in this repo!)
                     //installing will provide a known version, as well!
+                    ? versions.SingleOrDefault(v => v == parsedVersion)
                     : null;
             return result;
         }
