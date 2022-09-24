@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.Build.NoTargets">
+  <PropertyGroup>
+    <!-- for some reason not getting set here and causing package restore issues -->
+    <TargetFramework>net472</TargetFramework>
+  </PropertyGroup>
   <ItemGroup>
     <Inputs Include="$(ProjectRoot)\.build\Tasks\*.cs" />
     <Outputs Include="$(OutputPath)\EnsureBuildTasksAreBuilt.txt" />
