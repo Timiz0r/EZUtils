@@ -1,0 +1,36 @@
+name: Publish package on release
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: |
+          cat <<EOF > ~/.npmrc
+          //pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/:username=timiz0r
+          //pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/:_password=\${AZURE_ARTIFACTS_PAT}
+          //pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/:email=foo@foo.foo
+          registry=https://pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/
+          always-auth=true
+          EOF
+          echo Generated .npmrc:
+          cat ~/.npmrc
+      - run: npm --no-git-tag-version version ${{github.ref_name}}
+        working-directory: ./Packages/com.timiz0r.ezutils.packagemanager
+      - run: npm publish --loglevel=silly
+        working-directory: ./Packages/com.timiz0r.ezutils.packagemanager
+        env:
+          AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
