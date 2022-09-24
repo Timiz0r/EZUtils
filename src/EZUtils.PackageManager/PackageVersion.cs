@@ -23,7 +23,8 @@ namespace EZUtils.PackageManager
                 preReleaseParts = PreReleasePart.Parse(preRelease);
             }
 
-            FullVersion = $"{major}.{minor}.{patch}-{preRelease}";
+            string preReleaseSuffix = string.IsNullOrEmpty(preRelease) ? string.Empty : $"-{preRelease}";
+            FullVersion = $"{major}.{minor}.{patch}{preReleaseSuffix}";
             hashcode = FullVersion.GetHashCode();
         }
 
@@ -42,7 +43,7 @@ namespace EZUtils.PackageManager
         {
             packageVersion = null;
 
-            Match match = Regex.Match(version, @"^(\d+)\.(\d+)\.(\d+)(?:-(.+))$");
+            Match match = Regex.Match(version, @"^(\d+)\.(\d+)\.(\d+)(?:-(.+))?$");
             if (!match.Success) return false;
 
             int major = int.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);

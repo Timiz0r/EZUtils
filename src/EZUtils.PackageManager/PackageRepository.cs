@@ -27,6 +27,7 @@ namespace EZUtils.PackageManager
             {
                 string name = (string)package["name"];
                 PackageVersion[] versions = package["versions"]
+                    .Where(ver => ver["views"].Any(view => ((string)view["type"]) == "release"))
                     .Select(v => PackageVersion.Parse((string)v["version"]))
                     .OrderByDescending(v => v)
                     .ToArray();
