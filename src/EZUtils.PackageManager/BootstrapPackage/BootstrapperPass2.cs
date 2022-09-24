@@ -10,13 +10,14 @@ namespace EZUtils.PackageManager
 
     public static class BootstrapperPass2
     {
-        private const string TargetPackageName = "ToBeReplaced";
+        private const string TargetPackageName = "";
 
         [InitializeOnLoadMethod]
         public static async void Run()
         {
+            if (string.IsNullOrEmpty(TargetPackageName)) return;
+            if (File.Exists("Assets/EZUtils/BootstrapPackage/Development.txt")) return;
             string finishedFilePath = $"Assets/EZUtils/BootstrapPackage/{TargetPackageName}/Finished.txt";
-            if (File.Exists("Assets/EZUtils/BootstrapPackage/Block.txt")) return;
             if (File.Exists(finishedFilePath)) return;
 
             PackageRepository repo = new PackageRepository();

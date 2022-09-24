@@ -8,7 +8,6 @@ namespace EZUtils.PackageManager
     using UnityEditor;
     using UnityEditor.UIElements;
     using UnityEngine.UIElements;
-    using UPM = UnityEditor.PackageManager;
 
     public class BootstrapPackageCreatorEditorWindow : EditorWindow
     {
@@ -19,6 +18,8 @@ namespace EZUtils.PackageManager
                 GetWindow<BootstrapPackageCreatorEditorWindow>("EZUtils Bootstrap Package Creator");
             window.Show();
         }
+        [MenuItem("EZUtils/Bootstrap Package Creator", isValidateFunction: true, priority: 0)]
+        public static bool ValidatePackageManager() => File.Exists("Assets/EZUtils/BootstrapPackage/Development.txt");
 
         public async void CreateGUI()
         {
@@ -27,8 +28,6 @@ namespace EZUtils.PackageManager
             visualTree.CloneTree(rootVisualElement);
 
             string generationRoot = EnsureFolderCreated("Assets/EZUtils/BootstrapPackage");
-
-            File.Create(Path.Combine(generationRoot, "Block.txt")).Dispose();
 
             PackageRepository packageRepository = new PackageRepository();
             IReadOnlyList<PackageInformation> packages = await packageRepository.ListAsync(showPreRelease: true);
