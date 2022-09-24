@@ -11,3 +11,8 @@ ListView {
 .top-controls {
     flex-direction: row;
 }
+
+Label#status {
+    flex-grow: 1;
+    -unity-text-align: upper-right;
+}

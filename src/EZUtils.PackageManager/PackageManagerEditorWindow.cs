@@ -30,12 +30,26 @@ namespace EZUtils.PackageManager
             ListView listView = rootVisualElement.Q<ListView>();
             listView.selectionType = SelectionType.None;
 
+            Toggle preReleaseToggle = rootVisualElement.Q<Toggle>(name: "showPrerelease");
+
             async Task Refresh()
             {
-                IReadOnlyList<PackageInformation> packages = await packageRepository.ListAsync();
+                rootVisualElement.Q<Label>(name: "status").text = "Refreshing...";
 
-                listView.itemsSource = packages.ToArray();
-                listView.Refresh();
+                try
+                {
+                    bool showPreReleasePackages = preReleaseToggle.value;
+                    IReadOnlyList<PackageInformation> packages = await packageRepository.ListAsync(showPreReleasePackages);
+
+                    listView.itemsSource = packages.ToArray();
+                    listView.Refresh();
+
+                    rootVisualElement.Q<Label>(name: "status").text = string.Empty;
+                }
+                catch when ((rootVisualElement.Q<Label>(name: "status").text = "Refresh failed") == "lol") { throw; }
+                finally
+                {
+                }
             }
 
             listView.makeItem = () => new PackageInformationItem(packageRepository, async () => await Refresh());
@@ -46,6 +60,11 @@ namespace EZUtils.PackageManager
                 item.Rebind(targetPackage);
             };
             rootVisualElement.Q<Button>(name: "refreshPackages").clicked += async () => await Refresh();
+
+            _ = preReleaseToggle.RegisterValueChangedCallback(
+                evt => EditorPrefs.SetBool("EZUtils.PackageManager.ShowPreReleasePackages", evt.newValue));
+            preReleaseToggle.SetValueWithoutNotify(
+                EditorPrefs.GetBool("EZUtils.PackageManager.ShowPreReleasePackages"));
 
             packageRepository.CheckForScopedRegistry();
 

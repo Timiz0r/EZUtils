@@ -19,7 +19,7 @@ namespace EZUtils.PackageManager
             PackageRepository repo = new PackageRepository();
             repo.CheckForScopedRegistry();
 
-            IReadOnlyList<PackageInformation> packages = await repo.ListAsync();
+            IReadOnlyList<PackageInformation> packages = await repo.ListAsync(showPreRelease: false);
 
             PackageInformation targetPackage = packages.SingleOrDefault(p => p.Name == TargetPackageName);
             if (targetPackage == null) throw new InvalidOperationException(

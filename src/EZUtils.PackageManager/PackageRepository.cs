@@ -13,7 +13,7 @@ namespace EZUtils.PackageManager
     {
         private static readonly HttpClient httpClient = new HttpClient();
 
-        public async Task<IReadOnlyList<PackageInformation>> ListAsync()
+        public async Task<IReadOnlyList<PackageInformation>> ListAsync(bool showPreRelease)
         {
             HttpResponseMessage request = await httpClient.GetAsync(
                 new Uri("https://feeds.dev.azure.com/timiz0r/EZUtils/_apis/packaging/Feeds/EZUtils/packages?protocolType=npm&packageNameQuery=com.timiz0r.ezutils&includeAllVersions=true"));
@@ -28,6 +28,7 @@ namespace EZUtils.PackageManager
                 string name = (string)package["name"];
                 PackageVersion[] versions = package["versions"]
                     .Where(ver => ver["views"].Any(view => ((string)view["type"]) == "release"))
+                    .Where(ver => showPreRelease || !ver["views"].Any(view => ((string)view["name"]) == "Prerelease"))
                     .Select(v => PackageVersion.Parse((string)v["version"]))
                     .OrderByDescending(v => v)
                     .ToArray();
