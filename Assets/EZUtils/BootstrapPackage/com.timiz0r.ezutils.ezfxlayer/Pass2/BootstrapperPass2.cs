@@ -1,4 +1,4 @@
-namespace EZUtils.PackageManager
+namespace EZUtils.Bootstrap.com_timiz0r_ezutils_ezfxlayer
 {
     using System.Collections.Generic;
     using System.Linq;
@@ -10,7 +10,7 @@ namespace EZUtils.PackageManager
 
     public static class BootstrapperPass2
     {
-        private const string TargetPackageName = "ToBeReplaced";
+        private const string TargetPackageName = "com.timiz0r.ezutils.ezfxlayer";
 
         [InitializeOnLoadMethod]
         public static async void Run()

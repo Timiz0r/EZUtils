@@ -85,7 +85,7 @@ namespace EZUtils.PackageManager
                     string bootstrapScriptPath = CopyScript(relativePath, pass);
                     ReplaceContents(
                         bootstrapScriptPath,
-                        ("(?m)const string TargetPackageName.+", $@"const string TargetPackageName = ""{targetPackageName}"";"));
+                        ("const string TargetPackageName[^;]+;", $@"const string TargetPackageName = ""{targetPackageName}"";"));
                     return bootstrapScriptPath;
                 }
 
