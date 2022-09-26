@@ -2,7 +2,9 @@
     "name": "EZUtils.Localization",
     "references": [
         "Unity.Localization",
-        "Unity.Localization.Editor"
+        "Unity.Localization.Editor",
+        "Unity.Addressables",
+        "Unity.ResourceManager"
     ],
     "includePlatforms": [
         "Editor"
