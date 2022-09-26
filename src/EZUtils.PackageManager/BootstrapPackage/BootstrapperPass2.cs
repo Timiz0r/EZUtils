@@ -16,8 +16,8 @@ namespace EZUtils.PackageManager
         public static async void Run()
         {
             if (string.IsNullOrEmpty(TargetPackageName)) return;
-            if (File.Exists("Assets/EZUtils/BootstrapPackage/Development.txt")) return;
-            string finishedFilePath = $"Assets/EZUtils/BootstrapPackage/{TargetPackageName}/Finished.txt";
+            if (File.Exists("Assets/EZUtils/BootstrapPackage/Editor/Development.txt")) return;
+            string finishedFilePath = $"Assets/EZUtils/BootstrapPackage/Editor/{TargetPackageName}/Finished.txt";
             if (File.Exists(finishedFilePath)) return;
 
             PackageRepository repo = new PackageRepository();

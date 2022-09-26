@@ -19,7 +19,7 @@ namespace EZUtils.PackageManager
             window.Show();
         }
         [MenuItem("EZUtils/Bootstrap Package Creator", isValidateFunction: true, priority: 0)]
-        public static bool ValidatePackageManager() => File.Exists("Assets/EZUtils/BootstrapPackage/Development.txt");
+        public static bool ValidatePackageManager() => File.Exists("Assets/EZUtils/BootstrapPackage/Editor/Development.txt");
 
         public async void CreateGUI()
         {
@@ -27,7 +27,7 @@ namespace EZUtils.PackageManager
                 "Packages/com.timiz0r.ezutils.packagemanager/BootstrapPackage/BootstrapPackageCreatorEditorWindow.uxml");
             visualTree.CloneTree(rootVisualElement);
 
-            string generationRoot = EnsureFolderCreated("Assets/EZUtils/BootstrapPackage");
+            string generationRoot = EnsureFolderCreated("Assets/EZUtils/BootstrapPackage/Editor");
 
             PackageRepository packageRepository = new PackageRepository();
             IReadOnlyList<PackageInformation> packages = await packageRepository.ListAsync(showPreRelease: true);

@@ -14,8 +14,8 @@ namespace EZUtils.PackageManager
         public static async void Run()
         {
             if (string.IsNullOrEmpty(TargetPackageName)) return;
-            if (File.Exists("Assets/EZUtils/BootstrapPackage/Development.txt")) return;
-            if (File.Exists($"Assets/EZUtils/BootstrapPackage/{TargetPackageName}/BootstrapperPass2.cs")) return;
+            if (File.Exists("Assets/EZUtils/BootstrapPackage/Editor/Development.txt")) return;
+            if (File.Exists($"Assets/EZUtils/BootstrapPackage/Editor/{TargetPackageName}/BootstrapperPass2.cs")) return;
 
             IReadOnlyList<UPM.PackageInfo> existingPackages = await UPMPackageClient.ListAsync(offlineMode: true);
             if (!existingPackages.Any(p => p.name == "com.unity.nuget.newtonsoft-json"))
@@ -27,7 +27,7 @@ namespace EZUtils.PackageManager
             }
 
             AssetDatabase.ImportPackage(
-                $"Assets/EZUtils/BootstrapPackage/{TargetPackageName}/Pass2.unitypackage", interactive: false);
+                $"Assets/EZUtils/BootstrapPackage/Editor/{TargetPackageName}/Pass2.unitypackage", interactive: false);
         }
     }
 }
