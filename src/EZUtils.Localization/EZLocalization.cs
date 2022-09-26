@@ -12,8 +12,14 @@ namespace EZUtils.Localization
     using UnityEngine.Localization;
     using UnityEngine.Localization.Metadata;
     using UnityEngine.Localization.Settings;
-    using UnityEngine.Localization.Tables;
 
+    //TODO: we don't get defaulty strings when tables don't exist
+    //so, always generate a default table with no entries, allowing us to get them
+    //aka via default table reference. not sure how it works for assets; probably not well, but that's fine.
+    //TODO: the default values of generated entries should be the key names themselves, or maybe we provide our own
+    //or maybe just for the default locale
+    //TODO: look into better utilizing starup locale thingies. we still need some way to allow picking the locale,
+    //and this seems like a good generic way to allow it, versus our own convention.
     public class EZLocalization
     {
         private static readonly Dictionary<string, EZLocalization> initializedLocalizations = new Dictionary<string, EZLocalization>();
@@ -151,15 +157,15 @@ namespace EZUtils.Localization
             {
                 EnsureGroupExists();
             }//localizationSettings.GetStringDatabase().GetLocalizedString("a");
-            StringTable stringTable = localizationSettings.GetStringDatabase().GetTable(stringTableName);
-            if (stringTable == null) throw new ArgumentOutOfRangeException(
-                nameof(group), $"Group '{group}' does not exist.");
+            LocalizedStringDatabase stringDatabase = localizationSettings.GetStringDatabase();
 
-            AssetTable assetTable = localizationSettings.GetAssetDatabase().GetTable(assetTableName);
-            if (assetTable == null) throw new ArgumentOutOfRangeException(
-                nameof(group), $"Group '{group}' does not exist.");
+            LocalizedAssetDatabase assetDatabase = localizationSettings.GetAssetDatabase();
 
-            LocalizationContext context = new LocalizationContext(this, stringTable, assetTable, keyPrefix);
+            LocalizationContext context = new LocalizationContext(
+                this,
+                keyPrefix,
+                stringDatabase, stringTableName,
+                assetDatabase, assetTableName);
             return context;
 
             void EnsureGroupExists()

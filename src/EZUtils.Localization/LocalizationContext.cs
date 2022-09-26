@@ -1,63 +1,57 @@
 namespace EZUtils.Localization
 {
     using System;
+    using System.Linq;
     using UnityEditor;
+    using UnityEngine.Localization.Settings;
     using UnityEngine.Localization.Tables;
 
     public class LocalizationContext
     {
         private readonly EZLocalization ezLocalization;
-        private readonly StringTable stringTable;
-        private readonly AssetTable assetTable;
         private readonly string keyPrefix;
+        private readonly LocalizedStringDatabase stringDatabase;
+        private readonly string stringTableName;
+        private readonly LocalizedAssetDatabase assetDatabase;
+        private readonly string assetTableName;
 
         public LocalizationContext(
-            EZLocalization ezLocalization, StringTable stringTable, AssetTable assetTable, string keyPrefix)
+            EZLocalization ezLocalization,
+            string keyPrefix,
+            LocalizedStringDatabase stringDatabase,
+            string stringTableName,
+            LocalizedAssetDatabase assetDatabase,
+            string assetTableName)
         {
             this.ezLocalization = ezLocalization;
-            this.stringTable = stringTable;
-            this.assetTable = assetTable;
             this.keyPrefix = keyPrefix;
-        }
-
-        public LocalizationContext(EZLocalization ezLocalization, StringTable stringTable, AssetTable assetTable)
-            : this(ezLocalization, stringTable, assetTable, keyPrefix: string.Empty)
-        {
+            this.stringDatabase = stringDatabase;
+            this.stringTableName = stringTableName;
+            this.assetDatabase = assetDatabase;
+            this.assetTableName = assetTableName;
         }
 
         public LocalizationContext GetContext(string keyPrefix)
-            => new LocalizationContext(ezLocalization, stringTable, assetTable, $"{this.keyPrefix}.{keyPrefix}");
+            => new LocalizationContext(
+                ezLocalization,
+                keyPrefix: $"{this.keyPrefix}.{keyPrefix}",
+                stringDatabase: stringDatabase,
+                stringTableName: stringTableName,
+                assetDatabase: assetDatabase,
+                assetTableName: assetTableName);
 
 
-        public string GetString(string key)
-        {
-            key = $"{keyPrefix}.{key}";
-            string result = stringTable[key]?.LocalizedValue;
-            if (result == null)
-            {
-                //so in edit mode, we'll basically provide an empty value (in addition to creating an entry)
-                if (!ezLocalization.IsInEditMode) throw new ArgumentOutOfRangeException(
-                    nameof(key), $"There is no value for key '{key}'.");
-
-                _ = stringTable.SharedData.AddKey(key);
-                EditorUtility.SetDirty(stringTable.SharedData);
-            }
-
-            return result;
-        }
+        public string GetString(string key) => GetString(key, null);
 
         public string GetString(string key, params object[] args)
         {
             key = $"{keyPrefix}.{key}";
-            string result = stringTable[key]?.GetLocalizedString(args);
-            if (result == null)
-            {
-                //so in edit mode, we'll basically provide an empty value (in addition to creating an entry)
-                if (!ezLocalization.IsInEditMode) throw new ArgumentOutOfRangeException(
-                    nameof(key), $"There is no value for key '{key}' in '{stringTable.TableCollectionName}'.");
 
-                _ = stringTable.SharedData.AddKey(key);
-                EditorUtility.SetDirty(stringTable.SharedData);
+            string result = stringDatabase.GetLocalizedString(
+                stringTableName, key, fallbackBehavior: FallbackBehavior.UseFallback, arguments: args);
+            if (ezLocalization.IsInEditMode)
+            {
+                EnsureKeyExists(stringDatabase, stringTableName, key);
             }
 
             return result;
@@ -66,18 +60,26 @@ namespace EZUtils.Localization
         public T GetAsset<T>(string key) where T : UnityEngine.Object
         {
             key = $"{keyPrefix}.{key}";
-            T result = assetTable.GetAssetAsync<T>(key).WaitForCompletion();
-            if (result == null)
-            {
-                //so in edit mode, we'll basically provide an empty value (in addition to creating an entry)
-                if (!ezLocalization.IsInEditMode) throw new ArgumentOutOfRangeException(
-                    nameof(key), $"There is no value for key '{key}' in '{assetTable.TableCollectionName}'.");
 
-                _ = assetTable.SharedData.AddKey(key);
-                EditorUtility.SetDirty(assetTable.SharedData);
+            T result = assetDatabase.GetLocalizedAsset<T>(assetTableName, key);
+            if (ezLocalization.IsInEditMode)
+            {
+                EnsureKeyExists(assetDatabase, assetTableName, key);
             }
 
             return result;
+        }
+
+        private static void EnsureKeyExists<TTable, TEntry>(LocalizedDatabase<TTable, TEntry> db, string tableName, string key)
+            where TTable : DetailedLocalizationTable<TEntry>
+            where TEntry : TableEntry
+        {
+            TTable table = db.GetTable(tableName);
+            SharedTableData.SharedTableEntry entry = table.SharedData.Entries.SingleOrDefault(e => e.Key == key);
+            if (entry != null) return;
+
+            _ = table.SharedData.AddKey(key);
+            EditorUtility.SetDirty(table.SharedData);
         }
     }
 }

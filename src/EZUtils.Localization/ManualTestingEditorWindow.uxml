@@ -11,11 +11,11 @@
 >
   <VisualElement>
     <Style src="ManualTestingEditorWindow.uss" />
-    <Button text="loc:florpy" />
+    <Button text="loc:Start" />
     <VisualElement>
-      <Button text="loc:foo bar baz" />
+      <Button text="loc:Pudding" />
       <VisualElement>
-        <Label text="loc:hello im mamu" />
+        <Label text="loc:Have a nice day!" />
       </VisualElement>
     </VisualElement>
   </VisualElement>
