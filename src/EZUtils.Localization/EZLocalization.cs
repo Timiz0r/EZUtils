@@ -2,6 +2,7 @@ namespace EZUtils.Localization
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
     using UnityEditor;
@@ -9,21 +10,24 @@ namespace EZUtils.Localization
     using UnityEditor.Localization.Addressables;
     using UnityEngine;
     using UnityEngine.Localization;
+    using UnityEngine.Localization.Metadata;
     using UnityEngine.Localization.Settings;
     using UnityEngine.Localization.Tables;
-    using Object = UnityEngine.Object;
 
     public class EZLocalization
     {
         private readonly LocalizationSettings localizationSettings;
         private readonly string path;
+        private readonly LocaleIdentifier[] supportedLocales;
 
         public bool IsInEditMode => LocalizationSettings.Instance == localizationSettings;
 
-        private EZLocalization(LocalizationSettings localizationSettings, string path)
+        private EZLocalization(
+            LocalizationSettings localizationSettings, string path, LocaleIdentifier[] supportedLocales)
         {
             this.localizationSettings = localizationSettings;
             this.path = path;
+            this.supportedLocales = supportedLocales;
         }
 
         public static EZLocalization Create(string path, params LocaleIdentifier[] supportedLocales)
@@ -39,13 +43,8 @@ namespace EZUtils.Localization
             //not that we cant use them, but I suspect it would pollute other projects in undesirable ways
             _ = localizationSettings.GetInitializationOperation().WaitForCompletion();
 
-            ILocalesProvider locales = LocalesProvider.Create(path, localizationSettings, supportedLocales);
-            //even though we only ever use one local for lookups, we want all locales in so that we can
-            //add translations in editor (assuming editor supports what we're doing here without addressibles)
-            localizationSettings.SetAvailableLocales(locales);
-
-
             SystemLocaleSelector localeSelector = new SystemLocaleSelector();
+            ILocalesProvider locales = localizationSettings.GetAvailableLocales();
             Locale localeToSelect = localeSelector.GetStartupLocale(locales)
                 ?? locales.Locales.FirstOrDefault(
                     l => l.Identifier.CultureInfo.TwoLetterISOLanguageName.Equals(
@@ -53,7 +52,7 @@ namespace EZUtils.Localization
                 ?? locales.Locales.First();
             localizationSettings.SetSelectedLocale(localeToSelect);
 
-            return new EZLocalization(localizationSettings, path);
+            return new EZLocalization(localizationSettings, path, supportedLocales);
         }
 
         public void EnterEditMode()
@@ -71,6 +70,42 @@ namespace EZUtils.Localization
             addressableGroupRules.StringTablesResolver = new GroupResolver(pattern, pattern);
             addressableGroupRules.AssetTablesResolver = new GroupResolver(pattern, pattern);
             AddressableGroupRules.Instance = addressableGroupRules;
+
+            List<Locale> addedLocales = new List<Locale>();
+            foreach (LocaleIdentifier localeIdentifier in supportedLocales)
+            {
+                if (LocalizationEditorSettings.GetLocale(localeIdentifier) != null) return;
+
+                Locale locale = ScriptableObject.CreateInstance<Locale>();
+                locale.Identifier = localeIdentifier;
+                locale.name = localeIdentifier.CultureInfo.EnglishName;
+                string localePath = Path.Combine(path, $"{localeIdentifier.CultureInfo.EnglishName}.asset");
+                AssetDatabase.CreateAsset(locale, localePath);
+                LocalizationEditorSettings.AddLocale(locale);
+                addedLocales.Add(locale);
+            }
+
+            if (addedLocales.Count == 0) return;
+
+            //logic more or less referenced from LocaleGeneratorWindow
+            IReadOnlyCollection<Locale> allLocales = LocalizationEditorSettings.GetLocales();
+            Dictionary<string, Locale> localeMap =
+                allLocales.ToDictionary(l => l.Identifier.Code, l => l);
+            foreach (Locale locale in allLocales)
+            {
+                CultureInfo currentCultureInfo = locale.Identifier.CultureInfo?.Parent;
+                while (currentCultureInfo != null)
+                {
+                    if (localeMap.TryGetValue(currentCultureInfo.Name, out Locale foundParent))
+                    {
+                        locale.Metadata.AddMetadata(new FallbackLocale(foundParent));
+                        EditorUtility.SetDirty(locale);
+                        break;
+                    }
+
+                    currentCultureInfo = currentCultureInfo.Parent;
+                }
+            }
         }
 
         public static void StopEditing()
@@ -139,42 +174,6 @@ namespace EZUtils.Localization
                     }
                 }
             }
-        }
-
-        //TODO: use the normal one instead
-        private class LocalesProvider : ILocalesProvider
-        {
-            private readonly List<Locale> locales;
-
-            private LocalesProvider(List<Locale> locales)
-            {
-                this.locales = locales;
-            }
-
-            public static LocalesProvider Create(string path, Object parentAsset, params LocaleIdentifier[] supportedLocales)
-            {
-                List<Locale> locales = new List<Locale>(supportedLocales?.Length ?? 0);
-                Locale[] existingLocales = AssetDatabase.LoadAllAssetRepresentationsAtPath(path).OfType<Locale>().ToArray();
-                foreach (LocaleIdentifier localeIdentifier in supportedLocales ?? Enumerable.Empty<LocaleIdentifier>())
-                {
-                    Locale locale = existingLocales.SingleOrDefault(l => l.Identifier == localeIdentifier);
-                    if (locale == null)
-                    {
-                        locale = Locale.CreateLocale(localeIdentifier);
-                        AssetDatabase.AddObjectToAsset(parentAsset, locale);
-                    }
-                }
-
-                LocalesProvider result = new LocalesProvider(locales);
-                return result;
-            }
-
-            List<Locale> ILocalesProvider.Locales => locales;
-
-            //it's not clear how these two get called, so want to avoid implementing them to see how
-            Locale ILocalesProvider.GetLocale(LocaleIdentifier id) => throw new NotImplementedException();
-            void ILocalesProvider.AddLocale(Locale locale) => throw new NotImplementedException();
-            bool ILocalesProvider.RemoveLocale(Locale locale) => throw new NotImplementedException();
         }
     }
 }
