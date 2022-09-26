@@ -2,8 +2,6 @@ namespace EZUtils.Localization
 {
     using System;
     using UnityEditor;
-    using UnityEditor.Localization;
-    using UnityEngine.Localization.Settings;
     using UnityEngine.Localization.Tables;
 
     public class LocalizationContext

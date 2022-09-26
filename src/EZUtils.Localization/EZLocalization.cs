@@ -16,11 +16,16 @@ namespace EZUtils.Localization
 
     public class EZLocalization
     {
+        private static readonly Dictionary<string, EZLocalization> initializedLocalizations = new Dictionary<string, EZLocalization>();
+
         private readonly LocalizationSettings localizationSettings;
         private readonly string path;
         private readonly LocaleIdentifier[] supportedLocales;
 
-        public bool IsInEditMode => LocalizationSettings.Instance == localizationSettings;
+        public static IReadOnlyList<EZLocalization> InitializedLocalizations => initializedLocalizations.Values.ToArray();
+        public bool IsInEditMode => LocalizationEditorSettings.ActiveLocalizationSettings == localizationSettings;
+
+        public string Name => localizationSettings.name;
 
         private EZLocalization(
             LocalizationSettings localizationSettings, string path, LocaleIdentifier[] supportedLocales)
@@ -30,14 +35,25 @@ namespace EZUtils.Localization
             this.supportedLocales = supportedLocales;
         }
 
-        public static EZLocalization Create(string path, params LocaleIdentifier[] supportedLocales)
+        public static EZLocalization Create(string directory, params LocaleIdentifier[] supportedLocales)
         {
-            LocalizationSettings localizationSettings = AssetDatabase.LoadAssetAtPath<LocalizationSettings>(path);
+            //we have this cache because it's very supported to have multiple instantiations of the same instance
+            if (initializedLocalizations.TryGetValue(directory, out EZLocalization existing))
+            {
+                //TODO: would be good to ensure locales are in-sync
+                return existing;
+            }
+
+            LocalizationSettings localizationSettings = AssetDatabase.LoadAssetAtPath<LocalizationSettings>(directory);
             if (localizationSettings == null)
             {
                 localizationSettings = ScriptableObject.CreateInstance<LocalizationSettings>();
-                localizationSettings.name = Path.GetFileNameWithoutExtension(path);
-                AssetDatabase.CreateAsset(localizationSettings, path);
+                //so the last path component of the directory
+                localizationSettings.name = Path.GetFileNameWithoutExtension(directory);
+                localizationSettings.GetMetadata().AddMetadata(new Marker());
+                _ = Directory.CreateDirectory(directory);
+                AssetDatabase.CreateAsset(
+                    localizationSettings, Path.Combine(directory, $"{localizationSettings.name}.asset"));
             }
             //will see if we can get away with not using addressibles, since we generate don't need it for editor applications
             //not that we cant use them, but I suspect it would pollute other projects in undesirable ways
@@ -49,20 +65,27 @@ namespace EZUtils.Localization
                 ?? locales.Locales.FirstOrDefault(
                     l => l.Identifier.CultureInfo.TwoLetterISOLanguageName.Equals(
                         "en", StringComparison.OrdinalIgnoreCase))
-                ?? locales.Locales.First();
+                ?? locales.Locales.FirstOrDefault();
             localizationSettings.SetSelectedLocale(localeToSelect);
 
-            return new EZLocalization(localizationSettings, path, supportedLocales);
+            EZLocalization result = new EZLocalization(localizationSettings, directory, supportedLocales);
+            initializedLocalizations.Add(directory, result);
+            return result;
         }
 
         public void EnterEditMode()
         {
             if (IsInEditMode) return;
-            if (LocalizationSettings.Instance != null) throw new InvalidOperationException(
-                $"'{LocalizationSettings.Instance.name}' is already being edited.");
+            if (LocalizationEditorSettings.ActiveLocalizationSettings != null)
+            {
+                MetadataCollection metadata = LocalizationEditorSettings.ActiveLocalizationSettings.GetMetadata();
+                if (metadata.HasMetadata<Marker>() && InitializedLocalizations.Count != 0) throw new InvalidOperationException(
+                    $"'{LocalizationEditorSettings.ActiveLocalizationSettings.name}' is already being edited.");
+            }
 
-            LocalizationSettings.Instance = localizationSettings;
+            LocalizationEditorSettings.ActiveLocalizationSettings = localizationSettings;
 
+            //TODO: double check this is set. might not be upon first creation of localizationsettings
             string pattern = $"EZLocalization-{localizationSettings.name}";
             AddressableGroupRules addressableGroupRules = ScriptableObject.CreateInstance<AddressableGroupRules>();
             addressableGroupRules.LocaleResolver = new GroupResolver(pattern, pattern);
@@ -94,7 +117,7 @@ namespace EZUtils.Localization
             foreach (Locale locale in allLocales)
             {
                 CultureInfo currentCultureInfo = locale.Identifier.CultureInfo?.Parent;
-                while (currentCultureInfo != null)
+                while (currentCultureInfo != null && currentCultureInfo == CultureInfo.InvariantCulture)
                 {
                     if (localeMap.TryGetValue(currentCultureInfo.Name, out Locale foundParent))
                     {
@@ -106,11 +129,14 @@ namespace EZUtils.Localization
                     currentCultureInfo = currentCultureInfo.Parent;
                 }
             }
+
+            localizationSettings.ResetState();
+            _ = localizationSettings.GetInitializationOperation().WaitForCompletion();
         }
 
         public static void StopEditing()
         {
-            LocalizationSettings.Instance = null;
+            LocalizationEditorSettings.ActiveLocalizationSettings = null;
             AddressableGroupRules.Instance = null;
         }
 
@@ -124,8 +150,7 @@ namespace EZUtils.Localization
             if (IsInEditMode)
             {
                 EnsureGroupExists();
-            }
-
+            }//localizationSettings.GetStringDatabase().GetLocalizedString("a");
             StringTable stringTable = localizationSettings.GetStringDatabase().GetTable(stringTableName);
             if (stringTable == null) throw new ArgumentOutOfRangeException(
                 nameof(group), $"Group '{group}' does not exist.");
@@ -134,7 +159,7 @@ namespace EZUtils.Localization
             if (assetTable == null) throw new ArgumentOutOfRangeException(
                 nameof(group), $"Group '{group}' does not exist.");
 
-            LocalizationContext context = new LocalizationContext(this, stringTable, assetTable);
+            LocalizationContext context = new LocalizationContext(this, stringTable, assetTable, keyPrefix);
             return context;
 
             void EnsureGroupExists()
@@ -165,6 +190,9 @@ namespace EZUtils.Localization
                     EnsureTablesExist(assetTableCollection);
                 }
 
+                localizationSettings.ResetState();
+                _ = localizationSettings.GetInitializationOperation().WaitForCompletion();
+
                 void EnsureTablesExist(LocalizationTableCollection tableCollection)
                 {
                     foreach (Locale locale in localizationSettings.GetAvailableLocales().Locales)
@@ -174,6 +202,12 @@ namespace EZUtils.Localization
                     }
                 }
             }
+        }
+
+        [Metadata(AllowedTypes = MetadataType.LocalizationSettings)]
+        [Serializable]
+        public class Marker : IMetadata
+        {
         }
     }
 }

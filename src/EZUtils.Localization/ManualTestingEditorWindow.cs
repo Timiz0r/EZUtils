@@ -1,19 +1,19 @@
 namespace EZUtils.Localization
 {
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
     using UnityEditor;
     using UnityEngine;
+    using UnityEngine.Localization;
     using UnityEngine.UIElements;
 
     public class ManualTestingEditorWindow : EditorWindow
     {
+        private EZLocalization localization;
+
         [MenuItem("EZUtils/Localization Manual Testing", isValidateFunction: false, priority: 0)]
         public static void ManualTesting()
         {
-            ManualTestingEditorWindow window = GetWindow<ManualTestingEditorWindow>("EZUtils Package Manager");
+            ManualTestingEditorWindow window = GetWindow<ManualTestingEditorWindow>("EZLocalization manual testing");
             window.Show();
         }
 
@@ -22,22 +22,35 @@ namespace EZUtils.Localization
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 "Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml");
             visualTree.CloneTree(rootVisualElement);
-                foreach (VisualElement element in rootVisualElement.Query().Descendents<VisualElement>().ToList())
+
+            localization = EZLocalization.Create(
+                "Assets/EZUtils/EZLocalization/ManualTesting",
+                new LocaleIdentifier("en-US"),
+                new LocaleIdentifier("ja-JP"));
+            LocalizationContext localizationContext = localization.GetContext("manualtesting1", "key.lol");
+
+            foreach (VisualElement element in rootVisualElement.Query().Descendents<VisualElement>().ToList())
+            {
+
+                if (element is Button button && button.text.StartsWith("loc:", StringComparison.Ordinal))
                 {
-
-                    Debug.LogWarning("wat2");
-                    if (element is Button button && button.text.StartsWith("loc:", StringComparison.Ordinal))
-                    {
-                        Debug.LogWarning("wat3");
-                        button.text = "lolol" + button.text;
-                    }
-                    else if (element is Label label && label.text.StartsWith("loc:", StringComparison.Ordinal))
-                    {
-                        Debug.LogWarning("wat4");
-                        label.text = "lolol2" + label.text;
-                    }
+                    button.text = Localize(button.text);
                 }
+                else if (element is Label label && label.text.StartsWith("loc:", StringComparison.Ordinal))
+                {
+                    label.text = Localize(label.text);
+                }
+            }
 
+
+            string Localize(string text)
+            {
+                if (text.StartsWith("loc:", StringComparison.Ordinal))
+                {
+                    text = localizationContext.GetString(text.Substring(4));
+                }
+                return text;
+            }
         }
     }
 }
