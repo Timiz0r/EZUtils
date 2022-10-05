@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xmlns:ezui="EZUtils.UIElements"
+    xsi:schemaLocation="
+      UnityEngine.UIElements ../../UIElementsSchema/UnityEngine.UIElements.fixed.xsd
+      UnityEditor.UIElements ../../UIElementsSchema/UnityEditor.UIElements.xsd"
+>
+  <VisualElement>
+    <Style src="RepackPrefabEditorWindow.uss" />
+
+    <editor:ObjectField name="referenceObject" />
+    <editor:ObjectField name="referencePrefab" allow-scene-objects="false" />
+    <Button name="repackPrefab" text="Repack prefab" />
+  </VisualElement>
+</UXML>

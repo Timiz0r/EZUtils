@@ -8,6 +8,12 @@
         "com.unity.nuget.newtonsoft-json": "2.0.2"
       }
     },
+    "com.timiz0r.ezutils.repackprefab": {
+      "version": "file:../src/EZUtils.RepackPrefab",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.unity.collab-proxy": {
       "version": "1.10.2",
       "depth": 0,
