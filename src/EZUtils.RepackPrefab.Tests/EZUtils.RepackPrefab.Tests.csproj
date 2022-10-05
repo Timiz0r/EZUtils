@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="$(SrcRoot)\EZUtils.RepackPrefab\EZUtils.RepackPrefab.csproj" />
+  </ItemGroup>
+</Project>

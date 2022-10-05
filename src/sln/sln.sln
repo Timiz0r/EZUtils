@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZUtils.PackageManager", ".
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZUtils.RepackPrefab", "..\EZUtils.RepackPrefab\EZUtils.RepackPrefab.csproj", "{CF10D493-A573-4C2A-BAFB-FEDB80E2FE23}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZUtils.RepackPrefab.Tests", "..\EZUtils.RepackPrefab.Tests\EZUtils.RepackPrefab.Tests.csproj", "{9598EEF7-E8B8-4850-8E02-791BAA2AB72D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{CF10D493-A573-4C2A-BAFB-FEDB80E2FE23}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CF10D493-A573-4C2A-BAFB-FEDB80E2FE23}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CF10D493-A573-4C2A-BAFB-FEDB80E2FE23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9598EEF7-E8B8-4850-8E02-791BAA2AB72D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9598EEF7-E8B8-4850-8E02-791BAA2AB72D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9598EEF7-E8B8-4850-8E02-791BAA2AB72D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9598EEF7-E8B8-4850-8E02-791BAA2AB72D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
