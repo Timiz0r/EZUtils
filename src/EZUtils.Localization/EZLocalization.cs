@@ -13,9 +13,6 @@ namespace EZUtils.Localization
     using UnityEngine.Localization.Metadata;
     using UnityEngine.Localization.Settings;
 
-    //TODO: we don't get defaulty strings when tables don't exist
-    //so, always generate a default table with no entries, allowing us to get them
-    //aka via default table reference. not sure how it works for assets; probably not well, but that's fine.
     //TODO: the default values of generated entries should be the key names themselves, or maybe we provide our own
     //or maybe just for the default locale
     //TODO: look into better utilizing starup locale thingies. we still need some way to allow picking the locale,
@@ -156,8 +153,26 @@ namespace EZUtils.Localization
             if (IsInEditMode)
             {
                 EnsureGroupExists();
-            }//localizationSettings.GetStringDatabase().GetLocalizedString("a");
+            }
             LocalizedStringDatabase stringDatabase = localizationSettings.GetStringDatabase();
+            //not currently using because it doesn't solve the goal of getting a string when edit mode hasn't been done
+            //first
+            // if (stringDatabase.DefaultTable == null)
+            // {
+            //     string defaultStringTableName = $"MissingStringTableFallback";
+            //     StringTableCollection stringTableCollection =
+            //         LocalizationEditorSettings.GetStringTableCollection(defaultStringTableName);
+            //     if (stringTableCollection == null)
+            //     {
+            //         _ = LocalizationEditorSettings.CreateStringTableCollection(
+            //             defaultStringTableName,
+            //             groupDirectory,
+            //             localizationSettings.GetAvailableLocales().Locales);
+            //     }
+            //     stringDatabase.DefaultTable = defaultStringTableName;
+            //     //no need to keep it in sync with locales, since it's not supposed to have entries
+            //     //instead, the purpose is to still get back some string if the table were to be missing
+            // }
 
             LocalizedAssetDatabase assetDatabase = localizationSettings.GetAssetDatabase();
 
@@ -170,7 +185,8 @@ namespace EZUtils.Localization
 
             void EnsureGroupExists()
             {
-                StringTableCollection stringTableCollection = LocalizationEditorSettings.GetStringTableCollection(stringTableName);
+                StringTableCollection stringTableCollection =
+                    LocalizationEditorSettings.GetStringTableCollection(stringTableName);
                 if (stringTableCollection == null)
                 {
                     _ = LocalizationEditorSettings.CreateStringTableCollection(

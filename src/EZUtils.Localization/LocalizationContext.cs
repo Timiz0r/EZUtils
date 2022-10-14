@@ -47,6 +47,11 @@ namespace EZUtils.Localization
         {
             key = $"{keyPrefix}.{key}";
 
+            if (!ezLocalization.IsInEditMode && stringDatabase.GetTable(stringTableName) == null)
+            {
+                return $"Table '{stringTableName}' not found.";
+            }
+
             string result = stringDatabase.GetLocalizedString(
                 stringTableName, key, fallbackBehavior: FallbackBehavior.UseFallback, arguments: args);
             if (ezLocalization.IsInEditMode)
