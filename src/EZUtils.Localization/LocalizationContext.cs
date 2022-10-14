@@ -47,13 +47,17 @@ namespace EZUtils.Localization
         {
             key = $"{keyPrefix}.{key}";
 
-            if (!ezLocalization.IsInEditMode && stringDatabase.GetTable(stringTableName) == null)
+            if (!ezLocalization.IsInEditMode && stringDatabase.GetTable(stringTableName, ezLocalization.SelectedLocale) == null)
             {
                 return $"Table '{stringTableName}' not found.";
             }
 
             string result = stringDatabase.GetLocalizedString(
-                stringTableName, key, fallbackBehavior: FallbackBehavior.UseFallback, arguments: args);
+                stringTableName,
+                key,
+                locale: ezLocalization.SelectedLocale,
+                fallbackBehavior: FallbackBehavior.UseFallback,
+                arguments: args);
             if (ezLocalization.IsInEditMode)
             {
                 EnsureKeyExists(stringDatabase, stringTableName, key);
@@ -66,7 +70,7 @@ namespace EZUtils.Localization
         {
             key = $"{keyPrefix}.{key}";
 
-            T result = assetDatabase.GetLocalizedAsset<T>(assetTableName, key);
+            T result = assetDatabase.GetLocalizedAsset<T>(assetTableName, key, ezLocalization.SelectedLocale);
             if (ezLocalization.IsInEditMode)
             {
                 EnsureKeyExists(assetDatabase, assetTableName, key);
@@ -75,11 +79,11 @@ namespace EZUtils.Localization
             return result;
         }
 
-        private static void EnsureKeyExists<TTable, TEntry>(LocalizedDatabase<TTable, TEntry> db, string tableName, string key)
+        private void EnsureKeyExists<TTable, TEntry>(LocalizedDatabase<TTable, TEntry> db, string tableName, string key)
             where TTable : DetailedLocalizationTable<TEntry>
             where TEntry : TableEntry
         {
-            TTable table = db.GetTable(tableName);
+            TTable table = db.GetTable(tableName, ezLocalization.SelectedLocale);
             SharedTableData.SharedTableEntry entry = table.SharedData.Entries.SingleOrDefault(e => e.Key == key);
             if (entry != null) return;
 
@@ -90,11 +94,11 @@ namespace EZUtils.Localization
             if (typeof(TEntry) == typeof(StringTableEntry))
             {
                 //note that db.GetTableEntry returns a null entry, so we go the slightly longer route
-                TTable currentTable = db.GetTable(tableName);
+                TTable currentTable = db.GetTable(tableName, ezLocalization.SelectedLocale);
                 //for those that use key == `english translation`, we could offer a way to customize how we generated
                 //default values here, but not a big deal at least at the moment
                 _ = currentTable.AddEntry(key, $"TODO:{key}");
-                EditorUtility.SetDirty(currentTable);
+                EditorUtility.SetDirty(currentTable);//
             }
 
         }

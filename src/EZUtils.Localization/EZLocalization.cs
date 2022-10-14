@@ -13,8 +13,6 @@ namespace EZUtils.Localization
     using UnityEngine.Localization.Metadata;
     using UnityEngine.Localization.Settings;
 
-    //TODO: look into better utilizing starup locale thingies. we still need some way to allow picking the locale,
-    //and this seems like a good generic way to allow it, versus our own convention.
     public class EZLocalization
     {
         private static readonly Dictionary<string, EZLocalization> initializedLocalizations = new Dictionary<string, EZLocalization>();
@@ -28,12 +26,31 @@ namespace EZUtils.Localization
 
         public string Name => localizationSettings.name;
 
+        public Locale SelectedLocale { get; }
+
+        public IReadOnlyList<Locale> AvailableLocales { get; }
+
         private EZLocalization(
             LocalizationSettings localizationSettings, string path, LocaleIdentifier[] supportedLocales)
         {
             this.localizationSettings = localizationSettings;
             this.path = path;
             this.supportedLocales = supportedLocales;
+
+            SystemLocaleSelector localeSelector = new SystemLocaleSelector();
+            ILocalesProvider locales = localizationSettings.GetAvailableLocales();
+            //we don't use localizationSettings.SetSelectedLocale it's kinda useless for us
+            //all of the calls to the localization databases end up going thru the static LocalizationSettings
+            //and we want per-EZLocalization capability
+            //though even if we later go with a static across all EZUtils, we still dont want other tools that could use
+            //unity localization to be able to mess things up, or for us to mess other things up
+            SelectedLocale = localeSelector.GetStartupLocale(locales)
+                ?? locales.Locales.FirstOrDefault(
+                    l => l.Identifier.CultureInfo.TwoLetterISOLanguageName.Equals(
+                        "en", StringComparison.OrdinalIgnoreCase))
+                ?? locales.Locales.FirstOrDefault();
+
+            AvailableLocales = localizationSettings.GetAvailableLocales().Locales;
         }
 
         public static EZLocalization Create(string directory, params LocaleIdentifier[] supportedLocales)
@@ -60,19 +77,12 @@ namespace EZUtils.Localization
             //not that we cant use them, but I suspect it would pollute other projects in undesirable ways
             _ = localizationSettings.GetInitializationOperation().WaitForCompletion();
 
-            SystemLocaleSelector localeSelector = new SystemLocaleSelector();
-            ILocalesProvider locales = localizationSettings.GetAvailableLocales();
-            Locale localeToSelect = localeSelector.GetStartupLocale(locales)
-                ?? locales.Locales.FirstOrDefault(
-                    l => l.Identifier.CultureInfo.TwoLetterISOLanguageName.Equals(
-                        "en", StringComparison.OrdinalIgnoreCase))
-                ?? locales.Locales.FirstOrDefault();
-            localizationSettings.SetSelectedLocale(localeToSelect);
-
             EZLocalization result = new EZLocalization(localizationSettings, directory, supportedLocales);
             initializedLocalizations.Add(directory, result);
             return result;
         }
+
+
 
         public void EnterEditMode()
         {
@@ -153,27 +163,7 @@ namespace EZUtils.Localization
                 EnsureGroupExists();
             }
             LocalizedStringDatabase stringDatabase = localizationSettings.GetStringDatabase();
-            //not currently using because it doesn't solve the goal of getting a string when edit mode hasn't been done
-            //first
-            // if (stringDatabase.DefaultTable == null)
-            // {
-            //     string defaultStringTableName = $"MissingStringTableFallback";
-            //     StringTableCollection stringTableCollection =
-            //         LocalizationEditorSettings.GetStringTableCollection(defaultStringTableName);
-            //     if (stringTableCollection == null)
-            //     {
-            //         _ = LocalizationEditorSettings.CreateStringTableCollection(
-            //             defaultStringTableName,
-            //             groupDirectory,
-            //             localizationSettings.GetAvailableLocales().Locales);
-            //     }
-            //     stringDatabase.DefaultTable = defaultStringTableName;
-            //     //no need to keep it in sync with locales, since it's not supposed to have entries
-            //     //instead, the purpose is to still get back some string if the table were to be missing
-            // }
-
             LocalizedAssetDatabase assetDatabase = localizationSettings.GetAssetDatabase();
-
             LocalizationContext context = new LocalizationContext(
                 this,
                 keyPrefix,
