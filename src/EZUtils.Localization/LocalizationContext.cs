@@ -85,6 +85,18 @@ namespace EZUtils.Localization
 
             _ = table.SharedData.AddKey(key);
             EditorUtility.SetDirty(table.SharedData);
+
+
+            if (typeof(TEntry) == typeof(StringTableEntry))
+            {
+                //note that db.GetTableEntry returns a null entry, so we go the slightly longer route
+                TTable currentTable = db.GetTable(tableName);
+                //for those that use key == `english translation`, we could offer a way to customize how we generated
+                //default values here, but not a big deal at least at the moment
+                _ = currentTable.AddEntry(key, $"TODO:{key}");
+                EditorUtility.SetDirty(currentTable);
+            }
+
         }
     }
 }

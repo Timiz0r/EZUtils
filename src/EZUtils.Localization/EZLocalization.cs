@@ -13,8 +13,6 @@ namespace EZUtils.Localization
     using UnityEngine.Localization.Metadata;
     using UnityEngine.Localization.Settings;
 
-    //TODO: the default values of generated entries should be the key names themselves, or maybe we provide our own
-    //or maybe just for the default locale
     //TODO: look into better utilizing starup locale thingies. we still need some way to allow picking the locale,
     //and this seems like a good generic way to allow it, versus our own convention.
     public class EZLocalization
