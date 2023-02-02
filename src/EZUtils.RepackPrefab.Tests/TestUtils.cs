@@ -1,5 +1,6 @@
 namespace EZUtils.RepackPrefab.Tests
 {
+    using System.IO;
     using System.Linq;
     using UnityEditor;
     using UnityEngine;
@@ -16,6 +17,14 @@ namespace EZUtils.RepackPrefab.Tests
             }
 
             _ = AssetDatabase.DeleteAsset(TestArtifactRootFolder);
+        }
+
+        public static GameObject CreatePrefab(GameObject gameObject)
+        {
+            _ = Directory.CreateDirectory(TestArtifactRootFolder);
+            string path = AssetDatabase.GenerateUniqueAssetPath(
+                Path.Combine(TestArtifactRootFolder, $"{gameObject.name}.prefab"));
+            return PrefabUtility.SaveAsPrefabAssetAndConnect(gameObject, path, InteractionMode.AutomatedAction);
         }
     }
 }

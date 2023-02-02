@@ -13,52 +13,98 @@
         [Test]
         public void ReturnsVariantPrefab()
         {
-            GameObject referenceObject = new ObjectBuilder("root")
+            GameObject referenceObject = new ObjectBuilder("refObject")
                 .GetObject();
-            GameObject referencePrefab = new ObjectBuilder("root")
+            GameObject referencePrefab = new ObjectBuilder("refPrefab")
                 .CreatePrefab();
 
             GameObject newPrefab = RepackPrefab.Repack(referenceObject, referencePrefab);
+
             Assert.That(PrefabUtility.IsPartOfVariantPrefab(newPrefab), Is.True);
+        }
+
+        [Test]
+        public void Throws_WhenReferencePrefabNotPrefab()
+        {
+            GameObject referenceObject = new ObjectBuilder("refObject")
+                .GetObject();
+            GameObject referencePrefab = new ObjectBuilder("refPrefab")
+                .GetObject();
+
+            Assert.That(() => RepackPrefab.Repack(referenceObject, referencePrefab), Throws.InvalidOperationException);
         }
 
         [Test]
         public void AddsObject_WhenNotInPrefab()
         {
-            GameObject referenceObject = new ObjectBuilder("root")
+            GameObject referenceObject = new ObjectBuilder("refObject")
                 .AddObject("child")
                 .GetObject();
-            GameObject referencePrefab = new ObjectBuilder("root")
+            GameObject referencePrefab = new ObjectBuilder("refPrefab")
                 .CreatePrefab();
 
             GameObject newPrefab = RepackPrefab.Repack(referenceObject, referencePrefab);
+
             Assert.That(newPrefab.GetChildren(), Has.Exactly(1).With.Property("name").EqualTo("child"));
         }
 
         [Test]
         public void AddsComponent_WhenNotInPrefab()
         {
-            GameObject referenceObject = new ObjectBuilder("root")
+            GameObject referenceObject = new ObjectBuilder("refObject")
                 .AddComponent<BoxCollider>()
                 .GetObject();
-            GameObject referencePrefab = new ObjectBuilder("root")
+            GameObject referencePrefab = new ObjectBuilder("refPrefab")
                 .CreatePrefab();
 
             GameObject newPrefab = RepackPrefab.Repack(referenceObject, referencePrefab);
+
             Assert.That(newPrefab.GetComponent<BoxCollider>(), Is.Not.Null);
+        }
+
+        [Test]
+        public void ChangesComponentValue_WhenInBoth()
+        {
+            GameObject referenceObject = new ObjectBuilder("refObject")
+                .AddComponent<BoxCollider>(bc => bc.isTrigger = true)
+                .GetObject();
+            GameObject referencePrefab = new ObjectBuilder("refPrefab")
+                .AddComponent<BoxCollider>(bc => bc.isTrigger = false)
+                .CreatePrefab();
+
+            GameObject newPrefab = RepackPrefab.Repack(referenceObject, referencePrefab);
+
+            Assert.That(newPrefab.GetComponent<BoxCollider>().isTrigger, Is.True);
         }
 
         [Test]
         public void RemovesComponent_WhenOnlyInPrefab()
         {
-            GameObject referenceObject = new ObjectBuilder("root")
+            GameObject referenceObject = new ObjectBuilder("refObject")
                 .GetObject();
-            GameObject referencePrefab = new ObjectBuilder("root")
+            GameObject referencePrefab = new ObjectBuilder("refPrefab")
                 .AddComponent<BoxCollider>()
                 .CreatePrefab();
 
             GameObject newPrefab = RepackPrefab.Repack(referenceObject, referencePrefab);
             Assert.That(newPrefab.GetComponent<BoxCollider>(), Is.Null);
+        }
+
+        [Test]
+        public void DoesNotReplaceObjectReferences_WhenNotReferingToObjectInReferenceObjectHierarchy()
+        {
+            GameObject externalProbeAnchor = new GameObject("obj outside reference obj");
+            GameObject referenceObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            referenceObject.name = "refObject";
+            referenceObject.GetComponent<MeshRenderer>().probeAnchor = externalProbeAnchor.transform;
+
+            GameObject referencePrefabObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            referencePrefabObject.name = "refPrefab";
+            GameObject referencePrefab = TestUtils.CreatePrefab(referencePrefabObject);
+
+            GameObject newPrefab = RepackPrefab.Repack(referenceObject, referencePrefab);
+
+            Assert.That(newPrefab.GetComponent<MeshRenderer>().probeAnchor, Is.EqualTo(externalProbeAnchor.transform));
         }
     }
 }

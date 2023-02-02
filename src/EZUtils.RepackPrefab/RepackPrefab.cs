@@ -1,5 +1,6 @@
 namespace EZUtils.RepackPrefab
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
@@ -10,6 +11,9 @@ namespace EZUtils.RepackPrefab
     {
         public static GameObject Repack(GameObject referenceObject, GameObject referencePrefab)
         {
+            if (!AssetDatabase.Contains(referencePrefab)) throw new InvalidOperationException(
+                $"{nameof(referencePrefab)} '{referencePrefab.name}' is not a prefab.");
+
             GameObject newPrefab = (GameObject)PrefabUtility.InstantiatePrefab(referencePrefab);
 
             Copy(referenceObject, newPrefab);
@@ -80,7 +84,7 @@ namespace EZUtils.RepackPrefab
                 existingComponents.Where(c => !matchedComponents.Contains(c));
             foreach (Component unmatchedComponent in unmatchedComponents)
             {
-                Object.DestroyImmediate(unmatchedComponent);
+                UnityEngine.Object.DestroyImmediate(unmatchedComponent);
             }
 
             GameObject[] existingGameObjects = target.GetChildren().ToArray();
@@ -125,7 +129,7 @@ namespace EZUtils.RepackPrefab
                     //than to just leave them be
                     if (component.GetType() == typeof(Transform)) continue;
 
-                    Object.DestroyImmediate(component);
+                    UnityEngine.Object.DestroyImmediate(component);
                 }
                 foreach (GameObject child in gameObject.GetChildren())
                 {
