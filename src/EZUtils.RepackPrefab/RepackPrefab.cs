@@ -18,14 +18,12 @@ namespace EZUtils.RepackPrefab
 
             Dictionary<Object, Object> referenceToTargetMap = new Dictionary<Object, Object>();
             GameObject newPrefab = (GameObject)PrefabUtility.InstantiatePrefab(referencePrefab);
+            //TODO: do better with names here. also in testutils.
             newPrefab.name = $"{newPrefab.name} Variant";
 
             Copy(referenceObject, newPrefab, referenceToTargetMap);
 
             ReplaceObjectReferences(newPrefab, referenceToTargetMap);
-
-            //TODO: object reference replacement for objects in hierarchy. doing it here because we need all required
-            //gameobjects and components to exist first (after the copy)
 
             string referencePrefabPath = AssetDatabase.GetAssetPath(referencePrefab);
             string path = AssetDatabase.GenerateUniqueAssetPath(
@@ -66,32 +64,6 @@ namespace EZUtils.RepackPrefab
                 ReplaceObjectReferences(child, referenceToTargetMap);
             }
         }
-
-        // private static Dictionary<Object, Object> GenerateGameObjectMap(GameObject lhs, GameObject rhs)
-        // {
-        //     Dictionary<Object, Object> result = new Dictionary<Object, Object>();
-
-        //     void TraverseGameObjects(GameObject l, GameObject r)
-        //     {
-        //         result.Add(l, r);
-
-        //         foreach ((Component leftComponent, Component rightComponent) in lhs
-        //             .GetComponents<Component>()
-        //             .Zip(rhs.GetComponents<Component>(), (a, b) => (a, b)))
-        //         {
-        //             result.Add(leftComponent, rightComponent);
-        //         }
-
-        //         foreach ((GameObject leftGameObject, GameObject rightGameObject) in lhs
-        //             .GetChildren()
-        //             .Zip(rhs.GetChildren(), (a, b) => (a, b)))
-        //         {
-        //             TraverseGameObjects(leftGameObject, rightGameObject);
-        //         }
-        //     }
-
-        //     return result;
-        // }
 
         private static void Copy(
             GameObject reference, GameObject target, Dictionary<Object, Object> referenceToTargetMap)
@@ -162,17 +134,32 @@ namespace EZUtils.RepackPrefab
                 GameObject existingTargetChild =
                     existingTargetChildren.FirstOrDefault(go => go.name == referenceGameObject.name);
 
-                if (existingTargetChild == null)
+                if (existingTargetChild != null)
                 {
-                    //referenceToTargetMap gets updated in the next recursive call, so no need to update here
-                    GameObject newTargetChild = new GameObject(referenceGameObject.name);
-                    EditorUtility.CopySerialized(referenceGameObject.transform, newTargetChild.transform);
-                    newTargetChild.transform.SetParent(target.transform);
+                    targetToReferenceGameObjects.Add(existingTargetChild, referenceGameObject);
+                    continue;
+                }
+                else if (PrefabUtility.IsAnyPrefabInstanceRoot(referenceGameObject))
+                {
+                    GameObject prefabRoot = PrefabUtility.GetCorrespondingObjectFromOriginalSource(referenceGameObject);
+                    GameObject newTargetChild = (GameObject)PrefabUtility.InstantiatePrefab(
+                        prefabRoot, target.transform);
+                    newTargetChild.name = referenceGameObject.name;
                     targetToReferenceGameObjects.Add(newTargetChild, referenceGameObject);
+
+                    // PropertyModification[] modifications = PrefabUtility.GetPropertyModifications(existingTargetChild);
+                    // PrefabUtility.SetPropertyModifications(newTargetChild, modifications);
+
+                    // var addedComponents = PrefabUtility.GetAddedComponents(existingTargetChild);
+                    // PrefabUtility.compon
                 }
                 else
                 {
-                    targetToReferenceGameObjects.Add(existingTargetChild, referenceGameObject);
+                    //referenceToTargetMap gets updated in the next recursive call, so no need to update here
+                    GameObject newTargetChild = Object.Instantiate(referenceGameObject, target.transform);
+                    //gets (Clone); dont want
+                    newTargetChild.name = referenceGameObject.name;
+                    targetToReferenceGameObjects.Add(newTargetChild, referenceGameObject);
                 }
             }
 

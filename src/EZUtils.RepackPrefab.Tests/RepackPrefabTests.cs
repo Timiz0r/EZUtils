@@ -25,7 +25,7 @@
         }
 
         [Test]
-        public void Throws_WhenReferencePrefabNotPrefab()
+        public void Throws_WhenReferencePrefabNoReferencetPrefab()
         {
             GameObject referenceObject = new ObjectBuilder("refObject")
                 .GetObject();
@@ -36,7 +36,7 @@
         }
 
         [Test]
-        public void AddsObject_WhenNotInPrefab()
+        public void AddsObject_WhenNotInReferencePrefab()
         {
             GameObject referenceObject = new ObjectBuilder("refObject")
                 .AddObject("child")
@@ -50,7 +50,26 @@
         }
 
         [Test]
-        public void AddsComponent_WhenNotInPrefab()
+        public void AddsPrefabInstance_WhenNotInReferencePrefab()
+        {
+            //so one of the child objects of referenceObject is a prefab instance
+            GameObject childObject = new GameObject("child");
+            GameObject childObjectPrefab = TestUtils.CreatePrefab(childObject);
+            GameObject referenceObject = new ObjectBuilder("refObject")
+                .AddObject(childObject)
+                .GetObject();
+            GameObject referencePrefab = new ObjectBuilder("refPrefab")
+                .CreatePrefab();
+
+            GameObject newPrefab = RepackPrefab.Repack(referenceObject, referencePrefab);
+            GameObject newPrefabChildObject = newPrefab.GetChildren().Single();
+
+            Assert.That(
+                PrefabUtility.GetCorrespondingObjectFromOriginalSource(newPrefabChildObject), Is.EqualTo(childObjectPrefab));
+        }
+
+        [Test]
+        public void AddsComponent_WhenNotInReferencePrefab()
         {
             GameObject referenceObject = new ObjectBuilder("refObject")
                 .AddComponent<BoxCollider>()
@@ -79,7 +98,7 @@
         }
 
         [Test]
-        public void RemovesComponent_WhenOnlyInPrefab()
+        public void RemovesComponent_WhenOnlyInReferencePrefab()
         {
             GameObject referenceObject = new ObjectBuilder("refObject")
                 .GetObject();
@@ -92,7 +111,7 @@
         }
 
         [Test]
-        public void DoesNotReplaceObjectReferences_WhenOutsideReferenceObjectHierarchy()
+        public void DoesNotReplaceObjectReferences_WhenOutsideReferencePrefabObjectHierarchy()
         {
             GameObject externalProbeAnchor = new GameObject("obj outside reference obj");
             GameObject referenceObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -109,7 +128,7 @@
         }
 
         [Test]
-        public void ReplacesObjectReferences_WhenInsideReferenceObjectHierarchy()
+        public void ReplacesObjectReferences_WhenInsideReferencePrefabObjectHierarchy()
         {
             GameObject referenceObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
             referenceObject.name = "refObject";
@@ -132,5 +151,7 @@
                 newPrefab.GetComponent<MeshRenderer>().probeAnchor.gameObject,
                 Is.EqualTo(newPrefab.GetChildren().Single()));
         }
+
+        //TODO: test object chains
     }
 }
