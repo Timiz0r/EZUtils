@@ -1,5 +1,6 @@
 ﻿namespace EZUtils.RepackPrefab.Tests
 {
+    using System.Linq;
     using NUnit.Framework;
     using UnityEditor;
     using UnityEngine;
@@ -91,7 +92,7 @@
         }
 
         [Test]
-        public void DoesNotReplaceObjectReferences_WhenNotReferingToObjectInReferenceObjectHierarchy()
+        public void DoesNotReplaceObjectReferences_WhenOutsideReferenceObjectHierarchy()
         {
             GameObject externalProbeAnchor = new GameObject("obj outside reference obj");
             GameObject referenceObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -105,6 +106,31 @@
             GameObject newPrefab = RepackPrefab.Repack(referenceObject, referencePrefab);
 
             Assert.That(newPrefab.GetComponent<MeshRenderer>().probeAnchor, Is.EqualTo(externalProbeAnchor.transform));
+        }
+
+        [Test]
+        public void ReplacesObjectReferences_WhenInsideReferenceObjectHierarchy()
+        {
+            GameObject referenceObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            referenceObject.name = "refObject";
+            GameObject referenceObjectProbeAnchor = new GameObject("probe anchor");
+            referenceObjectProbeAnchor.transform.SetParent(referenceObject.transform);
+            referenceObject.GetComponent<MeshRenderer>().probeAnchor = referenceObjectProbeAnchor.transform;
+
+            GameObject referencePrefabObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            referencePrefabObject.name = "refPrefab";
+            GameObject referencePrefab = TestUtils.CreatePrefab(referencePrefabObject);
+
+            GameObject newPrefab = RepackPrefab.Repack(referenceObject, referencePrefab);
+
+            //a note that comparing the components themselves produced weird results
+            //where two clearly unequal components were said to be equal
+            Assert.That(
+                newPrefab.GetComponent<MeshRenderer>().probeAnchor.gameObject,
+                Is.Not.EqualTo(referenceObjectProbeAnchor));
+            Assert.That(
+                newPrefab.GetComponent<MeshRenderer>().probeAnchor.gameObject,
+                Is.EqualTo(newPrefab.GetChildren().Single()));
         }
     }
 }

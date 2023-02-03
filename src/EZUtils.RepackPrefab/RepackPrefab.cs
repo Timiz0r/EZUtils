@@ -7,6 +7,8 @@ namespace EZUtils.RepackPrefab
     using UnityEditor;
     using UnityEngine;
 
+    using Object = UnityEngine.Object;
+
     public static class RepackPrefab
     {
         public static GameObject Repack(GameObject referenceObject, GameObject referencePrefab)
@@ -14,9 +16,16 @@ namespace EZUtils.RepackPrefab
             if (!AssetDatabase.Contains(referencePrefab)) throw new InvalidOperationException(
                 $"{nameof(referencePrefab)} '{referencePrefab.name}' is not a prefab.");
 
+            Dictionary<Object, Object> referenceToTargetMap = new Dictionary<Object, Object>();
             GameObject newPrefab = (GameObject)PrefabUtility.InstantiatePrefab(referencePrefab);
+            newPrefab.name = $"{newPrefab.name} Variant";
 
-            Copy(referenceObject, newPrefab);
+            Copy(referenceObject, newPrefab, referenceToTargetMap);
+
+            ReplaceObjectReferences(newPrefab, referenceToTargetMap);
+
+            //TODO: object reference replacement for objects in hierarchy. doing it here because we need all required
+            //gameobjects and components to exist first (after the copy)
 
             string referencePrefabPath = AssetDatabase.GetAssetPath(referencePrefab);
             string path = AssetDatabase.GenerateUniqueAssetPath(
@@ -28,28 +37,85 @@ namespace EZUtils.RepackPrefab
             return newPrefab;
         }
 
-        private static void Copy(GameObject reference, GameObject target)
+        private static void ReplaceObjectReferences(GameObject target, Dictionary<Object, Object> referenceToTargetMap)
         {
+            //should be hard to do synchronized iteration because of prefabs, so not even trying it
+            foreach (Component targetComponent in target.GetComponents<Component>())
+            {
+                using (SerializedObject serializedTarget = new SerializedObject(targetComponent))
+                {
+                    SerializedProperty targetIterator = serializedTarget.GetIterator();
+                    while (targetIterator.Next(enterChildren: true))
+                    {
+                        if (targetIterator.propertyType != SerializedPropertyType.ObjectReference
+                            || targetIterator.objectReferenceValue == null) continue;
+                        if (!targetIterator.editable) continue;
+
+                        if (referenceToTargetMap.TryGetValue(targetIterator.objectReferenceValue, out Object targetObject))
+                        {
+                            targetIterator.objectReferenceValue = targetObject;
+                        }
+                    }
+
+                    _ = serializedTarget.ApplyModifiedPropertiesWithoutUndo();
+                }
+            }
+
+            foreach (GameObject child in target.GetChildren())
+            {
+                ReplaceObjectReferences(child, referenceToTargetMap);
+            }
+        }
+
+        // private static Dictionary<Object, Object> GenerateGameObjectMap(GameObject lhs, GameObject rhs)
+        // {
+        //     Dictionary<Object, Object> result = new Dictionary<Object, Object>();
+
+        //     void TraverseGameObjects(GameObject l, GameObject r)
+        //     {
+        //         result.Add(l, r);
+
+        //         foreach ((Component leftComponent, Component rightComponent) in lhs
+        //             .GetComponents<Component>()
+        //             .Zip(rhs.GetComponents<Component>(), (a, b) => (a, b)))
+        //         {
+        //             result.Add(leftComponent, rightComponent);
+        //         }
+
+        //         foreach ((GameObject leftGameObject, GameObject rightGameObject) in lhs
+        //             .GetChildren()
+        //             .Zip(rhs.GetChildren(), (a, b) => (a, b)))
+        //         {
+        //             TraverseGameObjects(leftGameObject, rightGameObject);
+        //         }
+        //     }
+
+        //     return result;
+        // }
+
+        private static void Copy(
+            GameObject reference, GameObject target, Dictionary<Object, Object> referenceToTargetMap)
+        {
+            referenceToTargetMap.Add(reference, target);
+
             Component[] existingComponents = target.GetComponents<Component>();
+            //we have a checkpoint under the assumption that reference was originally a modification of target
+            //and did relatively sane modifications. we could hypothetically find the first unmatched component for
+            //the given type, but things could end up looking weird in some cases, or perhaps desirable in others.
             int checkpointIndex = 0;
             List<Component> matchedComponents = new List<Component>();
             foreach (Component referenceComponent in reference.GetComponents<Component>())
             {
-                //TODO: add logic for known vrc components like pb
-                //the problem with handling components is that they have no identifier, though specific components may
-                //(such as pb components and their target bones/objects)
-                //perhaps the best automatic thing we can do is assume the order was never changed and add/remove
-                //based on the components' types we encounter
-                //TODO: add an option to only add components
-                //TODO: probably not a useful enough tool to do it, but add ux to allow users to resolve issues manually
-                //TODO: for the copying we do, find a matching object reference. probably needs to be done in a second pass,
-                //since it may depend on gameobjects that do not yet exist.
+                //TODO: add an option to only add components?
 
-                //TODO: move the other logic we have for transform component here
-                //will prob do it around when we support other component types
+                //TODO: remove the two cases of special transform component handling,
+                //since generic component copying and parent setting should work just fine
                 if (referenceComponent.GetType() == typeof(Transform))
                 {
-                    matchedComponents.Add(existingComponents.First(c => c.GetType() == typeof(Transform)));
+                    Transform existingTransform =
+                        (Transform)existingComponents.Single(c => c.GetType() == typeof(Transform));
+                    referenceToTargetMap.Add(referenceComponent, existingTransform);
+                    matchedComponents.Add(existingTransform);
                     continue;
                 }
 
@@ -61,6 +127,7 @@ namespace EZUtils.RepackPrefab
                     if (referenceComponent.GetType() == existingComponent.GetType())
                     {
                         checkpointIndex = index;
+                        referenceToTargetMap.Add(referenceComponent, existingComponent);
                         matchedComponents.Add(existingComponent);
 
                         EditorUtility.CopySerialized(referenceComponent, existingComponent);
@@ -72,11 +139,11 @@ namespace EZUtils.RepackPrefab
                 }
                 if (existingComponent == null)
                 {
-                    EditorUtility.CopySerialized(
-                        referenceComponent,
-                        target.AddComponent(referenceComponent.GetType()));
-                    //updating existingComponents is not necessary or desired, since it should never come up as a match
-                    //from reference components
+                    Component newComponent = target.AddComponent(referenceComponent.GetType());
+                    referenceToTargetMap.Add(referenceComponent, newComponent);
+                    EditorUtility.CopySerialized(referenceComponent, newComponent);
+                    //even though we added a component to target, updating existingComponents is not necessary
+                    //after all, we dont need it to be an eligible match for CopySerialized since we just did it
                 }
             }
 
@@ -84,40 +151,45 @@ namespace EZUtils.RepackPrefab
                 existingComponents.Where(c => !matchedComponents.Contains(c));
             foreach (Component unmatchedComponent in unmatchedComponents)
             {
-                UnityEngine.Object.DestroyImmediate(unmatchedComponent);
+                Object.DestroyImmediate(unmatchedComponent);
             }
 
-            GameObject[] existingGameObjects = target.GetChildren().ToArray();
+            GameObject[] existingTargetChildren = target.GetChildren().ToArray();
             //key is based on target so we can look up the matching reference later
-            Dictionary<GameObject, GameObject> matchedGameObjects = new Dictionary<GameObject, GameObject>();
+            Dictionary<GameObject, GameObject> targetToReferenceGameObjects = new Dictionary<GameObject, GameObject>();
             foreach (GameObject referenceGameObject in reference.GetChildren())
             {
-                GameObject existingGameObject =
-                    existingGameObjects.FirstOrDefault(go => go.name == referenceGameObject.name);
+                GameObject existingTargetChild =
+                    existingTargetChildren.FirstOrDefault(go => go.name == referenceGameObject.name);
 
-                if (existingGameObject == null)
+                if (existingTargetChild == null)
                 {
-                    GameObject newGameObject = new GameObject(referenceGameObject.name);
-                    EditorUtility.CopySerialized(referenceGameObject.transform, newGameObject.transform);
-                    newGameObject.transform.SetParent(target.transform);
+                    //referenceToTargetMap gets updated in the next recursive call, so no need to update here
+                    GameObject newTargetChild = new GameObject(referenceGameObject.name);
+                    EditorUtility.CopySerialized(referenceGameObject.transform, newTargetChild.transform);
+                    newTargetChild.transform.SetParent(target.transform);
+                    targetToReferenceGameObjects.Add(newTargetChild, referenceGameObject);
                 }
                 else
                 {
-                    matchedGameObjects.Add(existingGameObject, referenceGameObject);
+                    targetToReferenceGameObjects.Add(existingTargetChild, referenceGameObject);
                 }
             }
 
             foreach (GameObject gameObject in target.GetChildren())
             {
-                if (!matchedGameObjects.TryGetValue(gameObject, out GameObject referenceGameObject))
+                if (!targetToReferenceGameObjects.TryGetValue(gameObject, out GameObject referenceGameObject))
                 {
+                    //in this case, the target -- the modified version we're trying to reflect onto a base prefab --
+                    //has a gameobject not on the reference, meaning the reference removed a game object formerly
+                    //on the base prefab.
                     //can't remove gameobjects from a prefab. might normally just deactivate them, but,
                     //for vrc perf rating stuff, removing the components is better
                     ClearAllComponents(gameObject);
                 }
                 else
                 {
-                    Copy(referenceGameObject, gameObject);
+                    Copy(referenceGameObject, gameObject, referenceToTargetMap);
                 }
             }
 
@@ -129,7 +201,7 @@ namespace EZUtils.RepackPrefab
                     //than to just leave them be
                     if (component.GetType() == typeof(Transform)) continue;
 
-                    UnityEngine.Object.DestroyImmediate(component);
+                    Object.DestroyImmediate(component);
                 }
                 foreach (GameObject child in gameObject.GetChildren())
                 {
