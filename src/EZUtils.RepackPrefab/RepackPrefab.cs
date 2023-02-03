@@ -9,6 +9,9 @@ namespace EZUtils.RepackPrefab
 
     using Object = UnityEngine.Object;
 
+    //TODO: undo support
+    //TODO: make ui sensible
+    //TODO: not sure the component erasure goes all the way down the hierarchy
     public static class RepackPrefab
     {
         public static GameObject Repack(GameObject referenceObject, GameObject referencePrefab)
@@ -141,17 +144,23 @@ namespace EZUtils.RepackPrefab
                 }
                 else if (PrefabUtility.IsAnyPrefabInstanceRoot(referenceGameObject))
                 {
-                    GameObject prefabRoot = PrefabUtility.GetCorrespondingObjectFromOriginalSource(referenceGameObject);
+                    GameObject prefabRoot = PrefabUtility.GetCorrespondingObjectFromSource(referenceGameObject);
                     GameObject newTargetChild = (GameObject)PrefabUtility.InstantiatePrefab(
                         prefabRoot, target.transform);
                     newTargetChild.name = referenceGameObject.name;
                     targetToReferenceGameObjects.Add(newTargetChild, referenceGameObject);
 
-                    // PropertyModification[] modifications = PrefabUtility.GetPropertyModifications(existingTargetChild);
-                    // PrefabUtility.SetPropertyModifications(newTargetChild, modifications);
-
-                    // var addedComponents = PrefabUtility.GetAddedComponents(existingTargetChild);
-                    // PrefabUtility.compon
+                    //InstantiatePrefab only created a new instance of the prefab. in general, yet to be copied are
+                    //component modifications and added/removed components, objects.
+                    //for new objects and components, we already have logic to add and remove them.
+                    //though note that removal support is only a thing in unity 2022+ apparently.
+                    //
+                    //for modified components, we of course have that logic as well. however, these changes don't seem
+                    //to stick. didn't dig into it, but it's perhaps due to the lack of a
+                    //RecordPrefabInstancePropertyModifications call. there isn't a pretty place to make this call,
+                    //but Get/SetPropertyModifications works just as well!
+                    PropertyModification[] modifications = PrefabUtility.GetPropertyModifications(referenceGameObject);
+                    PrefabUtility.SetPropertyModifications(newTargetChild, modifications);
                 }
                 else
                 {
