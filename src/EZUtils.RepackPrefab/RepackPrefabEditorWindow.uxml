@@ -11,8 +11,10 @@
   <VisualElement>
     <Style src="RepackPrefabEditorWindow.uss" />
 
-    <editor:ObjectField name="referenceObject" />
-    <editor:ObjectField name="referencePrefab" allow-scene-objects="false" />
-    <Button name="repackPrefab" text="Repack prefab" />
+    <Label text="Object to create prefab out of" />
+    <editor:ObjectField name="sourceObject" />
+    <Label text="Existing prefab to use as base" />
+    <editor:ObjectField name="basePrefab" allow-scene-objects="false" />
+    <Button name="repackPrefab" text="Recreate as prefab" />
   </VisualElement>
 </UXML>

@@ -10,7 +10,6 @@ namespace EZUtils.RepackPrefab
     using Object = UnityEngine.Object;
 
     //TODO: undo support
-    //TODO: make ui sensible
     //TODO: not sure the component erasure goes all the way down the hierarchy
     //TODO: perhaps ditch static
     public static class RepackPrefab
