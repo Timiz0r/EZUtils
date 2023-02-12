@@ -10,6 +10,8 @@ namespace EZUtils.RepackPrefab.Tests
         public static readonly string TestArtifactRootFolder = "Assets/RepackPrefabTest";
         public static void StandardTearDown()
         {
+            //not sure if it's the newer UTF or not, but the gameobject destruction does not appear to be needed
+            //the asset deletion, however, is still needed
             GameObject dummy = new GameObject();
             foreach (GameObject obj in dummy.scene.GetRootGameObjects().Cast<GameObject>())
             {

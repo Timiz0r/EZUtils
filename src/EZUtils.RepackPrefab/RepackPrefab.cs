@@ -12,33 +12,34 @@ namespace EZUtils.RepackPrefab
     //TODO: undo support
     //TODO: make ui sensible
     //TODO: not sure the component erasure goes all the way down the hierarchy
+    //TODO: perhaps ditch static
     public static class RepackPrefab
     {
-        public static GameObject Repack(GameObject referenceObject, GameObject referencePrefab)
+        public static GameObject Repack(GameObject sourceObject, GameObject basePrefab)
         {
-            if (!AssetDatabase.Contains(referencePrefab)) throw new InvalidOperationException(
-                $"{nameof(referencePrefab)} '{referencePrefab.name}' is not a prefab.");
+            if (!AssetDatabase.Contains(basePrefab)) throw new InvalidOperationException(
+                $"{nameof(basePrefab)} '{basePrefab.name}' is not a prefab.");
 
-            Dictionary<Object, Object> referenceToTargetMap = new Dictionary<Object, Object>();
-            GameObject newPrefab = (GameObject)PrefabUtility.InstantiatePrefab(referencePrefab);
+            Dictionary<Object, Object> sourceToNewMap = new Dictionary<Object, Object>();
+            GameObject newPrefab = (GameObject)PrefabUtility.InstantiatePrefab(basePrefab);
             //TODO: do better with names here. also in testutils.
             newPrefab.name = $"{newPrefab.name} Variant";
 
-            Copy(referenceObject, newPrefab, referenceToTargetMap);
+            Copy(sourceObject, newPrefab, sourceToNewMap);
 
-            ReplaceObjectReferences(newPrefab, referenceToTargetMap);
+            ReplaceObjectReferences(newPrefab, sourceToNewMap);
 
-            string referencePrefabPath = AssetDatabase.GetAssetPath(referencePrefab);
+            string basePrefabPath = AssetDatabase.GetAssetPath(basePrefab);
             string path = AssetDatabase.GenerateUniqueAssetPath(
                 Path.Combine(
-                    Path.GetDirectoryName(referencePrefabPath),
-                    $"{Path.GetFileNameWithoutExtension(referencePrefabPath)} Variant.prefab"));
+                    Path.GetDirectoryName(basePrefabPath),
+                    $"{Path.GetFileNameWithoutExtension(basePrefabPath)} Variant.prefab"));
             _ = PrefabUtility.SaveAsPrefabAssetAndConnect(newPrefab, path, InteractionMode.AutomatedAction);
 
             return newPrefab;
         }
 
-        private static void ReplaceObjectReferences(GameObject target, Dictionary<Object, Object> referenceToTargetMap)
+        private static void ReplaceObjectReferences(GameObject target, Dictionary<Object, Object> sourceToNewMap)
         {
             //should be hard to do synchronized iteration because of prefabs, so not even trying it
             foreach (Component targetComponent in target.GetComponents<Component>())
@@ -46,13 +47,15 @@ namespace EZUtils.RepackPrefab
                 using (SerializedObject serializedTarget = new SerializedObject(targetComponent))
                 {
                     SerializedProperty targetIterator = serializedTarget.GetIterator();
-                    while (targetIterator.Next(enterChildren: true))
+                    //note: enterChildren really only enters arrays, structs, and whatnot, and doesnt traverse a whole tree
+                    //there isn't currently a scenario where we want to traverse a tree of references
+                    while (targetIterator.NextVisible(enterChildren: true))
                     {
                         if (targetIterator.propertyType != SerializedPropertyType.ObjectReference
                             || targetIterator.objectReferenceValue == null) continue;
                         if (!targetIterator.editable) continue;
 
-                        if (referenceToTargetMap.TryGetValue(targetIterator.objectReferenceValue, out Object targetObject))
+                        if (sourceToNewMap.TryGetValue(targetIterator.objectReferenceValue, out Object targetObject))
                         {
                             targetIterator.objectReferenceValue = targetObject;
                         }
@@ -64,19 +67,19 @@ namespace EZUtils.RepackPrefab
 
             foreach (GameObject child in target.GetChildren())
             {
-                ReplaceObjectReferences(child, referenceToTargetMap);
+                ReplaceObjectReferences(child, sourceToNewMap);
             }
         }
 
-        private static void Copy(
-            GameObject reference, GameObject target, Dictionary<Object, Object> referenceToTargetMap)
+        private static void Copy(GameObject reference, GameObject target, Dictionary<Object, Object> sourceToNewMap)
         {
-            referenceToTargetMap.Add(reference, target);
+            sourceToNewMap.Add(reference, target);
 
             Component[] existingComponents = target.GetComponents<Component>();
             //we have a checkpoint under the assumption that reference was originally a modification of target
-            //and did relatively sane modifications. we could hypothetically find the first unmatched component for
-            //the given type, but things could end up looking weird in some cases, or perhaps desirable in others.
+            //and did relatively sane modifications and didnt mix up ordering.
+            //we could hypothetically find the first unmatched component for the given type,
+            //but things could end up looking weird in some cases, though perhaps desirable in others.
             int checkpointIndex = 0;
             List<Component> matchedComponents = new List<Component>();
             foreach (Component referenceComponent in reference.GetComponents<Component>())
@@ -89,7 +92,7 @@ namespace EZUtils.RepackPrefab
                 {
                     Transform existingTransform =
                         (Transform)existingComponents.Single(c => c.GetType() == typeof(Transform));
-                    referenceToTargetMap.Add(referenceComponent, existingTransform);
+                    sourceToNewMap.Add(referenceComponent, existingTransform);
                     matchedComponents.Add(existingTransform);
                     continue;
                 }
@@ -102,7 +105,7 @@ namespace EZUtils.RepackPrefab
                     if (referenceComponent.GetType() == existingComponent.GetType())
                     {
                         checkpointIndex = index;
-                        referenceToTargetMap.Add(referenceComponent, existingComponent);
+                        sourceToNewMap.Add(referenceComponent, existingComponent);
                         matchedComponents.Add(existingComponent);
 
                         EditorUtility.CopySerialized(referenceComponent, existingComponent);
@@ -115,16 +118,14 @@ namespace EZUtils.RepackPrefab
                 if (existingComponent == null)
                 {
                     Component newComponent = target.AddComponent(referenceComponent.GetType());
-                    referenceToTargetMap.Add(referenceComponent, newComponent);
+                    sourceToNewMap.Add(referenceComponent, newComponent);
                     EditorUtility.CopySerialized(referenceComponent, newComponent);
                     //even though we added a component to target, updating existingComponents is not necessary
                     //after all, we dont need it to be an eligible match for CopySerialized since we just did it
                 }
             }
 
-            IEnumerable<Component> unmatchedComponents =
-                existingComponents.Where(c => !matchedComponents.Contains(c));
-            foreach (Component unmatchedComponent in unmatchedComponents)
+            foreach (Component unmatchedComponent in existingComponents.Where(c => !matchedComponents.Contains(c)))
             {
                 Object.DestroyImmediate(unmatchedComponent);
             }
@@ -142,7 +143,8 @@ namespace EZUtils.RepackPrefab
                     targetToReferenceGameObjects.Add(existingTargetChild, referenceGameObject);
                     continue;
                 }
-                else if (PrefabUtility.IsAnyPrefabInstanceRoot(referenceGameObject))
+
+                if (PrefabUtility.IsAnyPrefabInstanceRoot(referenceGameObject))
                 {
                     GameObject prefabRoot = PrefabUtility.GetCorrespondingObjectFromSource(referenceGameObject);
                     GameObject newTargetChild = (GameObject)PrefabUtility.InstantiatePrefab(
@@ -150,17 +152,17 @@ namespace EZUtils.RepackPrefab
                     newTargetChild.name = referenceGameObject.name;
                     targetToReferenceGameObjects.Add(newTargetChild, referenceGameObject);
 
-                    //InstantiatePrefab only created a new instance of the prefab. in general, yet to be copied are
-                    //component modifications and added/removed components, objects.
+                    //InstantiatePrefab only created a new instance of the prefab.
+                    //component modifications, added/removed components, and objects have not been copied.
                     //for new objects and components, we already have logic to add and remove them.
-                    //though note that removal support is only a thing in unity 2022+ apparently.
+                    //though note that true object removal support is only a thing in unity 2022+ apparently.
                     //
                     //for modified components, we of course have that logic as well. however, these changes don't seem
                     //to stick. didn't dig into it, but it's perhaps due to the lack of a
                     //RecordPrefabInstancePropertyModifications call. there isn't a pretty place to make this call,
                     //but Get/SetPropertyModifications works just as well!
-                    PropertyModification[] modifications = PrefabUtility.GetPropertyModifications(referenceGameObject);
-                    PrefabUtility.SetPropertyModifications(newTargetChild, modifications);
+                    PrefabUtility.SetPropertyModifications(
+                        newTargetChild, PrefabUtility.GetPropertyModifications(referenceGameObject));
                 }
                 else
                 {
@@ -179,16 +181,17 @@ namespace EZUtils.RepackPrefab
                     //in this case, the target -- the modified version we're trying to reflect onto a base prefab --
                     //has a gameobject not on the reference, meaning the reference removed a game object formerly
                     //on the base prefab.
-                    //can't remove gameobjects from a prefab. might normally just deactivate them, but,
+                    //can't remove gameobjects from a prefab until unity 2022. might normally just deactivate them, but,
                     //for vrc perf rating stuff, removing the components is better
                     ClearAllComponents(gameObject);
                 }
                 else
                 {
-                    Copy(referenceGameObject, gameObject, referenceToTargetMap);
+                    Copy(referenceGameObject, gameObject, sourceToNewMap);
                 }
             }
 
+            //TODO: test that these make it into the prefab
             void ClearAllComponents(GameObject gameObject)
             {
                 foreach (Component component in gameObject.GetComponents<Component>())

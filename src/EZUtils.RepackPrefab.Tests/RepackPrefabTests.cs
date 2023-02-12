@@ -1,10 +1,12 @@
-﻿namespace EZUtils.RepackPrefab.Tests
+namespace EZUtils.RepackPrefab.Tests
 {
     using System.Linq;
     using NUnit.Framework;
     using UnityEditor;
     using UnityEngine;
 
+    //of course, unit tests should avoid side-effects such as asset creation
+    //so consider these integration tests
     public class RepackPrefabTests
     {
         [TearDown]
