@@ -191,7 +191,9 @@ namespace EZUtils.RepackPrefab
                     SerializedProperty targetIterator = serializedTarget.GetIterator();
                     //note: enterChildren really only enters arrays, structs, and whatnot, and doesnt traverse a whole tree
                     //there isn't currently a scenario where we want to traverse a tree of references
-                    while (targetIterator.NextVisible(enterChildren: true))
+                    //note that nextvisible, in manual testing, caused weird issues with skinnedmeshrenderer
+                    //dont really understand the issue enough to have a test case, but Next seems to work fine
+                    while (targetIterator.Next(enterChildren: true))
                     {
                         if (targetIterator.propertyType != SerializedPropertyType.ObjectReference
                             || targetIterator.objectReferenceValue == null) continue;
