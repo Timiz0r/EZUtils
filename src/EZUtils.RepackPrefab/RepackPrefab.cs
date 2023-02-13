@@ -119,7 +119,7 @@ namespace EZUtils.RepackPrefab
 
                 if (PrefabUtility.IsAnyPrefabInstanceRoot(referenceGameObject))
                 {
-                    GameObject prefabRoot = PrefabUtility.GetCorrespondingObjectFromSource(referenceGameObject);
+                    GameObject prefabRoot = PrefabUtility.GetCorrespondingObjectFromOriginalSource(referenceGameObject);
                     GameObject newTargetChild = (GameObject)PrefabUtility.InstantiatePrefab(
                         prefabRoot, target.transform);
                     newTargetChild.name = referenceGameObject.name;
