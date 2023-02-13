@@ -9,64 +9,51 @@ namespace EZUtils.RepackPrefab
 
     using Object = UnityEngine.Object;
 
-    //TODO: undo support
-    //TODO: not sure the component erasure goes all the way down the hierarchy
     //TODO: perhaps ditch static
     public static class RepackPrefab
     {
         public static GameObject Repack(GameObject sourceObject, GameObject basePrefab)
         {
-            if (!AssetDatabase.Contains(basePrefab)) throw new InvalidOperationException(
-                $"{nameof(basePrefab)} '{basePrefab.name}' is not a prefab.");
+            bool exceptionCaught = false;
+            Undo.IncrementCurrentGroup();
+            int undoGroup = Undo.GetCurrentGroup();
 
-            Dictionary<Object, Object> sourceToNewMap = new Dictionary<Object, Object>();
-            GameObject newPrefab = (GameObject)PrefabUtility.InstantiatePrefab(basePrefab);
-            //TODO: do better with names here. also in testutils.
-            newPrefab.name = $"{newPrefab.name} Variant";
-
-            Copy(sourceObject, newPrefab, sourceToNewMap);
-
-            ReplaceObjectReferences(newPrefab, sourceToNewMap);
-
-            string basePrefabPath = AssetDatabase.GetAssetPath(basePrefab);
-            string path = AssetDatabase.GenerateUniqueAssetPath(
-                Path.Combine(
-                    Path.GetDirectoryName(basePrefabPath),
-                    $"{Path.GetFileNameWithoutExtension(basePrefabPath)} Variant.prefab"));
-            _ = PrefabUtility.SaveAsPrefabAssetAndConnect(newPrefab, path, InteractionMode.AutomatedAction);
-
-            return newPrefab;
-        }
-
-        private static void ReplaceObjectReferences(GameObject target, Dictionary<Object, Object> sourceToNewMap)
-        {
-            //should be hard to do synchronized iteration because of prefabs, so not even trying it
-            foreach (Component targetComponent in target.GetComponents<Component>())
+            try
             {
-                using (SerializedObject serializedTarget = new SerializedObject(targetComponent))
-                {
-                    SerializedProperty targetIterator = serializedTarget.GetIterator();
-                    //note: enterChildren really only enters arrays, structs, and whatnot, and doesnt traverse a whole tree
-                    //there isn't currently a scenario where we want to traverse a tree of references
-                    while (targetIterator.NextVisible(enterChildren: true))
-                    {
-                        if (targetIterator.propertyType != SerializedPropertyType.ObjectReference
-                            || targetIterator.objectReferenceValue == null) continue;
-                        if (!targetIterator.editable) continue;
+                if (!AssetDatabase.Contains(basePrefab)) throw new InvalidOperationException(
+                    $"{nameof(basePrefab)} '{basePrefab.name}' is not a prefab.");
 
-                        if (sourceToNewMap.TryGetValue(targetIterator.objectReferenceValue, out Object targetObject))
-                        {
-                            targetIterator.objectReferenceValue = targetObject;
-                        }
-                    }
+                Dictionary<Object, Object> sourceToNewMap = new Dictionary<Object, Object>();
+                GameObject newPrefab = (GameObject)PrefabUtility.InstantiatePrefab(basePrefab);
+                GameObjectUtility.EnsureUniqueNameForSibling(newPrefab);
+                Undo.RegisterCreatedObjectUndo(newPrefab, $"Created new instance of '{basePrefab.name}'");
 
-                    _ = serializedTarget.ApplyModifiedPropertiesWithoutUndo();
-                }
+                Copy(sourceObject, newPrefab, sourceToNewMap);
+
+                ReplaceObjectReferences(newPrefab, sourceToNewMap);
+
+                string basePrefabPath = AssetDatabase.GetAssetPath(basePrefab);
+                string path = AssetDatabase.GenerateUniqueAssetPath(
+                    Path.Combine(
+                        Path.GetDirectoryName(basePrefabPath),
+                        $"{Path.GetFileNameWithoutExtension(basePrefabPath)} Variant.prefab"));
+                _ = PrefabUtility.SaveAsPrefabAssetAndConnect(newPrefab, path, InteractionMode.AutomatedAction);
+
+                return newPrefab;
             }
-
-            foreach (GameObject child in target.GetChildren())
+            catch when ((exceptionCaught = true) != true) //maintain stack
             {
-                ReplaceObjectReferences(child, sourceToNewMap);
+                //we could revert the undo group, but it may be useful for debugging to leave it
+                //and the user has options, including undoing manually or fixing the issue if user-generated
+                //though for finalizing assets we prefer user-generated issues to be impossible
+                throw new InvalidOperationException("literally impossible but gets rid of a warning");
+            }
+            finally
+            {
+                Undo.SetCurrentGroupName(exceptionCaught
+                    ? $"Failed prefab repack of '{sourceObject.name}' against '{basePrefab.name}'"
+                    : $"Prefab repack of '{sourceObject.name}' against '{basePrefab.name}'");
+                Undo.CollapseUndoOperations(undoGroup);
             }
         }
 
@@ -83,19 +70,6 @@ namespace EZUtils.RepackPrefab
             List<Component> matchedComponents = new List<Component>();
             foreach (Component referenceComponent in reference.GetComponents<Component>())
             {
-                //TODO: add an option to only add components?
-
-                //TODO: remove the two cases of special transform component handling,
-                //since generic component copying and parent setting should work just fine
-                if (referenceComponent.GetType() == typeof(Transform))
-                {
-                    Transform existingTransform =
-                        (Transform)existingComponents.Single(c => c.GetType() == typeof(Transform));
-                    sourceToNewMap.Add(referenceComponent, existingTransform);
-                    matchedComponents.Add(existingTransform);
-                    continue;
-                }
-
                 Component existingComponent = null;
                 int index = checkpointIndex;
                 while (existingComponent == null && index < existingComponents.Length)
@@ -190,13 +164,12 @@ namespace EZUtils.RepackPrefab
                 }
             }
 
-            //TODO: test that these make it into the prefab
             void ClearAllComponents(GameObject gameObject)
             {
                 foreach (Component component in gameObject.GetComponents<Component>())
                 {
-                    //cant get rid of the transform ofc, but also dont really have anything better to do with values
-                    //than to just leave them be
+                    //cant get rid of the transform ofc
+                    //but also dont really have anything better to do with values (pos, etc) than to just leave them be
                     if (component.GetType() == typeof(Transform)) continue;
 
                     Object.DestroyImmediate(component);
@@ -205,6 +178,38 @@ namespace EZUtils.RepackPrefab
                 {
                     ClearAllComponents(child);
                 }
+            }
+        }
+
+        private static void ReplaceObjectReferences(GameObject target, Dictionary<Object, Object> sourceToNewMap)
+        {
+            //should be hard to do synchronized iteration because of prefabs, so not even trying it
+            foreach (Component targetComponent in target.GetComponents<Component>())
+            {
+                using (SerializedObject serializedTarget = new SerializedObject(targetComponent))
+                {
+                    SerializedProperty targetIterator = serializedTarget.GetIterator();
+                    //note: enterChildren really only enters arrays, structs, and whatnot, and doesnt traverse a whole tree
+                    //there isn't currently a scenario where we want to traverse a tree of references
+                    while (targetIterator.NextVisible(enterChildren: true))
+                    {
+                        if (targetIterator.propertyType != SerializedPropertyType.ObjectReference
+                            || targetIterator.objectReferenceValue == null) continue;
+                        if (!targetIterator.editable) continue;
+
+                        if (sourceToNewMap.TryGetValue(targetIterator.objectReferenceValue, out Object targetObject))
+                        {
+                            targetIterator.objectReferenceValue = targetObject;
+                        }
+                    }
+
+                    _ = serializedTarget.ApplyModifiedPropertiesWithoutUndo();
+                }
+            }
+
+            foreach (GameObject child in target.GetChildren())
+            {
+                ReplaceObjectReferences(child, sourceToNewMap);
             }
         }
     }

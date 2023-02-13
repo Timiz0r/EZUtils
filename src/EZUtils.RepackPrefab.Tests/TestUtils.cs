@@ -25,7 +25,7 @@ namespace EZUtils.RepackPrefab.Tests
         {
             _ = Directory.CreateDirectory(TestArtifactRootFolder);
             string path = AssetDatabase.GenerateUniqueAssetPath(
-                Path.Combine(TestArtifactRootFolder, $"{gameObject.name}.prefab"));
+                Path.Combine(TestArtifactRootFolder, $"{gameObject.name} Variant.prefab"));
             return PrefabUtility.SaveAsPrefabAssetAndConnect(gameObject, path, InteractionMode.AutomatedAction);
         }
     }
