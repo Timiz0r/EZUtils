@@ -28,9 +28,17 @@ jobs:
           EOF
           echo Generated .npmrc:
           cat ~/.npmrc
+
       - run: npm --no-git-tag-version version ${{github.ref_name}}
         working-directory: ./src/EZUtils.PackageManager
       - run: npm publish --loglevel=silly
         working-directory: ./src/EZUtils.PackageManager
+        env:
+          AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
+
+      - run: npm --no-git-tag-version version ${{github.ref_name}}
+        working-directory: ./src/EZUtils.RepackPrefab
+      - run: npm publish --loglevel=silly
+        working-directory: ./src/EZUtils.RepackPrefab
         env:
           AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
