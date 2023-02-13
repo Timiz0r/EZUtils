@@ -1,17 +1,33 @@
-name: Publish package on release
+name: Create release
+run-name: Create release for ${{inputs.package}}-${{inputs.version}}
 
 on:
-  release:
-    types: [created]
   workflow_dispatch:
+    inputs:
+      package:
+        description: 'Target package'
+        required: true
+        type: choice
+        options:
+        - EZUtils.PackageManager
+        - EZUtils.RepackPrefab
+      version:
+        description: 'Version to publish'
+        required: true
+        type: string
+      is_prerelease:
+        description: 'Is pre-release'
+        required: true
+        type: boolean
+        default: true
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+#todo: some solution to publishing only packages that have changed, including changes in dependencies
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-      contents: read
+      contents: write
 
     steps:
       - uses: actions/checkout@v3
@@ -28,17 +44,26 @@ jobs:
           EOF
           echo Generated .npmrc:
           cat ~/.npmrc
-
-      - run: npm --no-git-tag-version version ${{github.ref_name}}
-        working-directory: ./src/EZUtils.PackageManager
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          npm --no-git-tag-version version ${{inputs.version}}
+          git add package.json
+          git commit -m "Generate release ${{inputs.package}}-${{inputs.version}}"
+          git tag ${{inputs.package}}-${{inputs.version}}
+          git push origin
+          git push --tags
+        working-directory: ./src/${{inputs.package}}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: npm publish --loglevel=silly
-        working-directory: ./src/EZUtils.PackageManager
+        working-directory: ./src/${{inputs.package}}
         env:
           AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
 
-      - run: npm --no-git-tag-version version ${{github.ref_name}}
-        working-directory: ./src/EZUtils.RepackPrefab
-      - run: npm publish --loglevel=silly
-        working-directory: ./src/EZUtils.RepackPrefab
+      - uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{inputs.package}}-${{inputs.version}}
+          prerelease: ${{inputs.is_prerelease}}
         env:
-          AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
