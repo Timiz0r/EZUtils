@@ -1,5 +1,6 @@
 namespace EZUtils.RepackPrefab
 {
+    using System.Linq;
     using System.Reflection;
     using UnityEditor.UIElements;
     using UnityEngine;
@@ -52,12 +53,20 @@ namespace EZUtils.RepackPrefab
             using (ChangeEvent<T> newEvent = ChangeEvent<T>.GetPooled((T)evt.previousValue, (T)evt.newValue))
             {
                 foreach (FieldInfo fieldInfo in typeof(EventBase)
-                    .GetFields(BindingFlags.NonPublic | BindingFlags.Instance))
+                    .GetFields(BindingFlags.NonPublic | BindingFlags.Instance)
+                    .Where(fi => fieldsToCopy.Contains(fi.Name)))
                 {
                     fieldInfo.SetValue(newEvent, fieldInfo.GetValue(evt));
                 }
                 HandleEvent(newEvent);
             }
         }
+        private static readonly string[] fieldsToCopy = new string[]
+        {
+            "m_target",
+            "<timestamp>k__BackingField",
+            "<lifeCycleStatus>k__BackingField",
+            "<propagationPhase>k__BackingField"
+        };
     }
 }
