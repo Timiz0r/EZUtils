@@ -5,7 +5,7 @@ charset = utf-8
 indent_style = space
 indent_size = 4
 trim_trailing_whitespace = true
-
+guidelines = 120,130
 
 [*.json]
 indent_size = 2

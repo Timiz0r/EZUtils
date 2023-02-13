@@ -8,6 +8,27 @@
         "com.unity.nuget.newtonsoft-json": "2.0.2"
       }
     },
+    "com.timiz0r.ezutils.repackprefab": {
+      "version": "file:../src/EZUtils.RepackPrefab",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
+    "com.timiz0r.ezutils.repackprefab.tests": {
+      "version": "file:../src/EZUtils.RepackPrefab.Tests",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
+    "com.unity.burst": {
+      "version": "1.4.11",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.mathematics": "1.2.1"
+      },
+      "url": "https://packages.unity.com"
+    },
     "com.unity.collab-proxy": {
       "version": "1.10.2",
       "depth": 0,
@@ -16,8 +37,8 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ext.nunit": {
-      "version": "1.0.6",
-      "depth": 1,
+      "version": "2.0.3",
+      "depth": 0,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
@@ -32,7 +53,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "2.0.16",
+      "version": "2.0.17",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -47,6 +68,13 @@
       "dependencies": {},
       "hash": "aca83a6ba054d4a97d3848f1937c28846fe6d018"
     },
+    "com.unity.mathematics": {
+      "version": "1.2.5",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
     "com.unity.nuget.newtonsoft-json": {
       "version": "2.0.2",
       "depth": 0,
@@ -55,11 +83,11 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.test-framework": {
-      "version": "1.1.29",
+      "version": "2.0.1-exp.1",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.unity.ext.nunit": "1.0.6",
+        "com.unity.ext.nunit": "2.0.2",
         "com.unity.modules.imgui": "1.0.0",
         "com.unity.modules.jsonserialize": "1.0.0"
       },
@@ -93,6 +121,16 @@
       "dependencies": {
         "com.unity.modules.ui": "1.0.0",
         "com.unity.modules.imgui": "1.0.0"
+      }
+    },
+    "com.vrchat.base": {
+      "version": "file:com.vrchat.base",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.burst": "1.4.11",
+        "com.unity.mathematics": "1.2.5",
+        "com.unity.nuget.newtonsoft-json": "2.0.2"
       }
     },
     "com.unity.modules.ai": {
