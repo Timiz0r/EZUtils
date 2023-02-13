@@ -62,7 +62,11 @@ namespace EZUtils.PackageManager
             rootVisualElement.Q<Button>(name: "refreshPackages").clicked += async () => await Refresh();
 
             _ = preReleaseToggle.RegisterValueChangedCallback(
-                evt => EditorPrefs.SetBool("EZUtils.PackageManager.ShowPreReleasePackages", evt.newValue));
+                evt =>
+                {
+                    EditorPrefs.SetBool("EZUtils.PackageManager.ShowPreReleasePackages", evt.newValue);
+                    _ = Refresh();
+                });
             preReleaseToggle.SetValueWithoutNotify(
                 EditorPrefs.GetBool("EZUtils.PackageManager.ShowPreReleasePackages"));
 
