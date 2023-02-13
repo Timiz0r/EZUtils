@@ -1,7 +1,7 @@
 {
     "$schema": "../emptyschema.json",
     "name": "com.timiz0r.ezutils.repackprefab",
-    "version": "0.0.1-prerelease",
+    "version": "0.0.2-prerelease",
     "description": "A tool that takes an unpacked prefab that has been modified, plus a reference prefab, and produces a variant prefab.",
     "displayName": "EZUtils Repack Prefab",
     "unity": "2019.4",
