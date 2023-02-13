@@ -36,6 +36,7 @@ namespace EZUtils.PackageManager
                 //we specifically filter out prerelease here because, if a pre-release version is in use, we still
                 //want it in the result.
                 versions = versions.Where(v => showPreRelease || string.IsNullOrEmpty(v.PreRelease)).ToArray();
+                if (versions.Length == 0) versions = new[] { PackageVersion.Unavailable };
 
                 PackageInformation result = new PackageInformation(name, currentVersion, versions);
                 results.Add(result);
