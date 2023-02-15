@@ -27,23 +27,24 @@ namespace EZUtils.PackageManager
                 await UPMPackageClient.ListAsync(offlineMode: true);
             IReadOnlyList<PackageInformation> packages = await repo.ListAsync(showPreRelease: false);
 
-            await Install(TargetPackageName);
             await Install("com.timiz0r.ezutils.packagemanager");
+            await Install(TargetPackageName);
 
             File.Create(finishedFilePath).Dispose();
 
             Task Install(string packageName)
             {
-                if (installedPackages.Any(p => p.name == packageName))
-                {
-                    Debug.Log($"Package '{packageName}' is already installed.");
-                    return Task.CompletedTask;
-                }
-
                 PackageInformation targetPackage = packages.SingleOrDefault(p => p.Name == packageName);
                 if (targetPackage == null) throw new InvalidOperationException(
-                    $"Could not install package '{packageName}'.");
-                return repo.SetVersionAsync(targetPackage, targetPackage.Versions[0]);
+                    $"Could not install package '{packageName}' because it could not be found.");
+                if (!targetPackage.IsAvailable) throw new InvalidOperationException(
+                    $"Could not install package '{packageName}' because there are no available versions.");
+
+                PackageVersion targetVersion = targetPackage.Versions
+                    .OrderByDescending(v => v)
+                    .FirstOrDefault();
+
+                return repo.SetVersionAsync(targetPackage, targetVersion);
             }
         }
     }
