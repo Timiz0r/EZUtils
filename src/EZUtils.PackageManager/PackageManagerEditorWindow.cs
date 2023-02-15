@@ -15,7 +15,7 @@ namespace EZUtils.PackageManager
         private readonly PackageRepository packageRepository = new PackageRepository();
 
         [MenuItem("EZUtils/Package Manager", isValidateFunction: false, priority: 0)]
-        public static void PackageManager()
+        public static void ShowWindow()
         {
             PackageManagerEditorWindow window = GetWindow<PackageManagerEditorWindow>("EZUtils Package Manager");
             window.Show();

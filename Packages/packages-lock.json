@@ -20,6 +20,12 @@
       "source": "local",
       "dependencies": {}
     },
+    "com.timiz0r.ezutils.windowcloser": {
+      "version": "file:../src/EZUtils.WindowCloser",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.unity.burst": {
       "version": "1.4.11",
       "depth": 1,
