@@ -3,6 +3,7 @@
     "com.timiz0r.ezutils.packagemanager": "file:../src/EZUtils.PackageManager",
     "com.timiz0r.ezutils.repackprefab": "file:../src/EZUtils.RepackPrefab",
     "com.timiz0r.ezutils.repackprefab.tests": "file:../src/EZUtils.RepackPrefab.Tests",
+    "com.timiz0r.ezutils.mmdavatartools": "file:../src/EZUtils.MMDAvatarTools",
     "com.timiz0r.ezutils.windowcloser": "file:../src/EZUtils.WindowCloser",
     "com.unity.collab-proxy": "1.10.2",
     "com.unity.ext.nunit": "2.0.3",

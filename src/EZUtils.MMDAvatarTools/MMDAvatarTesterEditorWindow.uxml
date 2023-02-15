@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UXML
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="UnityEngine.UIElements"
+  xmlns:editor="UnityEditor.UIElements"
+  xsi:schemaLocation="
+    UnityEngine.UIElements ../../UIElementsSchema/UnityEngine.UIElements.fixed.xsd
+    UnityEditor.UIElements ../../UIElementsSchema/UnityEditor.UIElements.xsd">
+  <VisualElement>
+    <Style src="MMDAvatarTesterEditorWindow.uss" />
+
+    <VisualElement class="show-edit-mode">
+      <Label text="Please enter play mode to test your avatar." />
+    </VisualElement>
+
+    <VisualElement class="show-play-mode">
+      <editor:ObjectField name="targetAvatar" />
+      <editor:ObjectField name="targetAnimatorController" />
+      <Button class="show-not-running" name="start" text="Start" />
+      <Button class="show-running" name="stop" text="Stop" />
+    </VisualElement>
+  </VisualElement>
+</UXML>
