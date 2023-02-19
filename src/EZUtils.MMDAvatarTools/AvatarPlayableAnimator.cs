@@ -39,7 +39,71 @@ namespace EZUtils.MMDAvatarTools
             playableMixer = AnimationLayerMixerPlayable.Create(playableGraph, PlayableLayerCount);
             this.avatar = avatar;
 
-            foreach (var layer in avatar.baseAnimationLayers.Concat(avatar.specialAnimationLayers))
+            //TODO: clean this up, and see if we can use sdk to be the authoritative source
+            CustomAnimLayer[] baseLayers = avatar.baseAnimationLayers ?? new[]
+            {
+                new CustomAnimLayer()
+                {
+                    isDefault = true,
+                    isEnabled = false,
+                    mask = null,
+                    type = AnimLayerType.Base
+                },
+                new CustomAnimLayer()
+                {
+                    isDefault = true,
+                    isEnabled = false,
+                    mask = null,
+                    type = AnimLayerType.Additive
+                },
+                new CustomAnimLayer()
+                {
+                    isDefault = true,
+                    isEnabled = false,
+                    mask = null,
+                    type = AnimLayerType.Gesture
+                },
+                new CustomAnimLayer()
+                {
+                    isDefault = true,
+                    isEnabled = false,
+                    mask = null,
+                    type = AnimLayerType.Action
+                },
+                new CustomAnimLayer()
+                {
+                    isDefault = true,
+                    isEnabled = false,
+                    mask = null,
+                    type = AnimLayerType.FX
+                },
+            };
+            CustomAnimLayer[] specialLayers = avatar.specialAnimationLayers ?? new[]
+            {
+                new CustomAnimLayer()
+                {
+                    isDefault = true,
+                    isEnabled = false,
+                    mask = null,
+                    type = AnimLayerType.Sitting
+                },
+                new CustomAnimLayer()
+                {
+                    isDefault = true,
+                    isEnabled = false,
+                    mask = null,
+                    type = AnimLayerType.TPose
+                },
+                new CustomAnimLayer()
+                {
+                    isDefault = true,
+                    isEnabled = false,
+                    mask = null,
+                    type = AnimLayerType.IKPose
+                },
+            };
+
+            foreach (CustomAnimLayer layer in baseLayers.Concat(specialLayers))
             {
                 switch (layer.type)
                 {

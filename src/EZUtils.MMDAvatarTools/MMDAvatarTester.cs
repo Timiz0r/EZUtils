@@ -35,7 +35,7 @@ namespace EZUtils.MMDAvatarTools
 
         public void Stop()
         {
-            avatarPlayableAnimator.Destroy();
+            avatarPlayableAnimator?.Destroy();
             avatarPlayableAnimator = null;
         }
     }
