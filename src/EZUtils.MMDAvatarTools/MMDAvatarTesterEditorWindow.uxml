@@ -15,7 +15,7 @@
 
     <VisualElement class="show-play-mode">
       <editor:ObjectField name="targetAvatar" />
-      <editor:ObjectField name="targetAnimatorController" />
+      <editor:ObjectField name="targetAnimation" />
       <Button class="show-not-running" name="start" text="Start" />
       <Button class="show-running" name="stop" text="Stop" />
     </VisualElement>
