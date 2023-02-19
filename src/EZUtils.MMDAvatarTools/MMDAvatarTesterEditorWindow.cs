@@ -69,11 +69,16 @@ namespace EZUtils.MMDAvatarTools
                 validAvatarIsTargeted = targetAvatar.value != null;
                 EnableRunningIfPossible();
             });
+
             _ = targetAnimation.RegisterValueChangedCallback(_ =>
             {
                 animatorControllerIsTargeted = targetAnimation.value != null;
                 EnableRunningIfPossible();
             });
+            targetAnimation.SetValueWithoutNotify(
+                AssetDatabase.LoadAssetAtPath<AnimationClip>(
+                    "Packages/com.timiz0r.ezutils.mmdavatartools/mmdsample.anim"));
+
 
             void EnableRunningIfPossible()
                 => startButton.SetEnabled(validAvatarIsTargeted && animatorControllerIsTargeted);
