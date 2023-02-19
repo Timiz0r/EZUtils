@@ -6,6 +6,12 @@
       "source": "local",
       "dependencies": {}
     },
+    "com.timiz0r.ezutils.mmdavatartools.tests": {
+      "version": "file:../src/EZUtils.MMDAvatarTools.Tests",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.timiz0r.ezutils.packagemanager": {
       "version": "file:../src/EZUtils.PackageManager",
       "depth": 0,
