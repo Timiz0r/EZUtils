@@ -6,6 +6,7 @@
     "com.timiz0r.ezutils.mmdavatartools": "file:../src/EZUtils.MMDAvatarTools",
     "com.timiz0r.ezutils.mmdavatartools.tests": "file:../src/EZUtils.MMDAvatarTools.Tests",
     "com.timiz0r.ezutils.windowcloser": "file:../src/EZUtils.WindowCloser",
+    "com.timiz0r.ezutils.testutils": "file:../src/EZUtils.TestUtils",
     "com.unity.collab-proxy": "1.10.2",
     "com.unity.ext.nunit": "2.0.3",
     "com.unity.ide.rider": "1.2.1",

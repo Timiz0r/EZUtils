@@ -32,6 +32,12 @@
       "source": "local",
       "dependencies": {}
     },
+    "com.timiz0r.ezutils.testutils": {
+      "version": "file:../src/EZUtils.TestUtils",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.timiz0r.ezutils.windowcloser": {
       "version": "file:../src/EZUtils.WindowCloser",
       "depth": 0,

@@ -1,7 +1,7 @@
 namespace EZUtils.RepackPrefab.Tests
 {
-    using System.Collections.Generic;
     using System.Linq;
+    using EZUtils.TestUtils;
     using NUnit.Framework;
     using UnityEditor;
     using UnityEngine;
@@ -10,8 +10,14 @@ namespace EZUtils.RepackPrefab.Tests
     //so consider these integration tests
     public class RepackPrefabTests
     {
+        public static readonly string TestArtifactRootFolder = "Assets/RepackPrefabTest";
+
         [TearDown]
-        public void TearDown() => TestUtils.StandardTearDown();
+        public void TearDown()
+        {
+            TestUtils.ClearScene();
+            _ = AssetDatabase.DeleteAsset(TestArtifactRootFolder);
+        }
 
         [Test]
         public void ReturnsVariantPrefab()
@@ -68,7 +74,7 @@ namespace EZUtils.RepackPrefab.Tests
         {
             //so one of the child objects of sourceObject is a prefab instance
             GameObject childObject = new GameObject("child");
-            GameObject childObjectPrefab = TestUtils.CreatePrefab(childObject);
+            GameObject childObjectPrefab = ObjectBuilder.CreatePrefab(childObject);
             GameObject sourceObject = new ObjectBuilder("sourceObject")
                 .AddObject(childObject)
                 .GetObject();
@@ -146,7 +152,7 @@ namespace EZUtils.RepackPrefab.Tests
 
             GameObject basePrefabObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
             basePrefabObject.name = "basePrefab";
-            GameObject basePrefab = TestUtils.CreatePrefab(basePrefabObject);
+            GameObject basePrefab = ObjectBuilder.CreatePrefab(basePrefabObject);
 
             GameObject newPrefab = RepackPrefab.Repack(sourceObject, basePrefab);
 
@@ -166,7 +172,7 @@ namespace EZUtils.RepackPrefab.Tests
 
             GameObject basePrefabObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
             basePrefabObject.name = "basePrefab";
-            GameObject basePrefab = TestUtils.CreatePrefab(basePrefabObject);
+            GameObject basePrefab = ObjectBuilder.CreatePrefab(basePrefabObject);
 
             GameObject newPrefab = RepackPrefab.Repack(sourceObject, basePrefab);
 

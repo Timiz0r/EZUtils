@@ -2,6 +2,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="$(SrcRoot)\EZUtils.RepackPrefab\EZUtils.RepackPrefab.csproj" />
-    <ProjectReference Include="$(SrcRoot)\EZUtils.TestUtils\EZUtils.TestUtils.csproj" />
   </ItemGroup>
 </Project>

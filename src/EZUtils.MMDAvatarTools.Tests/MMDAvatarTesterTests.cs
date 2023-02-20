@@ -1,7 +1,6 @@
 namespace EZUtils.MMDAvatarTools.Tests
 {
     using System.Collections;
-    using System.Linq;
     using NUnit.Framework;
     using UnityEditor;
     using UnityEditor.Animations;
@@ -12,12 +11,15 @@ namespace EZUtils.MMDAvatarTools.Tests
 
     public class MMDAvatarTesterTests
     {
+
+        [TearDown]
+        public void TearDown() => EZUtils.TestUtils.TestUtils.ClearScene();
+
         [UnityTest]
         [RequiresPlayMode]
         public IEnumerator Start_ChangesShapeKeys_WhenAvatarDescriptorIsDefault()
         {
             //the robot avatar that comes with the sdk
-            //using guid to b
             GameObject avatarObject =
                 (GameObject)PrefabUtility.InstantiatePrefab(
                     AssetDatabase.LoadAssetAtPath<GameObject>(
@@ -49,7 +51,6 @@ namespace EZUtils.MMDAvatarTools.Tests
         public IEnumerator Start_DoesNotChangeShapeKeys_WhenFXLayerHasAStateWithWriteDefaultsOff()
         {
             //the robot avatar that comes with the sdk
-            //using guid to b
             GameObject avatarObject =
                 (GameObject)PrefabUtility.InstantiatePrefab(
                     AssetDatabase.LoadAssetAtPath<GameObject>(

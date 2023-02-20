@@ -39,6 +39,14 @@ namespace EZUtils.RepackPrefab.Tests
 
         public GameObject GetObject() => root;
 
-        public GameObject CreatePrefab() => TestUtils.CreatePrefab(root);
+        public GameObject CreatePrefab() => CreatePrefab(root);
+
+        public static GameObject CreatePrefab(GameObject gameObject)
+        {
+            _ = Directory.CreateDirectory(RepackPrefabTests.TestArtifactRootFolder);
+            string path = AssetDatabase.GenerateUniqueAssetPath(
+                Path.Combine(RepackPrefabTests.TestArtifactRootFolder, $"{gameObject.name} Variant.prefab"));
+            return PrefabUtility.SaveAsPrefabAssetAndConnect(gameObject, path, InteractionMode.AutomatedAction);
+        }
     }
 }
