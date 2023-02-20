@@ -9,7 +9,7 @@ namespace EZUtils.RepackPrefab.Tests
     //so consider these integration tests
     public class RepackPrefabTests
     {
-        public static readonly string TestArtifactRootFolder = "Assets/RepackPrefabTest";
+        private static readonly string TestArtifactRootFolder = "Assets/RepackPrefabTest";
 
         [TearDown]
         public void TearDown()
@@ -24,7 +24,7 @@ namespace EZUtils.RepackPrefab.Tests
             GameObject sourceObject = new ObjectBuilder("sourceObject")
                 .GetObject();
             GameObject basePrefab = new ObjectBuilder("basePrefab")
-                .CreatePrefab();
+                .CreatePrefab(TestArtifactRootFolder);
 
             GameObject newPrefab = RepackPrefab.Repack(sourceObject, basePrefab);
 
@@ -49,7 +49,7 @@ namespace EZUtils.RepackPrefab.Tests
                 .AddObject("child", co => co.AddObject("child of child"))
                 .GetObject();
             GameObject basePrefab = new ObjectBuilder("basePrefab")
-                .CreatePrefab();
+                .CreatePrefab(TestArtifactRootFolder);
 
             GameObject newPrefab = RepackPrefab.Repack(sourceObject, basePrefab);
 
@@ -73,12 +73,12 @@ namespace EZUtils.RepackPrefab.Tests
         {
             //so one of the child objects of sourceObject is a prefab instance
             GameObject childObject = new GameObject("child");
-            GameObject childObjectPrefab = ObjectBuilder.CreatePrefab(childObject);
+            GameObject childObjectPrefab = ObjectBuilder.CreatePrefab(TestArtifactRootFolder, childObject);
             GameObject sourceObject = new ObjectBuilder("sourceObject")
                 .AddObject(childObject)
                 .GetObject();
             GameObject basePrefab = new ObjectBuilder("basePrefab")
-                .CreatePrefab();
+                .CreatePrefab(TestArtifactRootFolder);
 
             GameObject newPrefab = RepackPrefab.Repack(sourceObject, basePrefab);
             GameObject newPrefabChildObject = newPrefab.GetChildren().Single();
@@ -95,7 +95,7 @@ namespace EZUtils.RepackPrefab.Tests
                 .AddComponent<BoxCollider>()
                 .GetObject();
             GameObject basePrefab = new ObjectBuilder("basePrefab")
-                .CreatePrefab();
+                .CreatePrefab(TestArtifactRootFolder);
 
             GameObject newPrefab = RepackPrefab.Repack(sourceObject, basePrefab);
 
@@ -113,7 +113,7 @@ namespace EZUtils.RepackPrefab.Tests
                 .GetObject();
             GameObject basePrefab = new ObjectBuilder("basePrefab")
                 .AddComponent<BoxCollider>(bc => bc.isTrigger = false)
-                .CreatePrefab();
+                .CreatePrefab(TestArtifactRootFolder);
 
             GameObject newPrefab = RepackPrefab.Repack(sourceObject, basePrefab);
 
@@ -130,7 +130,7 @@ namespace EZUtils.RepackPrefab.Tests
                 .AddObject("child", co => co
                     .AddComponent<BoxCollider>()
                     .AddObject("child of child", co2 => co2.AddComponent<CapsuleCollider>()))
-                .CreatePrefab();
+                .CreatePrefab(TestArtifactRootFolder);
 
             GameObject newPrefab = RepackPrefab.Repack(sourceObject, basePrefab);
 
@@ -151,7 +151,7 @@ namespace EZUtils.RepackPrefab.Tests
 
             GameObject basePrefabObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
             basePrefabObject.name = "basePrefab";
-            GameObject basePrefab = ObjectBuilder.CreatePrefab(basePrefabObject);
+            GameObject basePrefab = ObjectBuilder.CreatePrefab(TestArtifactRootFolder, basePrefabObject);
 
             GameObject newPrefab = RepackPrefab.Repack(sourceObject, basePrefab);
 
@@ -171,7 +171,7 @@ namespace EZUtils.RepackPrefab.Tests
 
             GameObject basePrefabObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
             basePrefabObject.name = "basePrefab";
-            GameObject basePrefab = ObjectBuilder.CreatePrefab(basePrefabObject);
+            GameObject basePrefab = ObjectBuilder.CreatePrefab(TestArtifactRootFolder, basePrefabObject);
 
             GameObject newPrefab = RepackPrefab.Repack(sourceObject, basePrefab);
 
@@ -193,7 +193,7 @@ namespace EZUtils.RepackPrefab.Tests
                 .GetObject();
             sourceObject.transform.position = new Vector3(100, 200, 300);
             GameObject basePrefab = new ObjectBuilder("basePrefab")
-                .CreatePrefab();
+                .CreatePrefab(TestArtifactRootFolder);
 
             GameObject newPrefab = RepackPrefab.Repack(sourceObject, basePrefab);
 

@@ -9,6 +9,8 @@ namespace EZUtils.MMDAvatarTools.Tests
     using VRC.SDK3.Avatars.Components;
     using static VRC.SDK3.Avatars.Components.VRCAvatarDescriptor;
 
+    //TODO: add support for vrc behaviors that blend stuff out. gotta test a bit more, but it appears all 0 weight
+    //things -- animatorlayers, playables -- can help with supporting mmd worlds even with write defaults off.
     public class MMDAvatarTesterTests
     {
         //note for waiting:

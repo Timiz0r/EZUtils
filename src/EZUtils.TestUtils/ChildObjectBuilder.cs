@@ -1,16 +1,19 @@
-namespace EZUtils.RepackPrefab.Tests
+namespace EZUtils
 {
     using System;
     using UnityEngine;
 
     public class ChildObjectBuilder
     {
-        private GameObject currentObject;
+        private readonly GameObject currentObject;
 
         public ChildObjectBuilder(GameObject root, GameObject child)
         {
             currentObject = child;
-            currentObject.transform.SetParent(root.transform);
+            if (root != null)
+            {
+                currentObject.transform.SetParent(root.transform);
+            }
         }
 
         public ChildObjectBuilder AddObject(string name) => AddObject(name, _ => { });
@@ -28,12 +31,16 @@ namespace EZUtils.RepackPrefab.Tests
             return this;
         }
 
-        public ChildObjectBuilder AddComponent<T>() where T : Component => AddComponent<T>(_ => { });
-        public ChildObjectBuilder AddComponent<T>(Action<T> componentBuilder) where T : Component
+        public ChildObjectBuilder AddComponent<T>(out T component, params Action<T>[] componentConfigurers) where T : Component
         {
-            T component = currentObject.AddComponent<T>();
-            componentBuilder(component);
+            component = currentObject.AddComponent<T>();
+            foreach (Action<T> configurer in componentConfigurers)
+            {
+                configurer(component);
+            }
             return this;
         }
+        public ChildObjectBuilder AddComponent<T>(params Action<T>[] componentConfigurers) where T : Component
+            => AddComponent(out _, componentConfigurers);
     }
 }

@@ -1,4 +1,4 @@
-namespace EZUtils.RepackPrefab.Tests
+namespace EZUtils
 {
     using System;
     using System.IO;
@@ -7,7 +7,7 @@ namespace EZUtils.RepackPrefab.Tests
 
     public class ObjectBuilder
     {
-        private GameObject root;
+        private readonly GameObject root;
 
         public ObjectBuilder(string rootObjectName)
         {
@@ -29,23 +29,28 @@ namespace EZUtils.RepackPrefab.Tests
             return this;
         }
 
-        public ObjectBuilder AddComponent<T>() where T : Component => AddComponent<T>(_ => { });
-        public ObjectBuilder AddComponent<T>(Action<T> componentBuilder) where T : Component
+
+        public ObjectBuilder AddComponent<T>(out T component, params Action<T>[] componentConfigurers) where T : Component
         {
-            T component = root.AddComponent<T>();
-            componentBuilder(component);
+            component = root.AddComponent<T>();
+            foreach (Action<T> configurer in componentConfigurers)
+            {
+                configurer(component);
+            }
             return this;
         }
+        public ObjectBuilder AddComponent<T>(params Action<T>[] componentConfigurers) where T : Component
+            => AddComponent(out _, componentConfigurers);
 
         public GameObject GetObject() => root;
 
-        public GameObject CreatePrefab() => CreatePrefab(root);
+        public GameObject CreatePrefab(string folder) => CreatePrefab(folder, root);
 
-        public static GameObject CreatePrefab(GameObject gameObject)
+        public static GameObject CreatePrefab(string folder, GameObject gameObject)
         {
-            _ = Directory.CreateDirectory(RepackPrefabTests.TestArtifactRootFolder);
+            _ = Directory.CreateDirectory(folder);
             string path = AssetDatabase.GenerateUniqueAssetPath(
-                Path.Combine(RepackPrefabTests.TestArtifactRootFolder, $"{gameObject.name} Variant.prefab"));
+                Path.Combine(folder, $"{gameObject.name} Variant.prefab"));
             return PrefabUtility.SaveAsPrefabAssetAndConnect(gameObject, path, InteractionMode.AutomatedAction);
         }
     }
