@@ -33,7 +33,8 @@ namespace EZUtils.MMDAvatarTools.Tests
             mmdAvatarTester.Start(avatar, animation);
             //wanted to wait certain amounts of frames to match what's in the clip, but it appears animations don't work that way
             //waiting for a period of time seems the most reliable, at least on my machine, but perhaps we'll need to
-            //change it if flaky
+            //change it if flaky. probably the best way would be to control time to either the underlying graph or via
+            //Time class. or maybe limiting to 60fps (but then what happens in the unlikely event that we're under?).
             yield return new WaitForSeconds(0.5f);
 
             SkinnedMeshRenderer body = avatarObject.transform.Find("Body").GetComponent<SkinnedMeshRenderer>();
