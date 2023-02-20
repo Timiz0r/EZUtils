@@ -1,4 +1,4 @@
-namespace EZUtils.TestUtils
+namespace EZUtils
 {
     using System.Linq;
     using UnityEngine;

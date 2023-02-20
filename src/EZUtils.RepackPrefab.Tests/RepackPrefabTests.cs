@@ -1,7 +1,6 @@
 namespace EZUtils.RepackPrefab.Tests
 {
     using System.Linq;
-    using EZUtils.TestUtils;
     using NUnit.Framework;
     using UnityEditor;
     using UnityEngine;

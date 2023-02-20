@@ -17,7 +17,7 @@ namespace EZUtils.MMDAvatarTools.Tests
         //change it if flaky. probably the best way would be to control time to either the underlying graph or via
         //Time class. or maybe limiting to 60fps (but then what happens in the unlikely event that we're under?).
         [TearDown]
-        public void TearDown() => EZUtils.TestUtils.TestUtils.ClearScene();
+        public void TearDown() => TestUtils.ClearScene();
 
         [UnityTest]
         [RequiresPlayMode]
