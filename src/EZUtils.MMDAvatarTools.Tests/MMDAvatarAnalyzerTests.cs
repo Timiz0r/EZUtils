@@ -18,7 +18,7 @@ namespace EZUtils.MMDAvatarTools.Tests
         [Test]
         public void Fails_WhenNoMeshNamedBodyExists()
         {
-            throw new System.NotImplementedException();
+            TestSetup testSetup = new TestSetup();
         }
 
         [Test]
@@ -30,22 +30,48 @@ namespace EZUtils.MMDAvatarTools.Tests
         [Test]
         public void Passes_WhenBodySkinnedMeshRendererExists()
         {
-            MMDAvatarAnalyzer analyzer = new MMDAvatarAnalyzer();
-            GameObject dummyCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            ObjectBuilder avatarObjectBuilder = new ObjectBuilder("avatar")
-                .AddComponent<Animator>()
-                .AddComponent(out VRCAvatarDescriptor avatar)
-                .AddObject("Body", o => o
-                    .AddComponent<SkinnedMeshRenderer>(
-                        c => c.sharedMesh = UnityEngine.Object.Instantiate(dummyCube.GetComponent<MeshFilter>().sharedMesh)));
+            TestSetup testSetup = new TestSetup();
+            //was an experiment that will get used later. keeping here for now
             //body.sharedMesh.AddBlendShapeFrame(
             //    "あ", 1f, body.sharedMesh.vertices, null, null);
 
-            IReadOnlyList<AnalysisResult> results = analyzer.Analyze(avatar);
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            Assert.That(
-                results, Has.Exactly(1).Matches<AnalysisResult>(
-                    r => r.AnalyzerType == typeof(BodyMeshExistsAnalyzer) && r.Level == AnalysisResultLevel.Pass));
+            AssertResult(results, BodyMeshExistsAnalyzer.ResultCode.Pass, AnalysisResultLevel.Pass);
+        }
+
+        private static void AssertResult(
+            IEnumerable<AnalysisResult> results, string resultCode, AnalysisResultLevel level)
+            => Assert.That(
+                results,
+                Has.Exactly(1).Matches<AnalysisResult>(r => r.ResultCode == resultCode && r.Level == level));
+
+        private class TestSetup
+        {
+            private readonly MMDAvatarAnalyzer analyzer;
+
+            public SkinnedMeshRenderer Body { get; }
+
+            public VRCAvatarDescriptor Avatar { get; }
+
+            public TestSetup()
+            {
+                analyzer = new MMDAvatarAnalyzer();
+                GameObject dummyCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                SkinnedMeshRenderer body = null;
+                ObjectBuilder avatarObjectBuilder = new ObjectBuilder("avatar")
+                    .AddComponent<Animator>()
+                    .AddComponent(out VRCAvatarDescriptor avatar)
+                    .AddObject("Body", o => o
+                        .AddComponent(
+                        out body,
+                            c => c.sharedMesh = UnityEngine.Object.Instantiate(dummyCube.GetComponent<MeshFilter>().sharedMesh)));
+
+                Body = body;
+                Avatar = avatar;
+            }
+
+            public IReadOnlyList<AnalysisResult> Analyze() => analyzer.Analyze(Avatar);
         }
     }
 }

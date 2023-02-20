@@ -5,6 +5,7 @@ namespace EZUtils.MMDAvatarTools
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Runtime.CompilerServices;
     using UnityEngine;
     using UnityEngine.UIElements;
     using VRC.SDK3.Avatars.Components;
@@ -44,10 +45,20 @@ namespace EZUtils.MMDAvatarTools
             SkinnedMeshRenderer skinnedMeshRenderer = body.GetComponent<SkinnedMeshRenderer>();
 
             AnalysisResult result = new AnalysisResult(
-                typeof(BodyMeshExistsAnalyzer),
-                renderer: null,
-                level: skinnedMeshRenderer == null ? AnalysisResultLevel.Error : AnalysisResultLevel.Pass);
+                ResultCode.Pass,
+                level: skinnedMeshRenderer == null ? AnalysisResultLevel.Error : AnalysisResultLevel.Pass,
+                renderer: null);
             return Enumerable.Repeat(result, 1);
+        }
+
+        public static class ResultCode
+        {
+            public static readonly string Pass = Code();
+            public static readonly string NoBody = Code();
+            public static readonly string NotSkinnedMeshRenderer = Code();
+
+            private static string Code([CallerMemberName] string caller = "")
+                => $"{nameof(BodyMeshExistsAnalyzer)}.{caller}";
         }
     }
 
@@ -61,15 +72,15 @@ namespace EZUtils.MMDAvatarTools
         //design-wise, want the analyzers in MMDAvatarAnalyzer to be transparent to driver ports, in general
         //yet, the unit test driver adapters need to accurately identify the failure
         //otherwise, maybe the intended failure is passing, and another is coincidentally failing
-        public Type AnalyzerType { get; }
+        public string ResultCode { get; }
 
         public AnalysisResultLevel Level { get; }
 
         public IAnalysisResultRenderer Renderer { get; }
 
-        public AnalysisResult(Type analyzerType, AnalysisResultLevel level, IAnalysisResultRenderer renderer)
+        public AnalysisResult(string resultCode, AnalysisResultLevel level, IAnalysisResultRenderer renderer)
         {
-            AnalyzerType = analyzerType;
+            ResultCode = resultCode;
             Level = level;
             Renderer = renderer;
         }
