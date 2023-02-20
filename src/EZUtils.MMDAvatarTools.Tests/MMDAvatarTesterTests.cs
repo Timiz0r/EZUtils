@@ -67,6 +67,24 @@ namespace EZUtils.MMDAvatarTools.Tests
             Assert.That(testSetup.GetBlendShapeWeight("blink_both"), Is.EqualTo(0f));
         }
 
+        [UnityTest]
+        [RequiresPlayMode]
+        public IEnumerator Stop_ResetsAvatar()
+        {
+            TestSetup testSetup = new TestSetup();
+            float initalBlendShapeWeight = testSetup.GetBlendShapeWeight("blink_both");
+            Vector3 initialLeftHandPosition =
+                testSetup.Avatar.GetComponent<Animator>().GetBoneTransform(HumanBodyBones.LeftHand).position;
+
+            testSetup.StartMMDTester();
+            yield return new WaitForSeconds(0.5f);
+            testSetup.StopMMDTester();
+
+            Assert.That(testSetup.GetBlendShapeWeight("blink_both"), Is.EqualTo(initalBlendShapeWeight));
+            Assert.That(testSetup.Avatar.GetComponent<Animator>().GetBoneTransform(HumanBodyBones.LeftHand).position,
+                Is.EqualTo(initialLeftHandPosition));
+        }
+
         private class TestSetup
         {
             private static readonly AnimationClip animation =
@@ -93,6 +111,8 @@ namespace EZUtils.MMDAvatarTools.Tests
             }
 
             public void StartMMDTester() => mmdAvatarTester.Start(Avatar, animation);
+
+            public void StopMMDTester() => mmdAvatarTester.Stop();
 
             public float GetBlendShapeWeight(string blendShapeName)
             {
