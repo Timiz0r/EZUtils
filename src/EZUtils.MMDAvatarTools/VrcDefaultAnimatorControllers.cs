@@ -3,7 +3,6 @@ namespace EZUtils.MMDAvatarTools
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using BestHTTP.SecureProtocol.Org.BouncyCastle.Utilities.IO.Pem;
     using NUnit.Framework;
     using UnityEditor;
     using UnityEditor.Animations;
@@ -61,6 +60,7 @@ namespace EZUtils.MMDAvatarTools
         //could also try to create a more generic version using SO more. the hard part is know what to copy.
         //for instance, we dont copy motions or avatarmasks, but they would certainly be object references.
         //maybe checking assetdatabase to see if it's a subasset would work.
+        //this still causes innocuous changes, though
         private static AnimatorController DeepCopy(AnimatorController original)
         {
             Dictionary<Object, Object> objectMap = new Dictionary<Object, Object>();
@@ -87,23 +87,13 @@ namespace EZUtils.MMDAvatarTools
                     if (targetIterator.propertyType != SerializedPropertyType.ObjectReference
                         || targetIterator.objectReferenceValue == null) continue;
 
-                    System.Type objectReferenceType = targetIterator.objectReferenceValue.GetType();
-                    if (objectReferenceType != typeof(AnimatorState)
-                        && objectReferenceType != typeof(AnimatorStateMachine)
-                        && objectReferenceType != typeof(AnimatorController)
-                        && objectReferenceType != typeof(AnimatorTransition)) continue;
-
                     if (objectMap.TryGetValue(targetIterator.objectReferenceValue, out Object newObject))
                     {
                         SwapReferences(targetIterator.objectReferenceValue);
                         targetIterator.objectReferenceValue = newObject;
                     }
-                    else if (objectReferenceType == typeof(AnimatorController))
-                    {
-                        targetIterator.objectReferenceValue = copy;
-                    }
-                    else throw new InvalidOperationException("Didn't find a match yo.");
                 }
+                //this actually breaks if done without undo, which is probably a hint as to where to micro changes come from
                 _ = so.ApplyModifiedProperties();
             }
 
@@ -111,56 +101,50 @@ namespace EZUtils.MMDAvatarTools
 
             AnimatorStateMachine CopyStateMachine(AnimatorStateMachine originalStateMachine)
             {
-                //cannot object.instantiate AnimatorStateMachine due to an assertion of unknown cause 🤷‍
-                AnimatorStateMachine newStateMachine = new AnimatorStateMachine()
-                {
-                    anyStatePosition = originalStateMachine.anyStatePosition,
-                    name = originalStateMachine.name,
-                    anyStateTransitions = CopyAll(originalStateMachine.anyStateTransitions),
-                    entryTransitions = CopyAll(originalStateMachine.entryTransitions),
-                    states = originalStateMachine.states
-                        .Select(cas => new ChildAnimatorState()
-                        {
-                            position = cas.position,
-                            state = CopyState(cas.state)
-                        })
-                        .ToArray(),
-                    stateMachines = originalStateMachine.stateMachines
-                        .Select(casm => new ChildAnimatorStateMachine()
-                        {
-                            position = casm.position,
-                            stateMachine = CopyStateMachine(casm.stateMachine)
-                        })
-                        .ToArray(),
-                    behaviours = CopyAll(originalStateMachine.behaviours),
-                    defaultState = originalStateMachine.defaultState,
-                    entryPosition = originalStateMachine.entryPosition,
-                    exitPosition = originalStateMachine.exitPosition,
-                    hideFlags = originalStateMachine.hideFlags,
-                    parentStateMachinePosition = originalStateMachine.parentStateMachinePosition,
-                };
-
+                //get asserts when object instantiating state machines
+                AnimatorStateMachine newStateMachine = new AnimatorStateMachine();
+                EditorUtility.CopySerialized(originalStateMachine, newStateMachine);
                 objectMap[originalStateMachine] = newStateMachine;
+
+                newStateMachine.states = CopyAll(
+                    originalStateMachine.states, casm => new ChildAnimatorState()
+                    {
+                        position = casm.position,
+                        state = CopyState(casm.state)
+                    });
+                newStateMachine.stateMachines = CopyAll(
+                    originalStateMachine.stateMachines, casm => new ChildAnimatorStateMachine()
+                    {
+                        position = casm.position,
+                        stateMachine = CopyStateMachine(casm.stateMachine)
+                    })
+                    .ToArray();
+                newStateMachine.anyStateTransitions =
+                    originalStateMachine.anyStateTransitions.Select(t => Copy(t)).ToArray();
+                newStateMachine.entryTransitions =
+                    originalStateMachine.entryTransitions.Select(t => Copy(t)).ToArray();
+
                 return newStateMachine;
             }
 
             AnimatorState CopyState(AnimatorState originalState)
             {
                 AnimatorState newState = Copy(originalState);
-                newState.transitions = CopyAll(newState.transitions);
-                newState.behaviours = CopyAll(newState.behaviours);
+                newState.transitions = CopyAll(newState.transitions, t => Copy(t));
+                newState.behaviours = CopyAll(newState.behaviours, b => Copy(b));
                 return newState;
             }
 
             T Copy<T>(T originalObject) where T : Object
             {
                 T newObject = Object.Instantiate(originalObject);
-                //newObject.name = originalObject.name;
+                newObject.name = originalObject.name;
                 objectMap[originalObject] = newObject;
                 return newObject;
             }
-            T[] CopyAll<T>(T[] originalObjects) where T : Object
-                => originalObjects.Select(o => Copy(o)).ToArray();
+
+            T[] CopyAll<T>(T[] originalObjects, Func<T, T> copier)
+                => originalObjects.Select(o => copier(o)).ToArray();
         }
     }
 }
