@@ -63,7 +63,6 @@ namespace EZUtils.MMDAvatarTools
         //maybe checking assetdatabase to see if it's a subasset would work.
         private static AnimatorController DeepCopy(AnimatorController original)
         {
-
             Dictionary<Object, Object> objectMap = new Dictionary<Object, Object>();
             HashSet<Object> traversedObjects = new HashSet<Object>();
             AnimatorController copy = Copy(original);
@@ -105,6 +104,7 @@ namespace EZUtils.MMDAvatarTools
                     }
                     else throw new InvalidOperationException("Didn't find a match yo.");
                 }
+                _ = so.ApplyModifiedProperties();
             }
 
             return copy;
@@ -155,7 +155,7 @@ namespace EZUtils.MMDAvatarTools
             T Copy<T>(T originalObject) where T : Object
             {
                 T newObject = Object.Instantiate(originalObject);
-                newObject.name = originalObject.name;
+                //newObject.name = originalObject.name;
                 objectMap[originalObject] = newObject;
                 return newObject;
             }
