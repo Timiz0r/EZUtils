@@ -13,6 +13,9 @@ namespace EZUtils.MMDAvatarTools
         //
         //in a future version, could also go strongly-typed results via inheritance
         //would work well with pattern matching and records/DUs, but kinda sucks without these language features
+        //
+        //TODO
+        //could consider a strongly-typed class ResultCode { Analyzer : Type, Identifier : string }
         public string ResultCode { get; }
 
         public AnalysisResultLevel Level { get; }

@@ -13,14 +13,19 @@ namespace EZUtils.MMDAvatarTools
 
         private static AvatarMask Load(string fileName)
         {
-            AvatarMask result = AssetDatabase.LoadAssetAtPath<AvatarMask>(
+            AvatarMask original = AssetDatabase.LoadAssetAtPath<AvatarMask>(
                 $"Packages/com.vrchat.avatars/Samples/AV3 Demo Assets/Animation/Masks/{fileName}");
-            if (result == null)
+            if (original == null)
             {
-                result = AssetDatabase.LoadAssetAtPath<AvatarMask>(
+                original = AssetDatabase.LoadAssetAtPath<AvatarMask>(
                     $"Assets/Samples/VRChat SDK - Avatars/3.0.6/AV3 Demo Assets/Animation/Masks/{fileName}");
             }
-            return result != null ? result : throw new InvalidOperationException($"Could not find asset {fileName}'.");
+
+            if (original == null) throw new InvalidOperationException($"Could not find asset {fileName}'.");
+
+            AvatarMask copy = new AvatarMask();
+            EditorUtility.CopySerialized(original, copy);
+            return copy;
         }
     }
 }
