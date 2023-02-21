@@ -1,6 +1,5 @@
 namespace EZUtils.MMDAvatarTools.Tests
 {
-    using System;
     using System.Collections.Generic;
     using NUnit.Framework;
     using UnityEngine;
@@ -16,15 +15,39 @@ namespace EZUtils.MMDAvatarTools.Tests
     public class MMDAvatarAnalyzerTests
     {
         [Test]
-        public void Fails_WhenNoMeshNamedBodyExists()
+        public void Fails_WhenNoSkinnedMeshRendererInBody()
         {
             TestSetup testSetup = new TestSetup();
+            Object.DestroyImmediate(testSetup.Body.gameObject);
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, BodyMeshExistsAnalyzer.ResultCode.NoBody, AnalysisResultLevel.Error);
+        }
+        [Test]
+        public void Fails_WhenNoRendererInBody()
+        {
+            TestSetup testSetup = new TestSetup();
+            Object.DestroyImmediate(testSetup.Body);
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, BodyMeshExistsAnalyzer.ResultCode.NoRendererInBody, AnalysisResultLevel.Error);
         }
 
         [Test]
         public void Fails_WhenBodyMeshNotSkinnedMeshRenderer()
         {
-            throw new System.NotImplementedException();
+            TestSetup testSetup = new TestSetup();
+            GameObject bodyObject = testSetup.Body.gameObject;
+            Object.DestroyImmediate(testSetup.Body);
+            bodyObject.AddComponent<MeshFilter>().sharedMesh =
+                GameObject.CreatePrimitive(PrimitiveType.Cube).GetComponent<MeshFilter>().sharedMesh;
+            _ = bodyObject.AddComponent<MeshRenderer>();
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, BodyMeshExistsAnalyzer.ResultCode.NotSkinnedMeshRenderer, AnalysisResultLevel.Error);
         }
 
         [Test]
