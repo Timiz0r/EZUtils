@@ -7,23 +7,23 @@ namespace EZUtils.MMDAvatarTools
     using UnityEngine.UIElements;
     using VRC.SDK3.Avatars.Components;
 
-    public class MMDAvatarTesterEditorWindow : EditorWindow
+    public class MmdAvatarTesterEditorWindow : EditorWindow
     {
         private bool validAvatarIsTargeted = false;
         private bool animatorControllerIsTargeted = false;
-        private readonly MMDAvatarTester mmdAvatarTester = new MMDAvatarTester();
+        private readonly MmdAvatarTester mmdAvatarTester = new MmdAvatarTester();
 
         [MenuItem("EZUtils/MMD avatar tester", isValidateFunction: false, priority: 0)]
         public static void PackageManager()
         {
-            MMDAvatarTesterEditorWindow window = GetWindow<MMDAvatarTesterEditorWindow>("MMD Tester");
+            MmdAvatarTesterEditorWindow window = GetWindow<MmdAvatarTesterEditorWindow>("MMD Tester");
             window.Show();
         }
 
         public void CreateGUI()
         {
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
-                "Packages/com.timiz0r.EZUtils.MMDAvatarTools/MMDAvatarTesterEditorWindow.uxml");
+                "Packages/com.timiz0r.EZUtils.MMDAvatarTools/MmdAvatarTesterEditorWindow.uxml");
             visualTree.CloneTree(rootVisualElement);
 
             //probably dont need allowSceneObjects, but meh

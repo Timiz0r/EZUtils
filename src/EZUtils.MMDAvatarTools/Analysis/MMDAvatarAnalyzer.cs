@@ -6,19 +6,19 @@ namespace EZUtils.MMDAvatarTools
     using System.Linq;
     using VRC.SDK3.Avatars.Components;
 
-    public class MMDAvatarAnalyzer
+    public class MmdAvatarAnalyzer
     {
         private readonly IReadOnlyList<IAnalyzer> analyzers;
 
-        public MMDAvatarAnalyzer(IEnumerable<IAnalyzer> analyzers)
+        public MmdAvatarAnalyzer(IEnumerable<IAnalyzer> analyzers)
         {
             this.analyzers = analyzers.ToArray();
         }
-        public MMDAvatarAnalyzer()
+        public MmdAvatarAnalyzer()
         {
             analyzers = new IAnalyzer[]
             {
-                new BodyMeshExistsAnalyzer(),
+                new BodyMeshAnalyzer(),
                 new NonBodyMeshAnalyzer()
             };
         }

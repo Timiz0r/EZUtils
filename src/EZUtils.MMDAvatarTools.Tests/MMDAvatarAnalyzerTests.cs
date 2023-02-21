@@ -1,13 +1,13 @@
 namespace EZUtils.MMDAvatarTools.Tests
 {
     using System.Collections.Generic;
+    using System.Linq;
     using NUnit.Framework;
     using UnityEngine;
     using VRC.SDK3.Avatars.Components;
 
     /*
      * TODO analyzers
-     * for body mesh analyzer (rename it also), not really an error if no meshes have compatible shape keys
      * error for write defaults off, downgraded to warnings if a potential weight change is detected
      * summary of blend shapes
      * warning for empty states
@@ -24,7 +24,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, BodyMeshExistsAnalyzer.ResultCode.NoBody, AnalysisResultLevel.Error);
+            AssertResult(results, BodyMeshAnalyzer.ResultCode.NoBody, AnalysisResultLevel.Error);
         }
 
         [Test]
@@ -35,7 +35,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, BodyMeshExistsAnalyzer.ResultCode.NoRendererInBody, AnalysisResultLevel.Error);
+            AssertResult(results, BodyMeshAnalyzer.ResultCode.NoRendererInBody, AnalysisResultLevel.Error);
         }
 
         [Test]
@@ -50,17 +50,28 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, BodyMeshExistsAnalyzer.ResultCode.NotSkinnedMeshRenderer, AnalysisResultLevel.Error);
+            AssertResult(results, BodyMeshAnalyzer.ResultCode.NotSkinnedMeshRenderer, AnalysisResultLevel.Error);
         }
 
         [Test]
-        public void Passes_WhenBodySkinnedMeshRendererExists()
+        public void Passes_WhenBodyHasMmdBlendShape()
+        {
+            TestSetup testSetup = new TestSetup();
+            AddBlendShape(testSetup.Body, "あ");
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, BodyMeshAnalyzer.ResultCode.MmdBodyMeshFound, AnalysisResultLevel.Pass);
+        }
+
+        [Test]
+        public void Errors_WhenBodyHasNoMmdBlendShapes()
         {
             TestSetup testSetup = new TestSetup();
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, BodyMeshExistsAnalyzer.ResultCode.BodySkinnedMeshExists, AnalysisResultLevel.Pass);
+            AssertResult(results, BodyMeshAnalyzer.ResultCode.BodyHasNoMmdBlendShapes, AnalysisResultLevel.Error);
         }
 
         [Test]
@@ -78,7 +89,7 @@ namespace EZUtils.MMDAvatarTools.Tests
         }
 
         [Test]
-        public void Pass_WhenNonBodyMeshHasNoMMDBlendShapes()
+        public void Passes_WhenNonBodyMeshHasNoMMDBlendShapes()
         {
             TestSetup testSetup = new TestSetup();
             _ = testSetup.AvatarBuilder.AddObject("AnotherMesh", o => o
@@ -94,7 +105,8 @@ namespace EZUtils.MMDAvatarTools.Tests
             IEnumerable<AnalysisResult> results, string resultCode, AnalysisResultLevel level)
             => Assert.That(
                 results,
-                Has.Exactly(1).Matches<AnalysisResult>(r => r.ResultCode == resultCode && r.Level == level));
+                Has.Exactly(1).Matches<AnalysisResult>(r => r.ResultCode == resultCode && r.Level == level),
+                $"Could not find result '{resultCode}' '{level}'. Result:\r\n{string.Join("\r\n\t", results.Select(r => $"'{r.ResultCode}' '{r.Level}'"))}");
 
         private static void ConfigureMesh(SkinnedMeshRenderer smr)
             => smr.sharedMesh =
@@ -109,7 +121,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
         private class TestSetup
         {
-            private readonly MMDAvatarAnalyzer analyzer;
+            private readonly MmdAvatarAnalyzer analyzer;
 
             public SkinnedMeshRenderer Body { get; }
 
@@ -119,7 +131,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             public TestSetup()
             {
-                analyzer = new MMDAvatarAnalyzer();
+                analyzer = new MmdAvatarAnalyzer();
                 SkinnedMeshRenderer body = null;
                 AvatarBuilder = new ObjectBuilder("avatar")
                     .AddComponent<Animator>()

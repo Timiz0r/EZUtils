@@ -9,15 +9,16 @@ namespace EZUtils.MMDAvatarTools
 
     public class NonBodyMeshAnalyzer : IAnalyzer
     {
-        public IEnumerable<AnalysisResult> Analyze(VRCAvatarDescriptor avatar)
+        public IReadOnlyList<AnalysisResult> Analyze(VRCAvatarDescriptor avatar)
         {
-            //include inactive since toggling meshes is a thing
+            //include inactive since toggling meshes is a thing. we're tring to detect attempts at making non-main
+            //meshes react to mmd shapekeys, which is impossible, as well as "main" meshes with a wrong name.
             foreach (SkinnedMeshRenderer smr in avatar.GetComponentsInChildren<SkinnedMeshRenderer>(includeInactive: true))
             {
                 if (smr.name.Equals("Body", StringComparison.OrdinalIgnoreCase)) continue;
 
                 //TODO: for rendering, of course we wont early exit
-                BlendShapeSummary blendShapeSummary = BlendShapeSummary.Generate(smr);
+                MmdBlendShapeSummary blendShapeSummary = MmdBlendShapeSummary.Generate(smr);
                 if (blendShapeSummary.Results.Any(r => r.ExistingBlendShapes.Any()))
                 {
                     return AnalysisResult.Generate(
@@ -40,19 +41,20 @@ namespace EZUtils.MMDAvatarTools
         }
     }
 
-    public class BlendShapeSummary
+    public class MmdBlendShapeSummary
     {
-        private static readonly BlendShapeSummary Empty = new BlendShapeSummary(Array.Empty<BlendShapeSummaryResult>());
+        private static readonly MmdBlendShapeSummary Empty = new MmdBlendShapeSummary(Array.Empty<BlendShapeSummaryResult>());
 
-        //could consider making class static and just returning results, but, since we have a class anyway...
         public IReadOnlyList<BlendShapeSummaryResult> Results { get; }
 
-        private BlendShapeSummary(IReadOnlyList<BlendShapeSummaryResult> results)
+        public bool HasAnyMmdBlendShapes => Results.Any(r => r.ExistingBlendShapes.Any());
+
+        private MmdBlendShapeSummary(IReadOnlyList<BlendShapeSummaryResult> results)
         {
             Results = results;
         }
 
-        public static BlendShapeSummary Generate(VRCAvatarDescriptor avatar)
+        public static MmdBlendShapeSummary Generate(VRCAvatarDescriptor avatar)
         {
             Transform body = avatar.transform.Find("Body");
             if (body == null) return Empty;
@@ -63,7 +65,7 @@ namespace EZUtils.MMDAvatarTools
             return Generate(bodyMesh);
         }
 
-        public static BlendShapeSummary Generate(SkinnedMeshRenderer skinnedMeshRenderer)
+        public static MmdBlendShapeSummary Generate(SkinnedMeshRenderer skinnedMeshRenderer)
         {
             List<BlendShapeSummaryResult> results =
                 new List<BlendShapeSummaryResult>(BlendShapeDefinition.Definitions.Count);
@@ -81,7 +83,7 @@ namespace EZUtils.MMDAvatarTools
                     definition.PossibleNames.Where(n => existingBlendShapes.Contains(n)).ToArray()));
             }
 
-            return new BlendShapeSummary(results);
+            return new MmdBlendShapeSummary(results);
         }
     }
 

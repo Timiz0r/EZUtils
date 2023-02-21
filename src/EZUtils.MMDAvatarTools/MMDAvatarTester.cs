@@ -1,12 +1,11 @@
 namespace EZUtils.MMDAvatarTools
 {
     using System;
-    using UnityEditor;
     using UnityEditor.Animations;
     using UnityEngine;
     using VRC.SDK3.Avatars.Components;
 
-    public class MMDAvatarTester
+    public class MmdAvatarTester
     {
         private AvatarPlayableAnimator avatarPlayableAnimator = null;
 

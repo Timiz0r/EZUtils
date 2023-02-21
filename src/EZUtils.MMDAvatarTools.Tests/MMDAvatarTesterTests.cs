@@ -92,7 +92,7 @@ namespace EZUtils.MMDAvatarTools.Tests
             private static readonly AnimationClip animation =
                 AssetDatabase.LoadAssetAtPath<AnimationClip>(
                     "Packages/com.timiz0r.ezutils.mmdavatartools.tests/mmdsample_vrcrobot.anim");
-            private readonly MMDAvatarTester mmdAvatarTester = new MMDAvatarTester();
+            private readonly MmdAvatarTester mmdAvatarTester = new MmdAvatarTester();
 
             public VRCAvatarDescriptor Avatar { get; }
 

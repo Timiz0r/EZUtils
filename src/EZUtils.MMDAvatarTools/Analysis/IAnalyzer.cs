@@ -1,4 +1,4 @@
-﻿
+
 
 namespace EZUtils.MMDAvatarTools
 {
@@ -7,7 +7,7 @@ namespace EZUtils.MMDAvatarTools
 
     public interface IAnalyzer
     {
-        IEnumerable<AnalysisResult> Analyze(VRCAvatarDescriptor avatar);
+        IReadOnlyList<AnalysisResult> Analyze(VRCAvatarDescriptor avatar);
         //maybe later members for remediation
     }
 }

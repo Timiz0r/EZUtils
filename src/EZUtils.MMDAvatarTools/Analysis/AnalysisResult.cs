@@ -26,8 +26,8 @@ namespace EZUtils.MMDAvatarTools
             Renderer = renderer;
         }
 
-        public static IEnumerable<AnalysisResult> Generate(
+        public static IReadOnlyList<AnalysisResult> Generate(
             string resultCode, AnalysisResultLevel level, IAnalysisResultRenderer renderer)
-            => Enumerable.Repeat(new AnalysisResult(resultCode, level, renderer), 1);
+            => new[] { new AnalysisResult(resultCode, level, renderer) };
     }
 }

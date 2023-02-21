@@ -7,7 +7,7 @@
     UnityEngine.UIElements ../../UIElementsSchema/UnityEngine.UIElements.fixed.xsd
     UnityEditor.UIElements ../../UIElementsSchema/UnityEditor.UIElements.xsd">
   <VisualElement>
-    <Style src="MMDAvatarTesterEditorWindow.uss" />
+    <Style src="MmdAvatarTesterEditorWindow.uss" />
 
     <VisualElement class="show-edit-mode">
       <Label text="Please enter play mode to test your avatar." />
