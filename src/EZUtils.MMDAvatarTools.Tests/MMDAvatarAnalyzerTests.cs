@@ -7,15 +7,17 @@ namespace EZUtils.MMDAvatarTools.Tests
 
     /*
      * TODO analyzers
-     * warning for non-body meshes that contain mmd shapekeys
+     * for body mesh analyzer (rename it also), not really an error if no meshes have compatible shape keys
      * error for write defaults off, downgraded to warnings if a potential weight change is detected
      * summary of blend shapes
      * warning for empty states
+     * when ready to do ui rendering, modify AssertResult to ensure there's always a renderer
+     * add an issue for suppressing things. gotta think about where to store them, probably in an asset. and the structure.
      */
     public class MMDAvatarAnalyzerTests
     {
         [Test]
-        public void Fails_WhenNoSkinnedMeshRendererInBody()
+        public void Errors_WhenNoSkinnedMeshRendererInBody()
         {
             TestSetup testSetup = new TestSetup();
             Object.DestroyImmediate(testSetup.Body.gameObject);
@@ -24,8 +26,9 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             AssertResult(results, BodyMeshExistsAnalyzer.ResultCode.NoBody, AnalysisResultLevel.Error);
         }
+
         [Test]
-        public void Fails_WhenNoRendererInBody()
+        public void Errors_WhenNoRendererInBody()
         {
             TestSetup testSetup = new TestSetup();
             Object.DestroyImmediate(testSetup.Body);
@@ -36,7 +39,7 @@ namespace EZUtils.MMDAvatarTools.Tests
         }
 
         [Test]
-        public void Fails_WhenBodyMeshNotSkinnedMeshRenderer()
+        public void Errors_WhenBodyMeshNotSkinnedMeshRenderer()
         {
             TestSetup testSetup = new TestSetup();
             GameObject bodyObject = testSetup.Body.gameObject;
@@ -54,13 +57,37 @@ namespace EZUtils.MMDAvatarTools.Tests
         public void Passes_WhenBodySkinnedMeshRendererExists()
         {
             TestSetup testSetup = new TestSetup();
-            //was an experiment that will get used later. keeping here for now
-            //body.sharedMesh.AddBlendShapeFrame(
-            //    "あ", 1f, body.sharedMesh.vertices, null, null);
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, BodyMeshExistsAnalyzer.ResultCode.Pass, AnalysisResultLevel.Pass);
+            AssertResult(results, BodyMeshExistsAnalyzer.ResultCode.BodySkinnedMeshExists, AnalysisResultLevel.Pass);
+        }
+
+        [Test]
+        public void Warns_WhenNonBodyMeshHasMMDBlendShapes()
+        {
+            TestSetup testSetup = new TestSetup();
+            _ = testSetup.AvatarBuilder.AddObject("AnotherMesh", o => o
+                .AddComponent<SkinnedMeshRenderer>(
+                c => ConfigureMesh(c),
+                c => AddBlendShape(c, "あ")));
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, NonBodyMeshAnalyzer.ResultCode.ContainsMMDBlendShapes, AnalysisResultLevel.Warning);
+        }
+
+        [Test]
+        public void Pass_WhenNonBodyMeshHasNoMMDBlendShapes()
+        {
+            TestSetup testSetup = new TestSetup();
+            _ = testSetup.AvatarBuilder.AddObject("AnotherMesh", o => o
+                .AddComponent<SkinnedMeshRenderer>(
+                c => ConfigureMesh(c)));
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, NonBodyMeshAnalyzer.ResultCode.ClearOfMMDBlendShapes, AnalysisResultLevel.Pass);
         }
 
         private static void AssertResult(
@@ -68,6 +95,17 @@ namespace EZUtils.MMDAvatarTools.Tests
             => Assert.That(
                 results,
                 Has.Exactly(1).Matches<AnalysisResult>(r => r.ResultCode == resultCode && r.Level == level));
+
+        private static void ConfigureMesh(SkinnedMeshRenderer smr)
+            => smr.sharedMesh =
+                Object.Instantiate(
+                    GameObject
+                        .CreatePrimitive(PrimitiveType.Cube)
+                        .GetComponent<MeshFilter>().sharedMesh);
+
+        private static void AddBlendShape(SkinnedMeshRenderer smr, string blendShapeName)
+            => smr.sharedMesh.AddBlendShapeFrame(
+                blendShapeName, 100f, smr.sharedMesh.vertices, null, null);
 
         private class TestSetup
         {
@@ -77,18 +115,19 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             public VRCAvatarDescriptor Avatar { get; }
 
+            public ObjectBuilder AvatarBuilder { get; }
+
             public TestSetup()
             {
                 analyzer = new MMDAvatarAnalyzer();
-                GameObject dummyCube = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 SkinnedMeshRenderer body = null;
-                ObjectBuilder avatarObjectBuilder = new ObjectBuilder("avatar")
+                AvatarBuilder = new ObjectBuilder("avatar")
                     .AddComponent<Animator>()
                     .AddComponent(out VRCAvatarDescriptor avatar)
                     .AddObject("Body", o => o
                         .AddComponent(
-                        out body,
-                            c => c.sharedMesh = UnityEngine.Object.Instantiate(dummyCube.GetComponent<MeshFilter>().sharedMesh)));
+                            out body,
+                            c => ConfigureMesh(c)));
 
                 Body = body;
                 Avatar = avatar;

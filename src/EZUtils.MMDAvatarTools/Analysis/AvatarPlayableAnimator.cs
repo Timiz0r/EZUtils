@@ -167,7 +167,7 @@ namespace EZUtils.MMDAvatarTools
         }
 
         [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
-        public sealed class AvatarPlayableLayerAttribute : Attribute
+        private sealed class AvatarPlayableLayerAttribute : Attribute
         {
         }
     }
