@@ -13,9 +13,8 @@ namespace EZUtils.MMDAvatarTools.Tests
      * TODO analyzers
      * summary of blend shapes
      * when ready to do ui rendering, modify AssertResult to ensure there's always a renderer
-     * add an issue for suppressing things. gotta think about where to store them, probably in an asset. and the structure.
-     * fx layers 1 and 2 (not 0) do non-hands stuff
      */
+    //technically testing is a bit insufficient because we dont test sub state machines and only layers' state machines
     public class MMDAvatarAnalyzerTests
     {
         [Test]
@@ -207,6 +206,171 @@ namespace EZUtils.MMDAvatarTools.Tests
             AssertResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsPotentiallyDisabled, AnalysisResultLevel.Warning);
             AssertResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsDisabled, AnalysisResultLevel.Error);
             LogAssert.Expect(LogType.Error, "AddAssetToSameFile failed because the other asset Default is not persistent");
+        }
+
+        [Test]
+        public void Passes_WhenAllLayer1And2TransitionsAreGestureTransitions()
+        {
+            TestSetup testSetup = new TestSetup();
+            //default is as such
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, Layer1And2Analyzer.ResultCode.AreGestureLayers, AnalysisResultLevel.Pass);
+        }
+
+        [Test]
+        public void Warns_WhenLayer1And2AnyStateTransitionsAreNonGesture()
+        {
+            TestSetup testSetup = new TestSetup();
+            testSetup.FX.AddParameter("param", AnimatorControllerParameterType.Bool);
+            testSetup.FX.layers[1].stateMachine.anyStateTransitions[2].conditions = new[]
+            {
+                new AnimatorCondition()
+                {
+                    mode = AnimatorConditionMode.If,
+                    parameter = "param"
+                }
+            };
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, Layer1And2Analyzer.ResultCode.MayNotBeGestureLayers, AnalysisResultLevel.Warning);
+        }
+
+        [Test]
+        public void Warns_WhenLayer1and2TransitionPathsHaveNoGestureParameterConditions()
+        {
+            //since this is the big test, will do a cursory check of both layers
+            TestSetup testSetup = new TestSetup();
+            testSetup.FX.AddParameter("param", AnimatorControllerParameterType.Bool);
+            TestLayer(1);
+            TestLayer(2);
+
+            void TestLayer(int layer)
+            {
+                AnimatorStateMachine stateMachine = testSetup.FX.layers[layer].stateMachine;
+                AnimatorStateTransition initialTransition = stateMachine.anyStateTransitions[3];
+                AnimatorState state1 = initialTransition.destinationState;
+                AnimatorState state2 = stateMachine.AddState("state2");
+                AnimatorState state3 = stateMachine.AddState("state3");
+                AnimatorState state4 = stateMachine.AddState("state4");
+                SetNonGestureConditions(initialTransition);
+                SetNonGestureConditions(state1.AddTransition(state2));
+                SetNonGestureConditions(state2.AddTransition(state3));
+                SetNonGestureConditions(state3.AddTransition(state4));
+                SetNonGestureConditions(stateMachine.defaultState.AddTransition(state2));
+
+                IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+                AssertResult(results, Layer1And2Analyzer.ResultCode.MayNotBeGestureLayers, AnalysisResultLevel.Warning);
+
+                void SetNonGestureConditions(AnimatorStateTransition transition)
+                    => transition.conditions = new[]
+                    {
+                        new AnimatorCondition()
+                        {
+                            mode = AnimatorConditionMode.If,
+                            parameter = "param"
+                        }
+                    };
+            }
+        }
+
+        //TODO: could kinda use more thorough testing on different kinds of paths
+        [Test]
+        public void Passes_WhenLayer1and2TransitionPathsHaveGestureParameterConditions()
+        {
+            //since this is the big test, will do a cursory check of both layers
+            TestSetup testSetup = new TestSetup();
+            testSetup.FX.AddParameter("param", AnimatorControllerParameterType.Bool);
+            TestLayer(1, "GestureLeft");
+            TestLayer(2, "GestureRight");
+
+            void TestLayer(int layer, string gestureParameter)
+            {
+                AnimatorStateMachine stateMachine = testSetup.FX.layers[layer].stateMachine;
+                AnimatorStateTransition initialTransition = stateMachine.anyStateTransitions[3];
+                AnimatorState state1 = initialTransition.destinationState;
+                AnimatorState state2 = stateMachine.AddState("state2");
+                AnimatorState state3 = stateMachine.AddState("state3");
+                AnimatorState state4 = stateMachine.AddState("state3");
+                SetNonGestureConditions(initialTransition);
+                SetNonGestureConditions(state1.AddTransition(state2));
+                SetGestureConditions(state2.AddTransition(state3));
+                SetNonGestureConditions(state3.AddTransition(state4));
+                SetNonGestureConditions(stateMachine.defaultState.AddTransition(state2));
+
+                IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+                AssertResult(results, Layer1And2Analyzer.ResultCode.AreGestureLayers, AnalysisResultLevel.Pass);
+
+                void SetNonGestureConditions(AnimatorStateTransition transition)
+                    => transition.conditions = new[]
+                    {
+                        new AnimatorCondition()
+                        {
+                            mode = AnimatorConditionMode.If,
+                            parameter = "param"
+                        }
+                    };
+                void SetGestureConditions(AnimatorStateTransition transition)
+                    => transition.conditions = new[]
+                    {
+                        new AnimatorCondition()
+                        {
+                            mode = AnimatorConditionMode.Equals,
+                            parameter = gestureParameter,
+                            threshold = 0
+                        }
+                    };
+            }
+        }
+
+        //would also then assume failures work even if circular
+        [Test]
+        public void Passes_WhenLayer1and2TransitionPathsHaveGestureParameterConditionsAndAreCircular()
+        {
+            //since this is the big test, will do a cursory check of both layers
+            TestSetup testSetup = new TestSetup();
+            testSetup.FX.AddParameter("param", AnimatorControllerParameterType.Bool);
+
+            AnimatorStateMachine stateMachine = testSetup.FX.layers[1].stateMachine;
+            AnimatorStateTransition initialTransition = stateMachine.anyStateTransitions[3];
+            AnimatorState state1 = initialTransition.destinationState;
+            AnimatorState state2 = stateMachine.AddState("state2");
+            AnimatorState state3 = stateMachine.AddState("state3");
+            AnimatorState state4 = stateMachine.AddState("state3");
+            SetNonGestureConditions(initialTransition);
+            SetNonGestureConditions(state1.AddTransition(state2));
+            SetGestureConditions(state2.AddTransition(state3));
+            SetNonGestureConditions(state3.AddTransition(state4));
+            SetNonGestureConditions(state4.AddTransition(state1));
+            SetNonGestureConditions(stateMachine.defaultState.AddTransition(state2));
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, Layer1And2Analyzer.ResultCode.AreGestureLayers, AnalysisResultLevel.Pass);
+
+            void SetNonGestureConditions(AnimatorStateTransition transition)
+                => transition.conditions = new[]
+                {
+                    new AnimatorCondition()
+                    {
+                        mode = AnimatorConditionMode.If,
+                        parameter = "param"
+                    }
+                };
+            void SetGestureConditions(AnimatorStateTransition transition)
+                => transition.conditions = new[]
+                {
+                    new AnimatorCondition()
+                    {
+                        mode = AnimatorConditionMode.Equals,
+                        parameter = "GestureLeft",
+                        threshold = 0
+                    }
+                };
         }
 
         private static void AssertResult(

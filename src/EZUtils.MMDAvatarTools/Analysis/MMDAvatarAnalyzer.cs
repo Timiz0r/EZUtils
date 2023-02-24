@@ -22,6 +22,7 @@ namespace EZUtils.MMDAvatarTools
                 new NonBodyMeshAnalyzer(),
                 new EmptyStateAnalyzer(),
                 new WriteDefaultsAnalyzer(),
+                new Layer1And2Analyzer()
             };
         }
 
