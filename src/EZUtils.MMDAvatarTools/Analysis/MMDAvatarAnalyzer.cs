@@ -20,7 +20,8 @@ namespace EZUtils.MMDAvatarTools
             {
                 new BodyMeshAnalyzer(),
                 new NonBodyMeshAnalyzer(),
-                new EmptyStateAnalyzer()
+                new EmptyStateAnalyzer(),
+                new WriteDefaultsAnalyzer(),
             };
         }
 

@@ -30,7 +30,6 @@ namespace EZUtils.MMDAvatarTools
                 ResultCode.ClearOfMMDBlendShapes, AnalysisResultLevel.Pass, null);
         }
 
-
         public static class ResultCode
         {
             public static readonly string ContainsMMDBlendShapes = Code();

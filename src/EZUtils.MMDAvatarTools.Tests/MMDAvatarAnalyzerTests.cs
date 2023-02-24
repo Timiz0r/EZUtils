@@ -5,19 +5,17 @@ namespace EZUtils.MMDAvatarTools.Tests
     using NUnit.Framework;
     using UnityEditor.Animations;
     using UnityEngine;
+    using UnityEngine.TestTools;
     using VRC.SDK3.Avatars.Components;
     using static VRC.SDK3.Avatars.Components.VRCAvatarDescriptor;
 
     /*
      * TODO analyzers
-     * error for write defaults off, downgraded to warnings if a potential weight change is detected
      * summary of blend shapes
-     * warning for empty states
      * when ready to do ui rendering, modify AssertResult to ensure there's always a renderer
      * add an issue for suppressing things. gotta think about where to store them, probably in an asset. and the structure.
      * fx layers 1 and 2 (not 0) do non-hands stuff
      */
-    //TODO: for both analyzer and tester, take a look at descriptor. there should be an extra bool or two for enabling customized layers.
     public class MMDAvatarAnalyzerTests
     {
         [Test]
@@ -109,7 +107,7 @@ namespace EZUtils.MMDAvatarTools.Tests
         public void Warns_WhenPlayableLayersHaveEmptyStates()
         {
             TestSetup testSetup = new TestSetup();
-            testSetup.FXLayer.layers[2].stateMachine.defaultState.motion = null;
+            testSetup.AddedFXLayer.defaultState.motion = null;
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
@@ -120,11 +118,95 @@ namespace EZUtils.MMDAvatarTools.Tests
         public void Passes_WhenPlayableLayersHaveNoEmptyStates()
         {
             TestSetup testSetup = new TestSetup();
-            //the default should pass
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
             AssertResult(results, EmptyStateAnalyzer.ResultCode.HasNoEmptyStates, AnalysisResultLevel.Pass);
+        }
+
+        [Test]
+        public void Passes_WhenFXLayerStatesHaveWriteDefaultsEnabled()
+        {
+            TestSetup testSetup = new TestSetup();
+            foreach (AnimatorState state in testSetup.FX.layers.SelectMany(l => l.stateMachine.states).Select(s => s.state))
+            {
+                state.writeDefaultValues = true;
+            }
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsEnabled, AnalysisResultLevel.Pass);
+        }
+
+        [Test]
+        public void Passes_WhenFXLayers1and2StatesHaveWriteDefaultsDisabled()
+        {
+            TestSetup testSetup = new TestSetup();
+            //is the default, incidentally
+            foreach (AnimatorState state in testSetup.FX.layers[1].stateMachine.states.Select(s => s.state))
+            {
+                state.writeDefaultValues = false;
+            }
+            foreach (AnimatorState state in testSetup.FX.layers[2].stateMachine.states.Select(s => s.state))
+            {
+                state.writeDefaultValues = false;
+            }
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsEnabled, AnalysisResultLevel.Pass);
+        }
+
+        [Test]
+        public void Errors_WhenFXStatesHaveWriteDefaultsDisabled()
+        {
+            TestSetup testSetup = new TestSetup();
+            foreach (AnimatorState state in testSetup.FX.layers.SelectMany(l => l.stateMachine.states).Select(s => s.state))
+            {
+                state.writeDefaultValues = false;
+            }
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsDisabled, AnalysisResultLevel.Error);
+        }
+
+        [Test]
+        public void Warns_WhenFXStatesHaveWriteDefaultsDisabledButMayBecomeWeightZero()
+        {
+            TestSetup testSetup = new TestSetup();
+            testSetup.AddedFXLayer.states[0].state.writeDefaultValues = false;
+            VRCAnimatorLayerControl behaviour =
+                testSetup.AddedFXLayer.states[0].state.AddStateMachineBehaviour<VRCAnimatorLayerControl>();
+            behaviour.playable = VRC.SDKBase.VRC_AnimatorLayerControl.BlendableLayer.FX;
+            behaviour.layer = 3;
+            behaviour.goalWeight = 0;
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsPotentiallyDisabled, AnalysisResultLevel.Warning);
+            AssertNoResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsDisabled, AnalysisResultLevel.Error);
+            LogAssert.Expect(LogType.Error, "AddAssetToSameFile failed because the other asset Default is not persistent");
+        }
+
+        [Test]
+        public void WarnsAndErrors_WhenFXStatesHaveBothWriteDefaultsDisabledAndPotentiallyDisabledStates()
+        {
+            TestSetup testSetup = new TestSetup();
+            testSetup.AddedFXLayer.states[0].state.writeDefaultValues = false;
+            VRCAnimatorLayerControl behaviour =
+                testSetup.AddedFXLayer.states[0].state.AddStateMachineBehaviour<VRCAnimatorLayerControl>();
+            behaviour.playable = VRC.SDKBase.VRC_AnimatorLayerControl.BlendableLayer.FX;
+            behaviour.layer = 3;
+            behaviour.goalWeight = 0;
+            AnimatorStateMachine anotherLayer = testSetup.AddFXLayer("another layer");
+            anotherLayer.states[0].state.writeDefaultValues = false;
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsPotentiallyDisabled, AnalysisResultLevel.Warning);
+            AssertResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsDisabled, AnalysisResultLevel.Error);
+            LogAssert.Expect(LogType.Error, "AddAssetToSameFile failed because the other asset Default is not persistent");
         }
 
         private static void AssertResult(
@@ -132,7 +214,13 @@ namespace EZUtils.MMDAvatarTools.Tests
             => Assert.That(
                 results,
                 Has.Exactly(1).Matches<AnalysisResult>(r => r.ResultCode == resultCode && r.Level == level),
-                $"Could not find result '{resultCode}' '{level}'. Result:\r\n\t{string.Join("\r\n\t", results.Select(r => $"'{r.ResultCode}' '{r.Level}'"))}");
+                $"Could not find result '{resultCode}' '{level}'. Results:\r\n\t{string.Join("\r\n\t", results.Select(r => $"'{r.ResultCode}' '{r.Level}'"))}");
+        private static void AssertNoResult(
+            IEnumerable<AnalysisResult> results, string resultCode, AnalysisResultLevel level)
+            => Assert.That(
+                results,
+                Has.Exactly(0).Matches<AnalysisResult>(r => r.ResultCode == resultCode && r.Level == level),
+                $"Found result '{resultCode}' '{level}' that shouldn't exist. Results:\r\n\t{string.Join("\r\n\t", results.Select(r => $"'{r.ResultCode}' '{r.Level}'"))}");
 
         private static void ConfigureMesh(SkinnedMeshRenderer smr)
             => smr.sharedMesh =
@@ -154,13 +242,17 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             public VRCAvatarDescriptor Avatar { get; }
 
-            public AnimatorController FXLayer { get; }
+            public AnimatorController FX { get; }
+
+            public AnimatorStateMachine AddedFXLayer { get; }
 
             public ObjectBuilder AvatarBuilder { get; }
 
             public TestSetup()
             {
-                VrcDefaultAnimatorControllers controllers = new VrcDefaultAnimatorControllers();
+                FX = new VrcDefaultAnimatorControllers().FX;
+                AddedFXLayer = AddFXLayer("AddedLayer");
+
                 analyzer = new MmdAvatarAnalyzer();
                 SkinnedMeshRenderer body = null;
                 AvatarBuilder = new ObjectBuilder("avatar")
@@ -171,7 +263,7 @@ namespace EZUtils.MMDAvatarTools.Tests
                         {
                             new CustomAnimLayer
                             {
-                                animatorController = controllers.FX,
+                                animatorController = FX,
                                 isDefault = false,
                                 isEnabled = true,
                                 type = AnimLayerType.FX
@@ -184,10 +276,32 @@ namespace EZUtils.MMDAvatarTools.Tests
 
                 Body = body;
                 Avatar = avatar;
-                FXLayer = controllers.FX;
             }
 
             public IReadOnlyList<AnalysisResult> Analyze() => analyzer.Analyze(Avatar);
+
+            public AnimatorStateMachine AddFXLayer(string name)
+            {
+                AnimatorStateMachine result;
+                FX.AddLayer(
+                    new AnimatorControllerLayer()
+                    {
+                        name = name,
+                        defaultWeight = 1.0f,
+                        stateMachine = result = new AnimatorStateMachine()
+                        {
+                            name = name
+                        }
+                    });
+                result.AddState(
+                    new AnimatorState()
+                    {
+                        name = "Default",
+                        writeDefaultValues = true,
+                        motion = new AnimationClip()
+                    }, Vector3.zero);
+                return result;
+            }
         }
     }
 }

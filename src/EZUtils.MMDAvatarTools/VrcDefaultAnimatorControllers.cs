@@ -99,7 +99,6 @@ namespace EZUtils.MMDAvatarTools
                 }
             }
 
-
             AnimatorStateMachine CopyStateMachine(AnimatorStateMachine originalStateMachine)
             {
                 AnimatorStateMachine newStateMachine = CopyByReflection(originalStateMachine);
