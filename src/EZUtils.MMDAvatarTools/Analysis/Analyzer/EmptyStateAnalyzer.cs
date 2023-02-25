@@ -27,11 +27,6 @@ namespace EZUtils.MMDAvatarTools
                     .Where(c => c != null));
             }
 
-            //TODO:
-            //the awkward thing is that controllers can have unconnected states and states not in layers or
-            //sub state machines, effectively invisible. both cases probably don't cause issues,
-            //so we ideally ignore them. since we're just warning, this is okay for now. or maybe the do have an effect idk.
-            //though rather the asset can have states not in layers, but they wouldnt show up here, i suppose.
             foreach (AnimatorState state in animatorControllers
                 .SelectMany(c => c.layers)
                 .SelectMany(l => l.stateMachine.states)

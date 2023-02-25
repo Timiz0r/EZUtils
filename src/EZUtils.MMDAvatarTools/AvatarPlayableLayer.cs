@@ -7,9 +7,6 @@ namespace EZUtils.MMDAvatarTools
     public class AvatarPlayableLayer
     {
         private AnimationLayerMixerPlayable playableMixer;
-        //TODO: having to pass around an index is kinda poop?
-        //could encapsulate stuff to hide the index, but that's kinda what we're already setting out to do
-        //in any case, either decide to do that, or make this a private member of AvatarPlayableAnimator
         private readonly int inputIndex;
 
         //part of me doesn't want the mask parameter, but all layers end up using the same logic

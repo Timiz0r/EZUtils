@@ -6,18 +6,56 @@
   xsi:schemaLocation="
     UnityEngine.UIElements ../../UIElementsSchema/UnityEngine.UIElements.fixed.xsd
     UnityEditor.UIElements ../../UIElementsSchema/UnityEditor.UIElements.xsd">
-  <VisualElement>
+  <VisualElement style="padding: 2px">
     <Style src="MmdAvatarTesterEditorWindow.uss" />
 
-    <VisualElement class="show-edit-mode">
-      <Label text="Please enter play mode to test your avatar." />
+    <Label text="アバター" />
+    <editor:ObjectField name="targetAvatar" />
+
+    <VisualElement class="section">
+      <Label text="再生モードで試す" />
+      <VisualElement class="show-edit-mode">
+        <Label text="再生モードに入っていません" />
+      </VisualElement>
+
+      <VisualElement class="show-play-mode">
+        <Label text="アニメーション" />
+        <editor:ObjectField name="targetAnimation" />
+        <Button class="show-not-running" name="start" text="アニメーション再生" />
+        <Button class="show-running" name="stop" text="アニメーション停止" />
+      </VisualElement>
     </VisualElement>
 
-    <VisualElement class="show-play-mode">
-      <editor:ObjectField name="targetAvatar" />
-      <editor:ObjectField name="targetAnimation" />
-      <Button class="show-not-running" name="start" text="Start" />
-      <Button class="show-running" name="stop" text="Stop" />
+    <VisualElement class="section">
+      <Label text="アバター解析" />
+      <Button name="analyze" text="再解析" />
+      <ScrollView>
+        <VisualElement class="result">
+          <VisualElement class="result-header">
+            <VisualElement class="result-title" style="flex-direction: row;">
+              <VisualElement class="result-icon" />
+              <Label class="analyzer-name" text="Write Defaultsオフ" />
+            </VisualElement>
+            <Label class="result-code" text="WriteDefaultsAnalyzer.WriteDefaultsDisabled" />
+          </VisualElement>
+
+          <VisualElement class="result-details">
+            <TextElement style="margin-bottom: 4px;" text="FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。オンにしないと、表情が変わらない可能性が高くなります。" />
+
+            <VisualElement>
+              <VisualElement style="flex-direction: row;align-items: center;">
+                <Label text="レイヤー 「帽子」" />
+                <Button text="開く" />
+              </VisualElement>
+
+              <VisualElement style="padding-left: 20px;">
+                <Label text="帽子オフ" />
+                <Label text="帽子オン" />
+              </VisualElement>
+            </VisualElement>
+          </VisualElement>
+        </VisualElement>
+      </ScrollView>
     </VisualElement>
   </VisualElement>
 </UXML>

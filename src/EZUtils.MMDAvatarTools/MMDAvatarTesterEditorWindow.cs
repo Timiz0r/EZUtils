@@ -1,6 +1,8 @@
 namespace EZUtils.MMDAvatarTools
 {
     using System;
+    using System.Linq;
+    using System.Reflection;
     using UnityEditor;
     using UnityEditor.UIElements;
     using UnityEngine;
@@ -78,6 +80,19 @@ namespace EZUtils.MMDAvatarTools
             targetAnimation.SetValueWithoutNotify(
                 AssetDatabase.LoadAssetAtPath<AnimationClip>(
                     "Packages/com.timiz0r.ezutils.mmdavatartools/mmdsample.anim"));
+
+            rootVisualElement.Q<Button>(name: "analyze").clicked += () =>
+            {
+                Type animatorType = Type.GetType("UnityEditor.Graphs.AnimatorControllerTool, UnityEditor.Graphs");
+                EditorWindow window = EditorWindow.GetWindow(animatorType);
+
+                animatorType.GetProperty("animatorController").SetValue(
+                    window,
+                    ((VRCAvatarDescriptor)targetAvatar.value).baseAnimationLayers
+                        .Single(l => l.type == VRCAvatarDescriptor.AnimLayerType.FX).animatorController);
+
+                animatorType.GetProperty("selectedLayerIndex").SetValue(window, 2);
+            };
 
 
             void EnableRunningIfPossible()
