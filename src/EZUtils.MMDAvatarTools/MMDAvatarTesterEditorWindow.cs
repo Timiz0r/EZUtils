@@ -12,7 +12,7 @@ namespace EZUtils.MMDAvatarTools
     public class MmdAvatarTesterEditorWindow : EditorWindow
     {
         private bool validAvatarIsTargeted = false;
-        private bool animatorControllerIsTargeted = false;
+        private bool animatorControllerIsTargeted = true;
         private readonly MmdAvatarTester mmdAvatarTester = new MmdAvatarTester();
 
         [MenuItem("EZUtils/MMD avatar tester", isValidateFunction: false, priority: 0)]
