@@ -22,21 +22,20 @@ namespace EZUtils.MMDAvatarTools
                 if (blendShapeSummary.Results.Any(r => r.ExistingBlendShapes.Any()))
                 {
                     return AnalysisResult.Generate(
-                        ResultCode.ContainsMMDBlendShapes, AnalysisResultLevel.Warning, null);
+                        Result.ContainsMMDBlendShapes, AnalysisResultLevel.Warning, null);
                 }
             }
 
             return AnalysisResult.Generate(
-                ResultCode.ClearOfMMDBlendShapes, AnalysisResultLevel.Pass, null);
+                Result.ClearOfMMDBlendShapes, AnalysisResultLevel.Pass, null);
         }
 
-        public static class ResultCode
+        public static class Result
         {
-            public static readonly string ContainsMMDBlendShapes = Code();
-            public static readonly string ClearOfMMDBlendShapes = Code();
-
-            private static string Code([CallerMemberName] string caller = "")
-                => $"{nameof(NonBodyMeshAnalyzer)}.{caller}";
+            public static readonly AnalysisResultIdentifier ContainsMMDBlendShapes =
+                AnalysisResultIdentifier.Create<NonBodyMeshAnalyzer>("Bodyではないメッシュには、MMD対応のブレンドシェープがあります");
+            public static readonly AnalysisResultIdentifier ClearOfMMDBlendShapes =
+                AnalysisResultIdentifier.Create<NonBodyMeshAnalyzer>("Bodyではないメッシュには、MMD対応のブレンドシェープはありません");
         }
     }
 

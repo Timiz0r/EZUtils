@@ -17,7 +17,7 @@ namespace EZUtils.MMDAvatarTools
             VRCAvatarDescriptor.CustomAnimLayer fxLayer = avatar.baseAnimationLayers.SingleOrDefault(
                 l => !l.isDefault && l.type == VRCAvatarDescriptor.AnimLayerType.FX);
             if (fxLayer.animatorController == null) return AnalysisResult.Generate(
-                ResultCode.AreGestureLayers,
+                Result.AreGestureLayers,
                 AnalysisResultLevel.Pass,
                 null);
 
@@ -29,14 +29,14 @@ namespace EZUtils.MMDAvatarTools
             if (nonGestureTransitionPaths.Count > 0)
             {
                 return AnalysisResult.Generate(
-                    ResultCode.MayNotBeGestureLayers,
+                    Result.MayNotBeGestureLayers,
                     AnalysisResultLevel.Warning,
                     null);
             }
             else
             {
                 return AnalysisResult.Generate(
-                    ResultCode.AreGestureLayers,
+                    Result.AreGestureLayers,
                     AnalysisResultLevel.Pass,
                     null);
             }
@@ -108,13 +108,12 @@ namespace EZUtils.MMDAvatarTools
             }
         }
 
-        public static class ResultCode
+        public static class Result
         {
-            public static readonly string AreGestureLayers = Code();
-            public static readonly string MayNotBeGestureLayers = Code();
-
-            private static string Code([CallerMemberName] string caller = "")
-                => $"{nameof(Layer1And2Analyzer)}.{caller}";
+            public static readonly AnalysisResultIdentifier AreGestureLayers =
+                AnalysisResultIdentifier.Create<Layer1And2Analyzer>("FXレイヤーの第1と第2のレイヤーがジェスチャー様");
+            public static readonly AnalysisResultIdentifier MayNotBeGestureLayers =
+                AnalysisResultIdentifier.Create<Layer1And2Analyzer>("FXレイヤーの第1と第2のレイヤーがジェスチャー様ではない可能性があります");
         }
     }
 }

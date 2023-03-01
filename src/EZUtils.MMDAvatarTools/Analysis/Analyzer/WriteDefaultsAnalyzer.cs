@@ -14,7 +14,7 @@ namespace EZUtils.MMDAvatarTools
             VRCAvatarDescriptor.CustomAnimLayer fxLayer = avatar.baseAnimationLayers.SingleOrDefault(
                 l => !l.isDefault && l.type == VRCAvatarDescriptor.AnimLayerType.FX);
             if (fxLayer.animatorController == null) return AnalysisResult.Generate(
-                ResultCode.WriteDefaultsEnabled,
+                Result.WriteDefaultsEnabled,
                 AnalysisResultLevel.Pass,
                 null);
 
@@ -47,7 +47,7 @@ namespace EZUtils.MMDAvatarTools
                     .ToLookup(s => s.definitelyDisabled, s => s.state);
 
             if (writeDefaultsDisabledStates.Count == 0) return AnalysisResult.Generate(
-                ResultCode.WriteDefaultsEnabled,
+                Result.WriteDefaultsEnabled,
                 AnalysisResultLevel.Pass,
                 null
             );
@@ -56,7 +56,7 @@ namespace EZUtils.MMDAvatarTools
             AnimatorState[] definitelyDisabledStates = writeDefaultsDisabledStates[DefinitelyDisabled]
                 .ToArray();
             if (definitelyDisabledStates.Length > 0) results.Add(new AnalysisResult(
-                ResultCode.WriteDefaultsDisabled,
+                Result.WriteDefaultsDisabled,
                 AnalysisResultLevel.Error,
                 null
             ));
@@ -64,7 +64,7 @@ namespace EZUtils.MMDAvatarTools
             AnimatorState[] possiblyDisabledStates = writeDefaultsDisabledStates[!DefinitelyDisabled]
                 .ToArray();
             if (possiblyDisabledStates.Length > 0) results.Add(new AnalysisResult(
-                ResultCode.WriteDefaultsPotentiallyDisabled,
+                Result.WriteDefaultsPotentiallyDisabled,
                 AnalysisResultLevel.Warning,
                 null
             ));
@@ -86,11 +86,14 @@ namespace EZUtils.MMDAvatarTools
 
         }
 
-        public static class ResultCode
+        public static class Result
         {
-            public static readonly string WriteDefaultsEnabled = Code();
-            public static readonly string WriteDefaultsDisabled = Code();
-            public static readonly string WriteDefaultsPotentiallyDisabled = Code();
+            public static readonly AnalysisResultIdentifier WriteDefaultsEnabled =
+                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>("FXレイヤーのWrite Defaultsがオン");
+            public static readonly AnalysisResultIdentifier WriteDefaultsDisabled =
+                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>("FXレイヤーのWrite Defaultsがオフ");
+            public static readonly AnalysisResultIdentifier WriteDefaultsPotentiallyDisabled =
+                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>("FXレイヤーのWrite Defaultsがオフになっている可能性があります");
 
             private static string Code([CallerMemberName] string caller = "")
                 => $"{nameof(WriteDefaultsAnalyzer)}.{caller}";

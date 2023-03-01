@@ -2,7 +2,6 @@ namespace EZUtils.MMDAvatarTools
 {
     using System.Collections.Generic;
     using System.Linq;
-    using System.Runtime.CompilerServices;
     using UnityEditor.Animations;
     using VRC.SDK3.Avatars.Components;
 
@@ -34,25 +33,24 @@ namespace EZUtils.MMDAvatarTools
             {
                 //TODO: once rendering is ready, dont short circuit
                 if (state.motion == null) return AnalysisResult.Generate(
-                    ResultCode.HasEmptyStates,
+                    Result.HasEmptyStates,
                     AnalysisResultLevel.Warning,
                     null
                 );
             }
             return AnalysisResult.Generate(
-                ResultCode.HasNoEmptyStates,
+                Result.HasNoEmptyStates,
                 AnalysisResultLevel.Pass,
                 null
             );
         }
 
-        public static class ResultCode
+        public static class Result
         {
-            public static readonly string HasEmptyStates = Code();
-            public static readonly string HasNoEmptyStates = Code();
-
-            private static string Code([CallerMemberName] string caller = "")
-                => $"{nameof(EmptyStateAnalyzer)}.{caller}";
+            public static readonly AnalysisResultIdentifier HasEmptyStates =
+                AnalysisResultIdentifier.Create<EmptyStateAnalyzer>("FXレイヤーにはモーションのないステートがあります");
+            public static readonly AnalysisResultIdentifier HasNoEmptyStates =
+                AnalysisResultIdentifier.Create<EmptyStateAnalyzer>("FXレイヤーの全部のステートにはモーションがあります");
         }
     }
 }

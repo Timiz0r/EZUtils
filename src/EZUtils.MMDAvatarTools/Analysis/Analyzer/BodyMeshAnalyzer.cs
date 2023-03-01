@@ -22,44 +22,46 @@ namespace EZUtils.MMDAvatarTools
                 .ToArray();
 
             if (body == null) return AnalysisResult.Generate(
-                ResultCode.NoBody,
+                Result.NoBody,
                 AnalysisResultLevel.Error,
                 null);
             if (body.TryGetComponent(out SkinnedMeshRenderer bodyMesh))
             {
                 return MmdBlendShapeSummary.Generate(bodyMesh).HasAnyMmdBlendShapes
                     ? AnalysisResult.Generate(
-                        ResultCode.MmdBodyMeshFound,
+                        Result.MmdBodyMeshFound,
                         AnalysisResultLevel.Pass,
                         null)
                     : AnalysisResult.Generate(
-                        ResultCode.BodyHasNoMmdBlendShapes,
+                        Result.BodyHasNoMmdBlendShapes,
                         AnalysisResultLevel.Error, //users probably want their face to move, so an error seems more appropriate
                         null);
             }
 
             if (body.GetComponent<MeshFilter>() != null) return AnalysisResult.Generate(
-                ResultCode.NotSkinnedMeshRenderer,
+                Result.NotSkinnedMeshRenderer,
                 AnalysisResultLevel.Error,
                 null);
 
             //so we have a body but no renderer
             return AnalysisResult.Generate(
-                ResultCode.NoRendererInBody,
+                Result.NoRendererInBody,
                 AnalysisResultLevel.Error,
                 null);
         }
 
-        public static class ResultCode
+        public static class Result
         {
-            public static readonly string MmdBodyMeshFound = Code();
-            public static readonly string NoBody = Code();
-            public static readonly string NotSkinnedMeshRenderer = Code();
-            public static readonly string NoRendererInBody = Code();
-            public static readonly string BodyHasNoMmdBlendShapes = Code();
-
-            private static string Code([CallerMemberName] string caller = "")
-                => $"{nameof(BodyMeshAnalyzer)}.{caller}";
+            public static readonly AnalysisResultIdentifier MmdBodyMeshFound =
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("MMD対応のBodyというメッシュを発見");
+            public static readonly AnalysisResultIdentifier NoBody =
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("Bodyというゲームオブジェクトが未発見");
+            public static readonly AnalysisResultIdentifier NotSkinnedMeshRenderer =
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("BodyというメッシュはSkinned Mesh Rendererではありません");
+            public static readonly AnalysisResultIdentifier NoRendererInBody =
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("BodyというゲームオブジェクトにはRendererはありません");
+            public static readonly AnalysisResultIdentifier BodyHasNoMmdBlendShapes =
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("BodyというメッシュにはMMD対応のブレンドシェープはありません");
         }
     }
 }

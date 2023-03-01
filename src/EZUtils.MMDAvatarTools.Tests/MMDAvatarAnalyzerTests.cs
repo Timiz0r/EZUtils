@@ -14,6 +14,7 @@ namespace EZUtils.MMDAvatarTools.Tests
      * summary of blend shapes
      * when ready to do ui rendering, modify AssertResult to ensure there's always a renderer
      * note: may be able to call SetCurrentLayer of UnityEditor.Graphs.AnimatorControllerTool, UnityEditor.Graphs
+     * add an analyzer checking the mask of the fx layer. if it allows muscle transforms, then error. warn if fx layer(s) may be off.
      */
     //technically testing is a bit insufficient because we dont test sub state machines and only layers' state machines
     public class MMDAvatarAnalyzerTests
@@ -26,7 +27,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, BodyMeshAnalyzer.ResultCode.NoBody, AnalysisResultLevel.Error);
+            AssertResult(results, BodyMeshAnalyzer.Result.NoBody, AnalysisResultLevel.Error);
         }
 
         [Test]
@@ -37,7 +38,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, BodyMeshAnalyzer.ResultCode.NoRendererInBody, AnalysisResultLevel.Error);
+            AssertResult(results, BodyMeshAnalyzer.Result.NoRendererInBody, AnalysisResultLevel.Error);
         }
 
         [Test]
@@ -52,7 +53,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, BodyMeshAnalyzer.ResultCode.NotSkinnedMeshRenderer, AnalysisResultLevel.Error);
+            AssertResult(results, BodyMeshAnalyzer.Result.NotSkinnedMeshRenderer, AnalysisResultLevel.Error);
         }
 
         [Test]
@@ -63,7 +64,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, BodyMeshAnalyzer.ResultCode.MmdBodyMeshFound, AnalysisResultLevel.Pass);
+            AssertResult(results, BodyMeshAnalyzer.Result.MmdBodyMeshFound, AnalysisResultLevel.Pass);
         }
 
         [Test]
@@ -73,7 +74,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, BodyMeshAnalyzer.ResultCode.BodyHasNoMmdBlendShapes, AnalysisResultLevel.Error);
+            AssertResult(results, BodyMeshAnalyzer.Result.BodyHasNoMmdBlendShapes, AnalysisResultLevel.Error);
         }
 
         [Test]
@@ -87,7 +88,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, NonBodyMeshAnalyzer.ResultCode.ContainsMMDBlendShapes, AnalysisResultLevel.Warning);
+            AssertResult(results, NonBodyMeshAnalyzer.Result.ContainsMMDBlendShapes, AnalysisResultLevel.Warning);
         }
 
         [Test]
@@ -100,7 +101,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, NonBodyMeshAnalyzer.ResultCode.ClearOfMMDBlendShapes, AnalysisResultLevel.Pass);
+            AssertResult(results, NonBodyMeshAnalyzer.Result.ClearOfMMDBlendShapes, AnalysisResultLevel.Pass);
         }
 
         [Test]
@@ -111,7 +112,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, EmptyStateAnalyzer.ResultCode.HasEmptyStates, AnalysisResultLevel.Warning);
+            AssertResult(results, EmptyStateAnalyzer.Result.HasEmptyStates, AnalysisResultLevel.Warning);
         }
 
         [Test]
@@ -121,7 +122,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, EmptyStateAnalyzer.ResultCode.HasNoEmptyStates, AnalysisResultLevel.Pass);
+            AssertResult(results, EmptyStateAnalyzer.Result.HasNoEmptyStates, AnalysisResultLevel.Pass);
         }
 
         [Test]
@@ -135,7 +136,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsEnabled, AnalysisResultLevel.Pass);
+            AssertResult(results, WriteDefaultsAnalyzer.Result.WriteDefaultsEnabled, AnalysisResultLevel.Pass);
         }
 
         [Test]
@@ -154,7 +155,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsEnabled, AnalysisResultLevel.Pass);
+            AssertResult(results, WriteDefaultsAnalyzer.Result.WriteDefaultsEnabled, AnalysisResultLevel.Pass);
         }
 
         [Test]
@@ -168,7 +169,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsDisabled, AnalysisResultLevel.Error);
+            AssertResult(results, WriteDefaultsAnalyzer.Result.WriteDefaultsDisabled, AnalysisResultLevel.Error);
         }
 
         [Test]
@@ -184,8 +185,8 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsPotentiallyDisabled, AnalysisResultLevel.Warning);
-            AssertNoResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsDisabled, AnalysisResultLevel.Error);
+            AssertResult(results, WriteDefaultsAnalyzer.Result.WriteDefaultsPotentiallyDisabled, AnalysisResultLevel.Warning);
+            AssertNoResult(results, WriteDefaultsAnalyzer.Result.WriteDefaultsDisabled, AnalysisResultLevel.Error);
             LogAssert.Expect(LogType.Error, "AddAssetToSameFile failed because the other asset Default is not persistent");
         }
 
@@ -204,8 +205,8 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsPotentiallyDisabled, AnalysisResultLevel.Warning);
-            AssertResult(results, WriteDefaultsAnalyzer.ResultCode.WriteDefaultsDisabled, AnalysisResultLevel.Error);
+            AssertResult(results, WriteDefaultsAnalyzer.Result.WriteDefaultsPotentiallyDisabled, AnalysisResultLevel.Warning);
+            AssertResult(results, WriteDefaultsAnalyzer.Result.WriteDefaultsDisabled, AnalysisResultLevel.Error);
             LogAssert.Expect(LogType.Error, "AddAssetToSameFile failed because the other asset Default is not persistent");
         }
 
@@ -217,7 +218,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, Layer1And2Analyzer.ResultCode.AreGestureLayers, AnalysisResultLevel.Pass);
+            AssertResult(results, Layer1And2Analyzer.Result.AreGestureLayers, AnalysisResultLevel.Pass);
         }
 
         [Test]
@@ -236,7 +237,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, Layer1And2Analyzer.ResultCode.MayNotBeGestureLayers, AnalysisResultLevel.Warning);
+            AssertResult(results, Layer1And2Analyzer.Result.MayNotBeGestureLayers, AnalysisResultLevel.Warning);
         }
 
         [Test]
@@ -264,7 +265,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
                 IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-                AssertResult(results, Layer1And2Analyzer.ResultCode.MayNotBeGestureLayers, AnalysisResultLevel.Warning);
+                AssertResult(results, Layer1And2Analyzer.Result.MayNotBeGestureLayers, AnalysisResultLevel.Warning);
 
                 void SetNonGestureConditions(AnimatorStateTransition transition)
                     => transition.conditions = new[]
@@ -304,7 +305,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
                 IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-                AssertResult(results, Layer1And2Analyzer.ResultCode.AreGestureLayers, AnalysisResultLevel.Pass);
+                AssertResult(results, Layer1And2Analyzer.Result.AreGestureLayers, AnalysisResultLevel.Pass);
 
                 void SetNonGestureConditions(AnimatorStateTransition transition)
                     => transition.conditions = new[]
@@ -351,7 +352,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, Layer1And2Analyzer.ResultCode.AreGestureLayers, AnalysisResultLevel.Pass);
+            AssertResult(results, Layer1And2Analyzer.Result.AreGestureLayers, AnalysisResultLevel.Pass);
 
             void SetNonGestureConditions(AnimatorStateTransition transition)
                 => transition.conditions = new[]
@@ -375,17 +376,17 @@ namespace EZUtils.MMDAvatarTools.Tests
         }
 
         private static void AssertResult(
-            IEnumerable<AnalysisResult> results, string resultCode, AnalysisResultLevel level)
+            IEnumerable<AnalysisResult> results, AnalysisResultIdentifier result, AnalysisResultLevel level)
             => Assert.That(
                 results,
-                Has.Exactly(1).Matches<AnalysisResult>(r => r.ResultCode == resultCode && r.Level == level),
-                $"Could not find result '{resultCode}' '{level}'. Results:\r\n\t{string.Join("\r\n\t", results.Select(r => $"'{r.ResultCode}' '{r.Level}'"))}");
+                Has.Exactly(1).Matches<AnalysisResult>(r => r.Result == result && r.Level == level),
+                $"Could not find result '{result.Code}' '{level}'. Results:\r\n\t{string.Join("\r\n\t", results.Select(r => $"'{r.Result.Code}' '{r.Level}'"))}");
         private static void AssertNoResult(
-            IEnumerable<AnalysisResult> results, string resultCode, AnalysisResultLevel level)
+            IEnumerable<AnalysisResult> results, AnalysisResultIdentifier result, AnalysisResultLevel level)
             => Assert.That(
                 results,
-                Has.Exactly(0).Matches<AnalysisResult>(r => r.ResultCode == resultCode && r.Level == level),
-                $"Found result '{resultCode}' '{level}' that shouldn't exist. Results:\r\n\t{string.Join("\r\n\t", results.Select(r => $"'{r.ResultCode}' '{r.Level}'"))}");
+                Has.Exactly(0).Matches<AnalysisResult>(r => r.Result == result && r.Level == level),
+                $"Found result '{result.Code}' '{level}' that shouldn't exist. Results:\r\n\t{string.Join("\r\n\t", results.Select(r => $"'{r.Result.Code}' '{r.Level}'"))}");
 
         private static void ConfigureMesh(SkinnedMeshRenderer smr)
             => smr.sharedMesh =
