@@ -1,6 +1,7 @@
 namespace EZUtils.MMDAvatarTools
 {
     using System;
+    using System.Linq;
     using UnityEditor;
     using UnityEngine;
 
@@ -9,7 +10,7 @@ namespace EZUtils.MMDAvatarTools
     {
         public static readonly AvatarMask HandsOnly = Load("vrc_HandsOnly.mask");
         public static readonly AvatarMask MuscleOnly = Load("vrc_MusclesOnly.mask");
-        public static readonly AvatarMask Empty = new AvatarMask() { name = "mmdAvatarTester_None" };
+        public static readonly AvatarMask NoMuscle = CreateNoMuscleMask();
 
         private static AvatarMask Load(string fileName)
         {
@@ -26,6 +27,17 @@ namespace EZUtils.MMDAvatarTools
             AvatarMask copy = new AvatarMask();
             EditorUtility.CopySerialized(original, copy);
             return copy;
+        }
+
+        private static AvatarMask CreateNoMuscleMask()
+        {
+            AvatarMask mask = new AvatarMask() { name = "mmdAvatarTester_NoMuscle" };
+            foreach (AvatarMaskBodyPart bodyPart in Enum.GetValues(typeof(AvatarMaskBodyPart)).Cast<AvatarMaskBodyPart>())
+            {
+                if (bodyPart == AvatarMaskBodyPart.LastBodyPart) continue;
+                mask.SetHumanoidBodyPartActive(bodyPart, false);
+            }
+            return mask;
         }
     }
 }
