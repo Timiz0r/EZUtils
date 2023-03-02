@@ -24,7 +24,7 @@ namespace EZUtils.MMDAvatarTools
                     Result.ContainsMMDBlendShapes,
                     AnalysisResultLevel.Warning,
                     new GeneralRenderer(
-                        "Bodyではないメッシュなんですから、変化しません。",
+                        "Bodyではないメッシュは表情が変化しません。",
                         ObjectSelectionRenderer.Create(
                             "MMD対応のブレンドシェープがあるメッシュ", nonBodyMeshesWithMMdBlendShapes)));
         }

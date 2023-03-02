@@ -61,10 +61,7 @@ namespace EZUtils.MMDAvatarTools
                 Result.WriteDefaultsDisabled,
                 AnalysisResultLevel.Error,
                 new GeneralRenderer(
-                    "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。" +
-                    "しかし、FXレイヤーまたは中のアニメーションレイヤーをオフにする「VRC Animator Layer Control」や「VRC Playable Layer Control」があります。" +
-                    "このステートがオフにされる場合、表情が変化できますが、FXレイヤーの他のアニメーションが直前に起動しても無効化にされます。" +
-                    "そしてオフにされない場合、表情が変化しない可能性が高くなります。",
+                    "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。オンにしないと、表情が変化しない可能性が高くなります。",
                     new AnimatorStateRenderer(
                         "Write Defaultsがオフになっているステート", fxController, definitelyDisabledStates))
             ));
@@ -75,7 +72,10 @@ namespace EZUtils.MMDAvatarTools
                 Result.WriteDefaultsPotentiallyDisabled,
                 AnalysisResultLevel.Warning,
                 new GeneralRenderer(
-                    "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。オンにしないと、表情が変化しない可能性が高くなります。",
+                    "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。" +
+                    "しかし、FXレイヤーまたは中のアニメーションレイヤーをオフにする「VRC Animator Layer Control」や「VRC Playable Layer Control」があります。" +
+                    "このステートがオフにされる場合、表情が変化できますが、FXレイヤーの他のアニメーションが直前に起動しても無効化にされます。" +
+                    "そしてオフにされない場合、表情が変化しない可能性が高くなります。",
                     new AnimatorStateRenderer(
                         "Write Defaultsがオフになっているステート", fxController, definitelyDisabledStates))
             ));
