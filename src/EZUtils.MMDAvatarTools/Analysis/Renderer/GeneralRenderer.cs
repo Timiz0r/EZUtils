@@ -15,12 +15,10 @@ namespace EZUtils.MMDAvatarTools
 
         public void Render(VisualElement container)
         {
-            TextElement descriptionElement = new TextElement()
+            container.Add(new TextElement()
             {
                 text = description
-            };
-            descriptionElement.AddToClassList("result-description");
-            container.Add(descriptionElement);
+            }.WithClasses("analyzer-result-details-description"));
 
             additionalRenderer?.Render(container);
         }

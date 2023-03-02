@@ -102,7 +102,7 @@ namespace EZUtils.MMDAvatarTools
         {
 
             Button analyzeButton = rootVisualElement.Q<Button>(name: "analyze");
-            ScrollView resultsContainer = rootVisualElement.Q<ScrollView>(className: "result-container");
+            ScrollView resultsContainer = rootVisualElement.Q<ScrollView>(className: "analyzer-result-container");
             analyzeButton.clicked += () => ValidateAvatar();
 
             analysisValidation.AddValueValidation(targetAvatar, passCondition: o => o != null);
@@ -122,14 +122,14 @@ namespace EZUtils.MMDAvatarTools
                     resultsContainer.Add(resultElement);
 
                     resultElement
-                        .Q<VisualElement>(className: "result-icon")
-                        .AddToClassList($"result-icon-{result.Level.ToString().ToLowerInvariant()}");
-                    resultElement.Q<Label>(className: "result-friendlyname").text = result.Result.FriendlyName;
-                    resultElement.Q<Label>(className: "result-code").text = result.Result.Code;
+                        .Q<VisualElement>(className: "analyzer-result-icon")
+                        .AddToClassList($"analyzer-result-icon-{result.Level.ToString().ToLowerInvariant()}");
+                    resultElement.Q<Label>(className: "analyzer-result-friendlyname").text = result.Result.FriendlyName;
+                    resultElement.Q<Label>(className: "analyzer-result-code").text = result.Result.Code;
 
                     if (result.Renderer != null)
                     {
-                        result.Renderer.Render(resultElement.Q<VisualElement>(className: "result-details"));
+                        result.Renderer.Render(resultElement.Q<VisualElement>(className: "analyzer-result-details"));
                     }
                 }
             };

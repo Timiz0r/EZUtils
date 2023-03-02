@@ -10,11 +10,11 @@
   <VisualElement>
     <Style src="AnimatorStateRendererLayerElement.uss" />
 
-    <VisualElement class="result-details-state-layer">
-      <Label class="result-details-state-layer-name" />
+    <VisualElement class="analyzer-result-details-state-layer">
+      <Label class="analyzer-result-details-state-layer-name" />
       <Button text="開く" />
     </VisualElement>
 
-    <VisualElement class="result-details-state-list" />
+    <VisualElement class="analyzer-result-details-state-list" />
   </VisualElement>
 </UXML>

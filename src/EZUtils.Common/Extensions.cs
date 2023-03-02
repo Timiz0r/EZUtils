@@ -5,6 +5,7 @@ namespace EZUtils
     using System.Linq;
     using UnityEditor.UIElements;
     using UnityEngine;
+    using UnityEngine.UIElements;
 
     public static class Extensions
     {
@@ -17,6 +18,15 @@ namespace EZUtils
         {
             fieldConfigurer?.Invoke(objectField);
             return new TypedObjectField<T>(objectField);
+        }
+
+        public static T WithClasses<T>(this T element, params string[] classes) where T : VisualElement
+        {
+            foreach (string @class in classes)
+            {
+                element.AddToClassList(@class);
+            }
+            return element;
         }
     }
 }

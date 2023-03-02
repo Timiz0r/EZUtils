@@ -26,10 +26,9 @@ namespace EZUtils.MMDAvatarTools
 
         public void Render(VisualElement container)
         {
-            container.Add(new Label(title));
+            container.Add(new Label(title).WithClasses("results-details-title"));
 
             VisualElement objectContainer = new VisualElement();
-            // objectContainer.AddToClassList("result-objects");
             container.Add(objectContainer);
 
             foreach (UnityEngine.Object obj in objects)

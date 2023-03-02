@@ -12,7 +12,7 @@
     <Label text="アバター" />
     <editor:ObjectField name="targetAvatar" />
 
-    <VisualElement class="section">
+    <VisualElement class="section tester">
       <Label text="再生モードで試す" />
       <VisualElement class="show-edit-mode">
         <Label text="再生モードに入っていません" />
@@ -26,10 +26,10 @@
       </VisualElement>
     </VisualElement>
 
-    <VisualElement class="section">
+    <VisualElement class="section analyzer">
       <Label text="アバター解析" />
       <Button name="analyze" text="再解析" />
-      <ScrollView class="result-container" />
+      <ScrollView class="analyzer-result-container" />
     </VisualElement>
   </VisualElement>
 </UXML>

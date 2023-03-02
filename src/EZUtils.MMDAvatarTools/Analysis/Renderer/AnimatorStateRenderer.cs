@@ -28,7 +28,7 @@ namespace EZUtils.MMDAvatarTools
 
         public void Render(VisualElement container)
         {
-            container.Add(new Label(title));
+            container.Add(new Label(title).WithClasses("results-details-title"));
 
             VisualElement statesContainer = new VisualElement();
             container.Add(statesContainer);
@@ -38,10 +38,10 @@ namespace EZUtils.MMDAvatarTools
                 TemplateContainer layerContainer = layerElement.CloneTree();
                 statesContainer.Add(layerContainer);
 
-                layerContainer.Q<Label>(className: "result-details-state-layer-name").text = group.Key;
+                layerContainer.Q<Label>(className: "analyzer-result-details-state-layer-name").text = group.Key;
                 layerContainer.Q<Button>().clicked += () => FocusAnimatorControllerLayer(group.Key);
 
-                VisualElement stateNameContainer = layerContainer.Q<VisualElement>(className: "result-details-state-list");
+                VisualElement stateNameContainer = layerContainer.Q<VisualElement>(className: "analyzer-result-details-state-list");
                 foreach (string stateName in group)
                 {
                     stateNameContainer.Add(new Label(stateName));
