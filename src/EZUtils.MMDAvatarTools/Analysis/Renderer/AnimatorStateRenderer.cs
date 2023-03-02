@@ -10,6 +10,8 @@ namespace EZUtils.MMDAvatarTools
 
     public class AnimatorStateRenderer : IAnalysisResultRenderer
     {
+        private readonly VisualTreeAsset layerElement = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
+            "Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/AnimatorStateRendererLayerElement.uxml");
         private readonly string title;
         private readonly AnimatorController animatorController;
         private readonly IReadOnlyList<(string layerName, string stateName)> states;
@@ -29,25 +31,20 @@ namespace EZUtils.MMDAvatarTools
             container.Add(new Label(title));
 
             VisualElement statesContainer = new VisualElement();
-            // objectContainer.AddToClassList("result-objects");
             container.Add(statesContainer);
 
             foreach (IGrouping<string, string> group in states.GroupBy(s => s.layerName, s => s.layerName))
             {
-                VisualElement layerContainer = new VisualElement();
+                TemplateContainer layerContainer = layerElement.CloneTree();
                 statesContainer.Add(layerContainer);
 
-                VisualElement layerName = new VisualElement();
-                layerName.AddToClassList("result-details-state-layername");
-                layerName.Add(new Label($"レイヤー 「{group.Key}」"));
-                layerName.Add(new Button(() => FocusAnimatorControllerLayer(group.Key)) { text = "開く" });
-                layerContainer.Add(layerName);
+                layerContainer.Q<Label>(className: "result-details-state-layer-name").text = group.Key;
+                layerContainer.Q<Button>().clicked += () => FocusAnimatorControllerLayer(group.Key);
 
-                VisualElement stateNames = new VisualElement();
-                stateNames.AddToClassList("result-details-state-statenames");
+                VisualElement stateNameContainer = layerContainer.Q<VisualElement>(className: "result-details-state-list");
                 foreach (string stateName in group)
                 {
-                    stateNames.Add(new Label(stateName));
+                    stateNameContainer.Add(new Label(stateName));
                 }
             }
         }

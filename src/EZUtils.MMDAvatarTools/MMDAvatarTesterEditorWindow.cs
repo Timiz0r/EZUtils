@@ -1,6 +1,7 @@
 namespace EZUtils.MMDAvatarTools
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using UnityEditor;
@@ -11,6 +12,7 @@ namespace EZUtils.MMDAvatarTools
 
     public class MmdAvatarTesterEditorWindow : EditorWindow
     {
+        private VisualTreeAsset analysisResultUxml;
         private bool validAvatarIsTargeted = false;
         private bool animatorControllerIsTargeted = true;
         private readonly MmdAvatarTester mmdAvatarTester = new MmdAvatarTester();
@@ -27,6 +29,9 @@ namespace EZUtils.MMDAvatarTools
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 "Packages/com.timiz0r.EZUtils.MMDAvatarTools/MmdAvatarTesterEditorWindow.uxml");
             visualTree.CloneTree(rootVisualElement);
+
+            analysisResultUxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
+                "Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/AnalysisResultElement.uxml");
 
             //probably dont need allowSceneObjects, but meh
             ObjectField targetAvatar = rootVisualElement.Q<ObjectField>(name: "targetAvatar");
@@ -83,15 +88,28 @@ namespace EZUtils.MMDAvatarTools
 
             rootVisualElement.Q<Button>(name: "analyze").clicked += () =>
             {
-                Type animatorType = Type.GetType("UnityEditor.Graphs.AnimatorControllerTool, UnityEditor.Graphs");
-                EditorWindow window = EditorWindow.GetWindow(animatorType);
+                MmdAvatarAnalyzer analyzer = new MmdAvatarAnalyzer();
+                IReadOnlyList<AnalysisResult> results = analyzer.Analyze((VRCAvatarDescriptor)targetAvatar.value);
 
-                animatorType.GetProperty("animatorController").SetValue(
-                    window,
-                    ((VRCAvatarDescriptor)targetAvatar.value).baseAnimationLayers
-                        .Single(l => l.type == VRCAvatarDescriptor.AnimLayerType.FX).animatorController);
+                ScrollView resultsContainer = rootVisualElement.Q<ScrollView>(className: "result-container");
+                resultsContainer.Clear();
 
-                animatorType.GetProperty("selectedLayerIndex").SetValue(window, 2);
+                foreach (AnalysisResult result in results)
+                {
+                    VisualElement resultElement = analysisResultUxml.CloneTree();
+                    resultsContainer.Add(resultElement);
+
+                    resultElement
+                        .Q<VisualElement>(className: "result-icon")
+                        .AddToClassList($"result-icon-{result.Level.ToString().ToLowerInvariant()}");
+                    resultElement.Q<Label>(className: "result-friendlyname").text = result.Result.FriendlyName;
+                    resultElement.Q<Label>(className: "result-code").text = result.Result.Code;
+
+                    if (result.Renderer != null)
+                    {
+                        result.Renderer.Render(resultElement.Q<VisualElement>(className: "result-details"));
+                    }
+                }
             };
 
 

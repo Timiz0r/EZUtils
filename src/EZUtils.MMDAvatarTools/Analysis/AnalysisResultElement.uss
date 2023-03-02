@@ -1,0 +1,47 @@
+.result {
+    margin-bottom: 8px;
+}
+
+.result-header {
+    margin-top: 4px;
+}
+.result-title {
+    flex-direction: row;
+    align-items: center;
+}
+.result-friendlyname {
+    font-size: 20px;
+    -unity-font-style: bold;
+    white-space: normal;
+    flex-shrink: 1;
+}
+.result-code {
+    font-size: 10px;
+    -unity-font-style: italic;
+    /*wont wrap it since not as critical to users*/
+}
+
+.result-details-description {
+    margin-bottom: 4px;
+}
+
+.result-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+.result-icon-pass {
+    background-image: url("Icons/Pass.psd");
+}
+.result-icon-informational {
+    background-image: url("Icons/Informational.psd");
+}
+.result-icon-warning {
+    background-image: url("Icons/Warning.psd");
+}
+.result-icon-error {
+    background-image: url("Icons/Error.psd");
+}
+.result-icon-analyzererror {
+    background-image: url("Icons/Error.psd");
+}

@@ -29,33 +29,7 @@
     <VisualElement class="section">
       <Label text="アバター解析" />
       <Button name="analyze" text="再解析" />
-      <ScrollView class="result-container">
-        <VisualElement class="result">
-          <VisualElement class="result-header">
-            <VisualElement class="result-title" style="flex-direction: row;">
-              <VisualElement class="result-icon" />
-              <Label class="analyzer-name" text="Write Defaultsオフ" />
-            </VisualElement>
-            <Label class="result-code" text="WriteDefaultsAnalyzer.WriteDefaultsDisabled" />
-          </VisualElement>
-
-          <VisualElement class="result-details">
-            <TextElement style="margin-bottom: 4px;" text="" />
-
-            <VisualElement>
-              <VisualElement style="flex-direction: row;align-items: center;">
-                <Label text="レイヤー 「帽子」" />
-                <Button text="開く" />
-              </VisualElement>
-
-              <VisualElement style="padding-left: 20px;">
-                <Label text="帽子オフ" />
-                <Label text="帽子オン" />
-              </VisualElement>
-            </VisualElement>
-          </VisualElement>
-        </VisualElement>
-      </ScrollView>
+      <ScrollView class="result-container" />
     </VisualElement>
   </VisualElement>
 </UXML>

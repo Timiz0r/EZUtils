@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xsi:schemaLocation="
+      UnityEngine.UIElements ../../../../UIElementsSchema/UnityEngine.UIElements.fixed.xsd
+      UnityEditor.UIElements ../../../../UIElementsSchema/UnityEditor.UIElements.xsd"
+>
+  <VisualElement>
+    <Style src="AnimatorStateRendererLayerElement.uss" />
+
+    <VisualElement class="result-details-state-layer">
+      <Label class="result-details-state-layer-name" />
+      <Button text="開く" />
+    </VisualElement>
+
+    <VisualElement style="result-details-state-list" />
+  </VisualElement>
+</UXML>

@@ -377,16 +377,23 @@ namespace EZUtils.MMDAvatarTools.Tests
 
         private static void AssertResult(
             IEnumerable<AnalysisResult> results, AnalysisResultIdentifier result, AnalysisResultLevel level)
-            => Assert.That(
+        {
+            Assert.That(
                 results,
                 Has.Exactly(1).Matches<AnalysisResult>(r => r.Result == result && r.Level == level),
                 $"Could not find result '{result.Code}' '{level}'. Results:\r\n\t{string.Join("\r\n\t", results.Select(r => $"'{r.Result.Code}' '{r.Level}'"))}");
+            Assert.That(results.Select(r => r.Renderer), Has.All.Not.Null);
+        }
+
         private static void AssertNoResult(
             IEnumerable<AnalysisResult> results, AnalysisResultIdentifier result, AnalysisResultLevel level)
-            => Assert.That(
+        {
+            Assert.That(
                 results,
                 Has.Exactly(0).Matches<AnalysisResult>(r => r.Result == result && r.Level == level),
                 $"Found result '{result.Code}' '{level}' that shouldn't exist. Results:\r\n\t{string.Join("\r\n\t", results.Select(r => $"'{r.Result.Code}' '{r.Level}'"))}");
+            Assert.That(results.Select(r => r.Renderer), Has.All.Not.Null);
+        }
 
         private static void ConfigureMesh(SkinnedMeshRenderer smr)
             => smr.sharedMesh =
