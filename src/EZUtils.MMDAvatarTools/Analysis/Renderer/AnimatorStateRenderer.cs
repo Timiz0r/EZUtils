@@ -33,7 +33,7 @@ namespace EZUtils.MMDAvatarTools
             VisualElement statesContainer = new VisualElement();
             container.Add(statesContainer);
 
-            foreach (IGrouping<string, string> group in states.GroupBy(s => s.layerName, s => s.layerName))
+            foreach (IGrouping<string, string> group in states.GroupBy(s => s.layerName, s => s.stateName))
             {
                 TemplateContainer layerContainer = layerElement.CloneTree();
                 statesContainer.Add(layerContainer);
