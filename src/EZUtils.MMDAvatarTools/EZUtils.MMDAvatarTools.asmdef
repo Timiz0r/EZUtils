@@ -1,7 +1,8 @@
 {
     "name": "EZUtils.MMDAvatarTools",
     "references": [
-        "GUID:5718fb738711cd34ea54e9553040911d"
+        "VRC.SDK3A",
+        "EZUtils.Common"
     ],
     "includePlatforms": [
         "Editor"

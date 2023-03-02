@@ -2,8 +2,6 @@ namespace EZUtils.MMDAvatarTools
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Reflection;
     using UnityEditor;
     using UnityEditor.UIElements;
     using UnityEngine;
@@ -12,10 +10,12 @@ namespace EZUtils.MMDAvatarTools
 
     public class MmdAvatarTesterEditorWindow : EditorWindow
     {
-        private VisualTreeAsset analysisResultUxml;
-        private bool validAvatarIsTargeted = false;
-        private bool animatorControllerIsTargeted = true;
+        private readonly UIValidator testerValidation = new UIValidator();
+        private readonly UIValidator analysisValidation = new UIValidator();
         private readonly MmdAvatarTester mmdAvatarTester = new MmdAvatarTester();
+
+        TypedObjectField<VRCAvatarDescriptor> targetAvatar;
+        private VisualTreeAsset analysisResultUxml;
 
         [MenuItem("EZUtils/MMD avatar tester", isValidateFunction: false, priority: 0)]
         public static void PackageManager()
@@ -30,16 +30,27 @@ namespace EZUtils.MMDAvatarTools
                 "Packages/com.timiz0r.EZUtils.MMDAvatarTools/MmdAvatarTesterEditorWindow.uxml");
             visualTree.CloneTree(rootVisualElement);
 
-            analysisResultUxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
-                "Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/AnalysisResultElement.uxml");
+            //not allowed to go in cctor, so here is as good as any other place
+            if (analysisResultUxml == null)
+            {
+                analysisResultUxml = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
+                    "Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/AnalysisResultElement.uxml");
+            }
 
             //probably dont need allowSceneObjects, but meh
-            ObjectField targetAvatar = rootVisualElement.Q<ObjectField>(name: "targetAvatar");
-            targetAvatar.objectType = typeof(VRCAvatarDescriptor);
-            targetAvatar.allowSceneObjects = true;
-            ObjectField targetAnimation = rootVisualElement.Q<ObjectField>(name: "targetAnimation");
-            targetAnimation.objectType = typeof(AnimationClip);
-            targetAnimation.allowSceneObjects = false;
+            targetAvatar = rootVisualElement
+                .Q<ObjectField>(name: "targetAvatar")
+                .Typed<VRCAvatarDescriptor>(f => f.allowSceneObjects = true);
+
+            RenderAvatarTester();
+            RenderAvatarAnalyzer();
+        }
+
+        private void RenderAvatarTester()
+        {
+            TypedObjectField<AnimationClip> targetAnimation = rootVisualElement
+                .Q<ObjectField>(name: "targetAnimation")
+                .Typed<AnimationClip>(f => f.allowSceneObjects = false);
 
             //isPlayingOrWillChangePlaymode covers if the window was open before entering playmode
             rootVisualElement.EnableInClassList(
@@ -61,39 +72,49 @@ namespace EZUtils.MMDAvatarTools
             startButton.clicked += () =>
             {
                 mmdAvatarTester.Start(
-                    (VRCAvatarDescriptor)targetAvatar.value,
-                    (AnimationClip)targetAnimation.value
+                    targetAvatar.value,
+                    targetAnimation.value
                 );
                 rootVisualElement.AddToClassList("running");
             };
-            EnableRunningIfPossible();
 
             Button stopButton = rootVisualElement.Q<Button>(name: "stop");
             stopButton.clicked += () => Stop();
 
-            _ = targetAvatar.RegisterValueChangedCallback(_ =>
-            {
-                validAvatarIsTargeted = targetAvatar.value != null;
-                EnableRunningIfPossible();
-            });
-
-            _ = targetAnimation.RegisterValueChangedCallback(_ =>
-            {
-                animatorControllerIsTargeted = targetAnimation.value != null;
-                EnableRunningIfPossible();
-            });
             targetAnimation.SetValueWithoutNotify(
                 AssetDatabase.LoadAssetAtPath<AnimationClip>(
                     "Packages/com.timiz0r.ezutils.mmdavatartools/mmdsample.anim"));
 
-            rootVisualElement.Q<Button>(name: "analyze").clicked += () =>
+            testerValidation.AddValueValidation(targetAvatar, passCondition: o => o != null);
+            testerValidation.AddValueValidation(targetAnimation, passCondition: o => o != null);
+            testerValidation.DisableIfInvalid(startButton);
+            testerValidation.TriggerWhenInvalid(() => Stop());
+
+            void Stop()
+            {
+                mmdAvatarTester.Stop();
+                rootVisualElement.RemoveFromClassList("running");
+            }
+        }
+
+        private void RenderAvatarAnalyzer()
+        {
+
+            Button analyzeButton = rootVisualElement.Q<Button>(name: "analyze");
+            ScrollView resultsContainer = rootVisualElement.Q<ScrollView>(className: "result-container");
+            analyzeButton.clicked += () => ValidateAvatar();
+
+            analysisValidation.AddValueValidation(targetAvatar, passCondition: o => o != null);
+            analysisValidation.DisableIfInvalid(analyzeButton);
+            analysisValidation.TriggerWhenValid(() => ValidateAvatar());
+            analysisValidation.TriggerWhenInvalid(() => resultsContainer.Clear());
+
+            void ValidateAvatar()
             {
                 MmdAvatarAnalyzer analyzer = new MmdAvatarAnalyzer();
-                IReadOnlyList<AnalysisResult> results = analyzer.Analyze((VRCAvatarDescriptor)targetAvatar.value);
+                IReadOnlyList<AnalysisResult> results = analyzer.Analyze(targetAvatar.value);
 
-                ScrollView resultsContainer = rootVisualElement.Q<ScrollView>(className: "result-container");
                 resultsContainer.Clear();
-
                 foreach (AnalysisResult result in results)
                 {
                     VisualElement resultElement = analysisResultUxml.CloneTree();
@@ -111,16 +132,6 @@ namespace EZUtils.MMDAvatarTools
                     }
                 }
             };
-
-
-            void EnableRunningIfPossible()
-                => startButton.SetEnabled(validAvatarIsTargeted && animatorControllerIsTargeted);
-
-            void Stop()
-            {
-                mmdAvatarTester.Stop();
-                rootVisualElement.RemoveFromClassList("running");
-            }
         }
     }
 }

@@ -30,7 +30,9 @@
       "version": "file:../src/EZUtils.RepackPrefab",
       "depth": 0,
       "source": "local",
-      "dependencies": {}
+      "dependencies": {
+        "com.timiz0r.ezutils.common": "1.0.0"
+      }
     },
     "com.timiz0r.ezutils.repackprefab.tests": {
       "version": "file:../src/EZUtils.RepackPrefab.Tests",
