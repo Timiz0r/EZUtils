@@ -29,7 +29,7 @@
     <VisualElement class="section">
       <Label text="アバター解析" />
       <Button name="analyze" text="再解析" />
-      <ScrollView>
+      <ScrollView class="result-container">
         <VisualElement class="result">
           <VisualElement class="result-header">
             <VisualElement class="result-title" style="flex-direction: row;">
@@ -40,7 +40,7 @@
           </VisualElement>
 
           <VisualElement class="result-details">
-            <TextElement style="margin-bottom: 4px;" text="FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。オンにしないと、表情が変わらない可能性が高くなります。" />
+            <TextElement style="margin-bottom: 4px;" text="" />
 
             <VisualElement>
               <VisualElement style="flex-direction: row;align-items: center;">

@@ -2,7 +2,6 @@ namespace EZUtils.MMDAvatarTools
 {
     using System.Collections.Generic;
     using System.Linq;
-    using System.Runtime.CompilerServices;
     using UnityEditor.Animations;
     using UnityEngine;
     using VRC.SDK3.Avatars.Components;
@@ -13,7 +12,7 @@ namespace EZUtils.MMDAvatarTools
         {
             VRCAvatarDescriptor.CustomAnimLayer fxLayer = avatar.baseAnimationLayers.SingleOrDefault(
                 l => !l.isDefault && l.type == VRCAvatarDescriptor.AnimLayerType.FX);
-            if (fxLayer.animatorController == null) return AnalysisResult.Generate(
+            if (fxLayer.animatorController == null) return AnalysisResult.Create(
                 Result.WriteDefaultsEnabled,
                 AnalysisResultLevel.Pass,
                 null);
@@ -35,38 +34,50 @@ namespace EZUtils.MMDAvatarTools
                 .Select(b => b.layer)
                 .Distinct());
 
-            const bool DefinitelyDisabled = true;
-            ILookup<bool, AnimatorState> writeDefaultsDisabledStates =
-                ((AnimatorController)fxLayer.animatorController).layers
+            AnimatorController fxController = (AnimatorController)fxLayer.animatorController;
+            ILookup<bool, (string layerName, string stateName)> writeDefaultsDisabledStates =
+                fxController.layers
                     .SelectMany((l, i) => l.stateMachine.states
                         .Select(s => (
+                            layerName: l.name,
                             layerIndex: i,
                             definitelyDisabled: !hasFXPlayableLayerControlBehavior && !animatorLayerControlLayers.Contains(i),
                             s.state)))
                     .Where(s => s.layerIndex != 1 && s.layerIndex != 2 && !s.state.writeDefaultValues)
-                    .ToLookup(s => s.definitelyDisabled, s => s.state);
+                    .ToLookup(s => s.definitelyDisabled, s => (
+                        s.layerName,
+                        stateName: s.state.name
+                    ));
 
-            if (writeDefaultsDisabledStates.Count == 0) return AnalysisResult.Generate(
-                Result.WriteDefaultsEnabled,
-                AnalysisResultLevel.Pass,
-                null
-            );
+            if (writeDefaultsDisabledStates.Count == 0) return AnalysisResult.Create(
+                Result.WriteDefaultsEnabled, AnalysisResultLevel.Pass, new EmptyRenderer());
 
+            //since there can be a mix, we return results for each set (if any)
+            const bool DefinitelyDisabled = true;
             List<AnalysisResult> results = new List<AnalysisResult>();
-            AnimatorState[] definitelyDisabledStates = writeDefaultsDisabledStates[DefinitelyDisabled]
+            (string layerName, string stateName)[] definitelyDisabledStates = writeDefaultsDisabledStates[DefinitelyDisabled]
                 .ToArray();
             if (definitelyDisabledStates.Length > 0) results.Add(new AnalysisResult(
                 Result.WriteDefaultsDisabled,
                 AnalysisResultLevel.Error,
-                null
+                new GeneralRenderer(
+                    "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。" +
+                    "しかし、FXレイヤーまたは中のアニメーションレイヤーをオフにする「VRC Animator Layer Control」や「VRC Playable Layer Control」があります。" +
+                    "このステートがオフにされる場合、表情が変化できますが、FXレイヤーの他のアニメーションが直前に起動しても無効化にされます。" +
+                    "そしてオフにされない場合、表情が変化しない可能性が高くなります。",
+                    new AnimatorStateRenderer(
+                        "Write Defaultsがオフになっているステート", fxController, definitelyDisabledStates))
             ));
 
-            AnimatorState[] possiblyDisabledStates = writeDefaultsDisabledStates[!DefinitelyDisabled]
+            (string layerName, string stateName)[] possiblyDisabledStates = writeDefaultsDisabledStates[!DefinitelyDisabled]
                 .ToArray();
             if (possiblyDisabledStates.Length > 0) results.Add(new AnalysisResult(
                 Result.WriteDefaultsPotentiallyDisabled,
                 AnalysisResultLevel.Warning,
-                null
+                new GeneralRenderer(
+                    "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。オンにしないと、表情が変化しない可能性が高くなります。",
+                    new AnimatorStateRenderer(
+                        "Write Defaultsがオフになっているステート", fxController, definitelyDisabledStates))
             ));
 
             return results;
@@ -94,9 +105,6 @@ namespace EZUtils.MMDAvatarTools
                 AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>("FXレイヤーのWrite Defaultsがオフ");
             public static readonly AnalysisResultIdentifier WriteDefaultsPotentiallyDisabled =
                 AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>("FXレイヤーのWrite Defaultsがオフになっている可能性があります");
-
-            private static string Code([CallerMemberName] string caller = "")
-                => $"{nameof(WriteDefaultsAnalyzer)}.{caller}";
         }
     }
 }

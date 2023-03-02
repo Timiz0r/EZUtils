@@ -3,7 +3,6 @@ namespace EZUtils.MMDAvatarTools
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Runtime.CompilerServices;
     using UnityEditor.Animations;
     using VRC.SDK3.Avatars.Components;
 
@@ -16,7 +15,7 @@ namespace EZUtils.MMDAvatarTools
         {
             VRCAvatarDescriptor.CustomAnimLayer fxLayer = avatar.baseAnimationLayers.SingleOrDefault(
                 l => !l.isDefault && l.type == VRCAvatarDescriptor.AnimLayerType.FX);
-            if (fxLayer.animatorController == null) return AnalysisResult.Generate(
+            if (fxLayer.animatorController == null) return AnalysisResult.Create(
                 Result.AreGestureLayers,
                 AnalysisResultLevel.Pass,
                 null);
@@ -28,17 +27,30 @@ namespace EZUtils.MMDAvatarTools
 
             if (nonGestureTransitionPaths.Count > 0)
             {
-                return AnalysisResult.Generate(
+                (string layerName, string stateName)[] layer1and2States = controller.layers
+                    .SelectMany((l, i) => l.stateMachine.states
+                        .Select(s => (
+                            layerIndex: i,
+                            layerName: l.name,
+                            stateName: s.state.name
+                        )))
+                    .Where(s => s.layerIndex == 1 || s.layerIndex == 2)
+                    .Select(s => (s.layerName, s.stateName))
+                    .ToArray();
+                return AnalysisResult.Create(
                     Result.MayNotBeGestureLayers,
                     AnalysisResultLevel.Warning,
-                    null);
+                    new GeneralRenderer(
+                        "MMDワールドはFXレイヤーの第1と第2レイヤーをオフにしますので、" +
+                        "ジェスチャー様なアニメーション以外があっていたら、異変が起こる可能性があります。",
+                        new AnimatorStateRenderer("FXレイヤーのレイヤー", controller, layer1and2States)));
             }
             else
             {
-                return AnalysisResult.Generate(
+                return AnalysisResult.Create(
                     Result.AreGestureLayers,
                     AnalysisResultLevel.Pass,
-                    null);
+                    new GeneralRenderer("FXレイヤーの第1と第2レイヤーがジェスチャー様になっているようです。"));
             }
         }
 

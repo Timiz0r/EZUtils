@@ -53,8 +53,24 @@
     font-size: 10px;
     -unity-font-style: italic;
 }
+
 .result-icon {
     width: 24px;
     height: 24px;
+}
+
+.result-icon-pass {
+    background-image: url("Pass.psd");
+}
+.result-icon-informational {
+    background-image: url("Informational.psd");
+}
+.result-icon-warning {
+    background-image: url("Warning.psd");
+}
+.result-icon-error {
+    background-image: url("Error.psd");
+}
+.result-icon-analyzererror {
     background-image: url("Error.psd");
 }

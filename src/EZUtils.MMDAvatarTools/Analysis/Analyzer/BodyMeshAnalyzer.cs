@@ -4,7 +4,6 @@ namespace EZUtils.MMDAvatarTools
 {
     using System.Collections.Generic;
     using System.Linq;
-    using System.Runtime.CompilerServices;
     using UnityEngine;
     using VRC.SDK3.Avatars.Components;
 
@@ -16,38 +15,57 @@ namespace EZUtils.MMDAvatarTools
             //will want to output these eventually, so not a bool
             //while the nonbodymesh analyzer includes inactive, we don't here because we're trying to detect the main
             //meshes, which are likely always on.
-            SkinnedMeshRenderer[] otherMeshesWithMMDBlendShapes = avatar
-                .GetComponentsInChildren<SkinnedMeshRenderer>()
-                .Where(smr => MmdBlendShapeSummary.Generate(smr).Results.Any(r => r.ExistingBlendShapes.Any()))
-                .ToArray();
+            ObjectSelectionRenderer otherMeshRenderer = ObjectSelectionRenderer.Create(
+                "MMD対応メッシュ",
+                avatar
+                    .GetComponentsInChildren<SkinnedMeshRenderer>()
+                    .Where(smr => MmdBlendShapeSummary.Generate(smr).HasAnyMmdBlendShapes)
+                    .ToArray()
+            );
 
-            if (body == null) return AnalysisResult.Generate(
+            if (body == null) return AnalysisResult.Create(
                 Result.NoBody,
                 AnalysisResultLevel.Error,
-                null);
+                new GeneralRenderer(
+                    "Bodyというメッシュが存在しないと表情は変化することができません。",
+                    otherMeshRenderer
+                ));
             if (body.TryGetComponent(out SkinnedMeshRenderer bodyMesh))
             {
                 return MmdBlendShapeSummary.Generate(bodyMesh).HasAnyMmdBlendShapes
-                    ? AnalysisResult.Generate(
+                    ? AnalysisResult.Create(
                         Result.MmdBodyMeshFound,
                         AnalysisResultLevel.Pass,
-                        null)
-                    : AnalysisResult.Generate(
+                        new GeneralRenderer(
+                            "MMD対応のBodyというメッシュが発見できました。表情は普通に変化することができます。",
+                            otherMeshRenderer
+                        ))
+                    : AnalysisResult.Create(
                         Result.BodyHasNoMmdBlendShapes,
                         AnalysisResultLevel.Error, //users probably want their face to move, so an error seems more appropriate
-                        null);
+                        new GeneralRenderer(
+                            "Bodyというメッシュがありますが、ブレンドシェープが存在しません。存在しないと表情が変化することができません。",
+                            otherMeshRenderer
+                        ));
             }
 
-            if (body.GetComponent<MeshFilter>() != null) return AnalysisResult.Generate(
+            if (body.GetComponent<MeshFilter>() != null) return AnalysisResult.Create(
                 Result.NotSkinnedMeshRenderer,
                 AnalysisResultLevel.Error,
-                null);
+                new GeneralRenderer(
+                    "Bodyというメッシュが存在しますが、Skinned Mesh Rendererではなくて、Mesh Rendererになっています。" +
+                    "Mesh Renderでのメッシュは表情が変化することができません。",
+                    otherMeshRenderer
+                ));
 
             //so we have a body but no renderer
-            return AnalysisResult.Generate(
+            return AnalysisResult.Create(
                 Result.NoRendererInBody,
                 AnalysisResultLevel.Error,
-                null);
+                new GeneralRenderer(
+                    "Bodyというオブジェクトがありますが、Rendererが存在していません。もしかして、他のメッシュが本体のメッシュになっているのでしょうか。そのメッシュの名前がBodyにならないと、表情が変化することができません。",
+                    otherMeshRenderer
+                ));
         }
 
         public static class Result
@@ -59,9 +77,9 @@ namespace EZUtils.MMDAvatarTools
             public static readonly AnalysisResultIdentifier NotSkinnedMeshRenderer =
                 AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("BodyというメッシュはSkinned Mesh Rendererではありません");
             public static readonly AnalysisResultIdentifier NoRendererInBody =
-                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("BodyというゲームオブジェクトにはRendererはありません");
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("BodyというゲームオブジェクトにはRendererがありません");
             public static readonly AnalysisResultIdentifier BodyHasNoMmdBlendShapes =
-                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("BodyというメッシュにはMMD対応のブレンドシェープはありません");
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("BodyというメッシュにはMMD対応のブレンドシェープがありません");
         }
     }
 }

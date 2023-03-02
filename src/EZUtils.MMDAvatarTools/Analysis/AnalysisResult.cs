@@ -33,7 +33,7 @@ namespace EZUtils.MMDAvatarTools
             Renderer = renderer;
         }
 
-        public static IReadOnlyList<AnalysisResult> Generate(
+        public static IReadOnlyList<AnalysisResult> Create(
             AnalysisResultIdentifier result, AnalysisResultLevel level, IAnalysisResultRenderer renderer)
             => new[] { new AnalysisResult(result, level, renderer) };
     }

@@ -112,7 +112,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, EmptyStateAnalyzer.Result.HasEmptyStates, AnalysisResultLevel.Warning);
+            AssertResult(results, EmptyStateAnalyzer.Result.FXLayerHasEmptyStates, AnalysisResultLevel.Warning);
         }
 
         [Test]
@@ -122,7 +122,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, EmptyStateAnalyzer.Result.HasNoEmptyStates, AnalysisResultLevel.Pass);
+            AssertResult(results, EmptyStateAnalyzer.Result.FXLayerHasNoEmptyStates, AnalysisResultLevel.Pass);
         }
 
         [Test]

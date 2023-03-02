@@ -18,6 +18,6 @@ namespace EZUtils.MMDAvatarTools
         }
 
         public static AnalysisResultIdentifier Create<T>(string friendlyName, [CallerMemberName] string caller = "") where T : IAnalyzer
-            => new AnalysisResultIdentifier(friendlyName, code: $"{nameof(T)}.{caller}");
+            => new AnalysisResultIdentifier(friendlyName, code: $"{typeof(T).Name}.{caller}");
     }
 }
