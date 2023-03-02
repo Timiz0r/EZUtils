@@ -15,6 +15,6 @@
       <Button text="開く" />
     </VisualElement>
 
-    <VisualElement style="result-details-state-list" />
+    <VisualElement class="result-details-state-list" />
   </VisualElement>
 </UXML>
