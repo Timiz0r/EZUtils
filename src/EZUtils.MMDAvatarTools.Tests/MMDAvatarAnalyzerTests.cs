@@ -374,6 +374,25 @@ namespace EZUtils.MMDAvatarTools.Tests
                 };
         }
 
+        [Test]
+        public void AnalyzerErrors_WhenAnalyzerThrowsException()
+        {
+            TestSetup testSetup = new TestSetup();
+            MmdAvatarAnalyzer analyzer = new MmdAvatarAnalyzer(new IAnalyzer[]
+            {
+                //we go with two to ensure others after a failure get run
+                new AlwaysFailsAnalyzer(),
+                new AlwaysFailsAnalyzer()
+            });
+
+            //dont really care about the other configuration
+            IReadOnlyList<AnalysisResult> results = analyzer.Analyze(testSetup.Avatar);
+
+            Assert.That(
+                results,
+                Has.Exactly(2).Matches<AnalysisResult>(r => r.Level == AnalysisResultLevel.AnalyzerError));
+        }
+
         private static void AssertResult(
             IEnumerable<AnalysisResult> results, AnalysisResultIdentifier result, AnalysisResultLevel level)
         {

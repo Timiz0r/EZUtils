@@ -2,6 +2,7 @@
 
 namespace EZUtils.MMDAvatarTools
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using VRC.SDK3.Avatars.Components;
@@ -22,16 +23,29 @@ namespace EZUtils.MMDAvatarTools
                 new NonBodyMeshAnalyzer(),
                 new EmptyStateAnalyzer(),
                 new WriteDefaultsAnalyzer(),
-                new Layer1And2Analyzer()
+                new Layer1And2Analyzer(),
             };
         }
 
         public IReadOnlyList<AnalysisResult> Analyze(VRCAvatarDescriptor avatar)
         {
-            List<AnalysisResult> results = new List<AnalysisResult>(analyzers.Count);
+            List<AnalysisResult> results = new List<AnalysisResult>();
             foreach (IAnalyzer analyzer in analyzers)
             {
-                results.AddRange(analyzer.Analyze(avatar));
+                try
+                {
+                    results.AddRange(analyzer.Analyze(avatar));
+                }
+                catch (Exception e) when (
+                    ExceptionUtil.Record(() => results.Add(
+                        new AnalysisResult(
+                            new AnalysisResultIdentifier(
+                                $"「{analyzer.GetType().Name}」にエラーが発生しました。",
+                                $"AnalyzerException.{analyzer.GetType().Name}"),
+                            AnalysisResultLevel.AnalyzerError,
+                            new GeneralRenderer(e.ToString())))))
+                {
+                }
             }
             return results;
         }
