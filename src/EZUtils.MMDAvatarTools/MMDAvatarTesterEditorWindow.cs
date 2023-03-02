@@ -2,6 +2,7 @@ namespace EZUtils.MMDAvatarTools
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using UnityEditor;
     using UnityEditor.UIElements;
     using UnityEngine;
@@ -115,7 +116,7 @@ namespace EZUtils.MMDAvatarTools
                 IReadOnlyList<AnalysisResult> results = analyzer.Analyze(targetAvatar.value);
 
                 resultsContainer.Clear();
-                foreach (AnalysisResult result in results)
+                foreach (AnalysisResult result in results.OrderByDescending(r => r.Level))
                 {
                     VisualElement resultElement = analysisResultUxml.CloneTree();
                     resultsContainer.Add(resultElement);
