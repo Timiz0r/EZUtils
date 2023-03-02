@@ -12,9 +12,10 @@ namespace EZUtils.MMDAvatarTools.Tests
     /*
      * TODO analyzers
      * summary of blend shapes
-     * when ready to do ui rendering, modify AssertResult to ensure there's always a renderer
-     * note: may be able to call SetCurrentLayer of UnityEditor.Graphs.AnimatorControllerTool, UnityEditor.Graphs
      * add an analyzer checking the mask of the fx layer. if it allows muscle transforms, then error. warn if fx layer(s) may be off.
+     * sort rendered results based on severity
+     * make ui reactive to object field, including first analysis. do common lib stuff finally
+     *
      */
     //technically testing is a bit insufficient because we dont test sub state machines and only layers' state machines
     public class MMDAvatarAnalyzerTests

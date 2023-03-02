@@ -3,5 +3,6 @@
   <ItemGroup>
     <ProjectReference Include="$(SrcRoot)\EZUtils.RepackPrefab\EZUtils.RepackPrefab.csproj" />
     <ProjectReference Include="$(SrcRoot)\EZUtils.TestUtils\EZUtils.TestUtils.csproj" />
+    <ProjectReference Include="$(SrcRoot)\EZUtils.Common\EZUtils.Common.csproj" />
   </ItemGroup>
 </Project>

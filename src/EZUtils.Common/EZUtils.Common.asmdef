@@ -1,7 +1,6 @@
 {
-    "name": "EZUtils.RepackPrefab",
+    "name": "EZUtils.Common",
     "references": [
-        "EZUtils.Common"
     ],
     "includePlatforms": [
         "Editor"

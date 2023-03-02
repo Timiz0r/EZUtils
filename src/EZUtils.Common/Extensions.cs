@@ -1,4 +1,4 @@
-namespace EZUtils.RepackPrefab
+namespace EZUtils
 {
     using System.Collections.Generic;
     using System.Linq;

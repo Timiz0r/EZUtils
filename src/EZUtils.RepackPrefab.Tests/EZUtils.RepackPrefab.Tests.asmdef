@@ -4,7 +4,8 @@
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
         "EZUtils.RepackPrefab",
-        "EZUtils.TestUtils"
+        "EZUtils.TestUtils",
+        "EZUtils.Common"
     ],
     "includePlatforms": [
         "Editor"

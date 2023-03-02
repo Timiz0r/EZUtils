@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZUtils.WindowCloser", "..\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZUtils.MMDAvatarTools.Tests", "..\EZUtils.MMDAvatarTools.Tests\EZUtils.MMDAvatarTools.Tests.csproj", "{15109EF4-C39F-41F9-95C3-2072C4A4AD1D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZUtils.Common", "..\EZUtils.Common\EZUtils.Common.csproj", "{49DEEFC1-AF56-4497-86E1-83C5797C1160}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,5 +50,9 @@ Global
 		{15109EF4-C39F-41F9-95C3-2072C4A4AD1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{15109EF4-C39F-41F9-95C3-2072C4A4AD1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{15109EF4-C39F-41F9-95C3-2072C4A4AD1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49DEEFC1-AF56-4497-86E1-83C5797C1160}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49DEEFC1-AF56-4497-86E1-83C5797C1160}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49DEEFC1-AF56-4497-86E1-83C5797C1160}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49DEEFC1-AF56-4497-86E1-83C5797C1160}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

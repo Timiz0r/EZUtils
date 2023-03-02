@@ -1,5 +1,11 @@
 {
   "dependencies": {
+    "com.timiz0r.ezutils.common": {
+      "version": "file:../src/EZUtils.Common",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.timiz0r.ezutils.mmdavatartools": {
       "version": "file:../src/EZUtils.MMDAvatarTools",
       "depth": 0,
