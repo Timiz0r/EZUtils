@@ -1,5 +1,6 @@
 namespace EZUtils.MMDAvatarTools
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -18,7 +19,7 @@ namespace EZUtils.MMDAvatarTools
             Target = target;
         }
 
-        public static IReadOnlyList<BlendShapeDefinition> Definitions { get; } = new []
+        public static IReadOnlyList<BlendShapeDefinition> Definitions { get; } = new[]
         {
             new BlendShapeDefinition(
                 name: "あ",
@@ -71,13 +72,13 @@ namespace EZUtils.MMDAvatarTools
             new BlendShapeDefinition(
                 name: "ω",
                 isCommon: true,
-                synonyms: new[] { "ω" },
+                synonyms: Array.Empty<string>(),
                 target: BlendShapeTarget.Mouth
             ),
             new BlendShapeDefinition(
                 name: "▲",
                 isCommon: true,
-                synonyms: new[] { "▲" },
+                synonyms: Array.Empty<string>(),
                 target: BlendShapeTarget.Mouth
             ),
             new BlendShapeDefinition(
@@ -236,37 +237,37 @@ namespace EZUtils.MMDAvatarTools
             new BlendShapeDefinition(
                 name: "にやり２",
                 isCommon: true,
-                synonyms: new[] { "" },
+                synonyms: Array.Empty<string>(),
                 target: BlendShapeTarget.Other
             ),
             new BlendShapeDefinition(
                 name: "ん",
                 isCommon: true,
-                synonyms: new[] { "" },
+                synonyms: Array.Empty<string>(),
                 target: BlendShapeTarget.Other
             ),
             new BlendShapeDefinition(
                 name: "あ2",
                 isCommon: true,
-                synonyms: new[] { "" },
+                synonyms: Array.Empty<string>(),
                 target: BlendShapeTarget.Other
             ),
             new BlendShapeDefinition(
                 name: "恐ろしい子！",
                 isCommon: true,
-                synonyms: new[] { "" },
+                synonyms: Array.Empty<string>(),
                 target: BlendShapeTarget.Other
             ),
             new BlendShapeDefinition(
                 name: "歯無し下",
                 isCommon: true,
-                synonyms: new[] { "" },
+                synonyms: Array.Empty<string>(),
                 target: BlendShapeTarget.Other
             ),
             new BlendShapeDefinition(
                 name: "涙",
                 isCommon: true,
-                synonyms: new[] { "" },
+                synonyms: Array.Empty<string>(),
                 target: BlendShapeTarget.Other
             ),
         };
