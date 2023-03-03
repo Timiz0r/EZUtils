@@ -11,9 +11,9 @@ namespace EZUtils.MMDAvatarTools
         public IReadOnlyList<AnalysisResult> Analyze(VRCAvatarDescriptor avatar)
         {
             PlayableLayerInformation playableLayerInformation = PlayableLayerInformation.Generate(avatar);
-            ILookup<bool, PlayableLayerInformation.State> writeDefaultsDisabledStates = playableLayerInformation.FX.States
+            ILookup<bool, (string layerName, string stateName)> writeDefaultsDisabledStates = playableLayerInformation.FX.States
                 .Where(s => s.LayerIndex != 1 && s.LayerIndex != 2 && !s.UnderlyingState.writeDefaultValues)
-                .ToLookup(s => s.MayGetDisabledByBehaviour);
+                .ToLookup(s => s.MayGetDisabledByBehaviour, s => (layerName: s.LayerName, stateName: s.StateName));
 
             if (writeDefaultsDisabledStates.Count == 0) return AnalysisResult.Create(
                 Result.WriteDefaultsEnabled, AnalysisResultLevel.Pass, new EmptyRenderer());
@@ -22,7 +22,7 @@ namespace EZUtils.MMDAvatarTools
             const bool PossiblyDisabled = true;
             List<AnalysisResult> results = new List<AnalysisResult>();
 
-            PlayableLayerInformation.State[] definitelyDisabledStates = writeDefaultsDisabledStates[!PossiblyDisabled]
+            (string layerName, string stateName)[] definitelyDisabledStates = writeDefaultsDisabledStates[!PossiblyDisabled]
                 .ToArray();
             if (definitelyDisabledStates.Length > 0) results.Add(new AnalysisResult(
                 Result.WriteDefaultsDisabled,
@@ -34,7 +34,7 @@ namespace EZUtils.MMDAvatarTools
                         playableLayerInformation.FX.UnderlyingController,
                         definitelyDisabledStates))));
 
-            PlayableLayerInformation.State[] possiblyDisabledStates = writeDefaultsDisabledStates[PossiblyDisabled]
+            (string layerName, string stateName)[] possiblyDisabledStates = writeDefaultsDisabledStates[PossiblyDisabled]
                 .ToArray();
             if (possiblyDisabledStates.Length > 0) results.Add(new AnalysisResult(
                 Result.WriteDefaultsPotentiallyDisabled,
