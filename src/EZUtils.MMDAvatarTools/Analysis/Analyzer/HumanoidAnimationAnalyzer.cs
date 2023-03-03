@@ -6,7 +6,7 @@ namespace EZUtils.MMDAvatarTools
     using UnityEngine;
     using VRC.SDK3.Avatars.Components;
 
-    public class HumanoidTransformAnalyzer : IAnalyzer
+    public class HumanoidAnimationAnalyzer : IAnalyzer
     {
         public IReadOnlyList<AnalysisResult> Analyze(VRCAvatarDescriptor avatar)
         {
@@ -31,7 +31,7 @@ namespace EZUtils.MMDAvatarTools
             //curve of any sort, then it'll cause the body to not move according to the mmd motion.
             //this makes detection easy, at least, since we don't have to dig into matching up curves to masked parts.
             ILookup<bool, (string layerName, string stateName)> humanMotionStates = playableLayerInformation.FX.States
-                .Where(s => s.LayerIndex != 1 && s.LayerIndex != 2)
+                .Where(s => s.LayerIndex != 1 && s.LayerIndex != 2 && !s.IsAlwaysDisabled)
                 .Where(s => s.UnderlyingState.motion != null)
                 .Where(s => s.UnderlyingState.motion.isHumanMotion)
                 .ToLookup(s => s.MayGetDisabledByBehaviour, s => (layerName: s.LayerName, stateName: s.StateName));
@@ -75,11 +75,11 @@ namespace EZUtils.MMDAvatarTools
         public static class Result
         {
             public static readonly AnalysisResultIdentifier ActiveHumanoidAnimationsFound =
-                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>("使われてるヒューマノイドのアニメーションを発見");
+                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>("使われてるヒューマノイドのアニメーションを発見");
             public static readonly AnalysisResultIdentifier PossiblyActiveHumanoidAnimationsFound =
-                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>("使われてる可能性のあるヒューマノイドのアニメーションを発見");
+                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>("使われてる可能性のあるヒューマノイドのアニメーションを発見");
             public static readonly AnalysisResultIdentifier NoActiveHumanoidAnimationsFound =
-                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>("使われてるヒューマノイドのアニメーションが未発見");
+                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>("使われてるヒューマノイドのアニメーションが未発見");
         }
     }
 }

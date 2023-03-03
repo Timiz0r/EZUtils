@@ -6,11 +6,12 @@ namespace EZUtils.MMDAvatarTools
     using UnityEngine;
 
     //unlike controllers, though these can be mutated, will assume they're just read
+    //but we create a new one each time mainly because loading them in cctor doesnt seem to work
     public static class VrcAvatarMasks
     {
-        public static readonly AvatarMask HandsOnly = Load("vrc_HandsOnly.mask");
-        public static readonly AvatarMask MuscleOnly = Load("vrc_MusclesOnly.mask");
-        public static readonly AvatarMask NoHumanoid = CreateNoHumanoidMask();
+        public static AvatarMask HandsOnly => Load("vrc_HandsOnly.mask");
+        public static AvatarMask MuscleOnly => Load("vrc_MusclesOnly.mask");
+        public static AvatarMask NoHumanoid { get; } = CreateNoHumanoidMask();
 
         private static AvatarMask Load(string fileName)
         {

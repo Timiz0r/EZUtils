@@ -24,7 +24,7 @@ namespace EZUtils.MMDAvatarTools
                 new EmptyStateAnalyzer(),
                 new WriteDefaultsAnalyzer(),
                 new Layer1And2Analyzer(),
-                new HumanoidTransformAnalyzer(),
+                new HumanoidAnimationAnalyzer(),
             };
         }
 

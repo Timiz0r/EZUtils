@@ -87,6 +87,8 @@ namespace EZUtils.MMDAvatarTools
                             layerIndex: layerIndex,
                             layerName: l.name,
                             stateName: s.state.name,
+                            isAlwaysDisabled:
+                                l.defaultWeight == 0 && !possiblyDisabledAnimatorLayers.Contains((layerType, layerIndex)),
                             mayGetDisabledByBehaviour:
                                 playableLayerPossiblyDisabled
                                 || possiblyDisabledAnimatorLayers.Contains((layerType, layerIndex)),
@@ -135,14 +137,16 @@ namespace EZUtils.MMDAvatarTools
             public int LayerIndex { get; }
             public string LayerName { get; }
             public string StateName { get; }
+            public bool IsAlwaysDisabled { get; }
             public bool MayGetDisabledByBehaviour { get; }
             public AnimatorState UnderlyingState { get; }
 
-            public State(int layerIndex, string layerName, string stateName, bool mayGetDisabledByBehaviour, AnimatorState underlyingState)
+            public State(int layerIndex, string layerName, string stateName, bool isAlwaysDisabled, bool mayGetDisabledByBehaviour, AnimatorState underlyingState)
             {
                 LayerIndex = layerIndex;
                 LayerName = layerName;
                 StateName = stateName;
+                IsAlwaysDisabled = isAlwaysDisabled;
                 MayGetDisabledByBehaviour = mayGetDisabledByBehaviour;
                 UnderlyingState = underlyingState;
             }

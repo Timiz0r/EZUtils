@@ -12,7 +12,11 @@ namespace EZUtils.MMDAvatarTools
         {
             PlayableLayerInformation playableLayerInformation = PlayableLayerInformation.Generate(avatar);
             ILookup<bool, (string layerName, string stateName)> writeDefaultsDisabledStates = playableLayerInformation.FX.States
-                .Where(s => s.LayerIndex != 1 && s.LayerIndex != 2 && !s.UnderlyingState.writeDefaultValues)
+                .Where(s =>
+                    s.LayerIndex != 1
+                    && s.LayerIndex != 2
+                    && !s.IsAlwaysDisabled
+                    && !s.UnderlyingState.writeDefaultValues)
                 .ToLookup(s => s.MayGetDisabledByBehaviour, s => (layerName: s.LayerName, stateName: s.StateName));
 
             if (writeDefaultsDisabledStates.Count == 0) return AnalysisResult.Create(

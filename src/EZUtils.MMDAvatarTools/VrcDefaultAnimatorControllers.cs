@@ -11,6 +11,7 @@ namespace EZUtils.MMDAvatarTools
 
     //is not static to allow workflows where these loaded assets are then modified.
     //would not one consumer to affect another consumer.
+    //also worth noting making them static and non-lazy doesnt work in unit tests for some reason
     public class VrcDefaultAnimatorControllers
     {
         //using asset ids to be vcc/old unitypackage agnostic

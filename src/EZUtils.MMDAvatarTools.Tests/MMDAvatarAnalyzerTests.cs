@@ -14,15 +14,10 @@ namespace EZUtils.MMDAvatarTools.Tests
     /*
      * TODO analyzers
      * summary of blend shapes
-     * add an analyzer checking the mask of the fx layer.
-     *  if it allows muscle transforms, then error. warn if fx layer(s) may be off.
-     *  oh right also gotta see if any animations transform them.
-     *  do layer masks also cause a problem? probably, so verify and analyze based on that.
      * empty lists dont look good, so indicate they're empty.
      * object fields arent clickable, perhaps because not inspector? either make them clickable, or go with buttons (or both)
      * add instructions for fixing issues
      * add support for behaviours to tester
-     * exclude 0 weight layers where appropriate. if always 0, then boom. if could be turned on, then b careeful.
      */
     //technically testing is a bit insufficient because we dont test sub state machines and only layers' state machines
     public class MMDAvatarAnalyzerTests
@@ -134,6 +129,20 @@ namespace EZUtils.MMDAvatarTools.Tests
         }
 
         [Test]
+        public void Passes_WhenPlayableLayersHaveEmptyStatesButTheLayerIsAlwaysDisabled()
+        {
+            TestSetup testSetup = new TestSetup();
+            testSetup.AddedFXLayer.defaultState.motion = null;
+            AnimatorControllerLayer[] layers = testSetup.FX.layers;
+            layers.Last().defaultWeight = 0;
+            testSetup.FX.layers = layers;
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, EmptyStateAnalyzer.Result.FXLayerHasNoEmptyStates, AnalysisResultLevel.Pass);
+        }
+
+        [Test]
         public void Passes_WhenFXLayerStatesHaveWriteDefaultsEnabled()
         {
             TestSetup testSetup = new TestSetup();
@@ -216,6 +225,20 @@ namespace EZUtils.MMDAvatarTools.Tests
             AssertResult(results, WriteDefaultsAnalyzer.Result.WriteDefaultsPotentiallyDisabled, AnalysisResultLevel.Warning);
             AssertResult(results, WriteDefaultsAnalyzer.Result.WriteDefaultsDisabled, AnalysisResultLevel.Error);
             LogAssert.Expect(LogType.Error, "AddAssetToSameFile failed because the other asset Default is not persistent");
+        }
+
+        [Test]
+        public void Passes_WhenFXStateHasWriteDefaultsDisabledButLayerIsAlwaysDisabled()
+        {
+            TestSetup testSetup = new TestSetup();
+            testSetup.AddedFXLayer.states[0].state.writeDefaultValues = false;
+            AnimatorControllerLayer[] layers = testSetup.FX.layers;
+            layers.Last().defaultWeight = 0;
+            testSetup.FX.layers = layers;
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, WriteDefaultsAnalyzer.Result.WriteDefaultsEnabled, AnalysisResultLevel.Pass);
         }
 
         [Test]
@@ -411,7 +434,7 @@ namespace EZUtils.MMDAvatarTools.Tests
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
             AssertResult(
-                results, HumanoidTransformAnalyzer.Result.NoActiveHumanoidAnimationsFound, AnalysisResultLevel.Pass);
+                results, HumanoidAnimationAnalyzer.Result.NoActiveHumanoidAnimationsFound, AnalysisResultLevel.Pass);
         }
 
         [Test]
@@ -429,7 +452,7 @@ namespace EZUtils.MMDAvatarTools.Tests
             Assert.That(clip.humanMotion, Is.True);
             Assert.That(clip.isHumanMotion, Is.True);
             AssertResult(
-                results, HumanoidTransformAnalyzer.Result.NoActiveHumanoidAnimationsFound, AnalysisResultLevel.Pass);
+                results, HumanoidAnimationAnalyzer.Result.NoActiveHumanoidAnimationsFound, AnalysisResultLevel.Pass);
         }
 
         [Test]
@@ -440,26 +463,52 @@ namespace EZUtils.MMDAvatarTools.Tests
             AnimationClip clip = new AnimationClip();
             clip.SetCurve("", typeof(Animator), "Head Turn Left-Right", AnimationCurve.Constant(0, 1, 0));
 
-            testSetup.FX.AddLayer("active");
-            AnimatorStateMachine active = testSetup.FX.layers.Last().stateMachine;
-            active.AddState("state").motion = clip;
+            AnimatorControllerLayer activeLayer = new AnimatorControllerLayer()
+            {
+                name = "active",
+                stateMachine = new AnimatorStateMachine(),
+                defaultWeight = 1,
+            };
+            testSetup.FX.AddLayer(activeLayer);
+            activeLayer.stateMachine.AddState("active").motion = clip;
 
-            testSetup.FX.AddLayer("possibly active");
-            AnimatorStateMachine possiblyActive = testSetup.FX.layers.Last().stateMachine;
-            VRCAnimatorLayerControl behavior = possiblyActive.AddStateMachineBehaviour<VRCAnimatorLayerControl>();
+            AnimatorControllerLayer possiblyActiveLayer = new AnimatorControllerLayer()
+            {
+                name = "possibly active",
+                stateMachine = new AnimatorStateMachine(),
+                defaultWeight = 1,
+            };
+            testSetup.FX.AddLayer(possiblyActiveLayer);
+            possiblyActiveLayer.stateMachine.AddState("active").motion = clip;
+            VRCAnimatorLayerControl behavior = possiblyActiveLayer.stateMachine.AddStateMachineBehaviour<VRCAnimatorLayerControl>();
             behavior.goalWeight = 0;
             behavior.layer = testSetup.FX.layers.Length - 1;
             behavior.playable = VRC.SDKBase.VRC_AnimatorLayerControl.BlendableLayer.FX;
-            possiblyActive.AddState("state").motion = clip;
-            _ = testSetup.FX.AddMotion(clip);
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
             AssertResult(
-                results, HumanoidTransformAnalyzer.Result.PossiblyActiveHumanoidAnimationsFound, AnalysisResultLevel.Warning);
+                results, HumanoidAnimationAnalyzer.Result.PossiblyActiveHumanoidAnimationsFound, AnalysisResultLevel.Warning);
             AssertResult(
-                results, HumanoidTransformAnalyzer.Result.ActiveHumanoidAnimationsFound, AnalysisResultLevel.Error);
-            LogAssert.Expect(LogType.Error, "AddAssetToSameFile failed because the other asset possibly active is not persistent");
+                results, HumanoidAnimationAnalyzer.Result.ActiveHumanoidAnimationsFound, AnalysisResultLevel.Error);
+            LogAssert.Expect(LogType.Error, "AddAssetToSameFile failed because the other asset  is not persistent");
+        }
+
+        [Test]
+        public void Passes_WhenFXLayerHasHumanoidAnimationButLayerIsAlwaysDisabled()
+        {
+            TestSetup testSetup = new TestSetup();
+            AnimationClip clip = new AnimationClip();
+            clip.SetCurve("", typeof(Animator), "Head Turn Left-Right", AnimationCurve.Constant(0, 1, 0));
+            _ = testSetup.AddedFXLayer.AddState("state").motion = clip;
+            AnimatorControllerLayer[] layers = testSetup.FX.layers;
+            layers.Last().defaultWeight = 0;
+            testSetup.FX.layers = layers;
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(
+                results, HumanoidAnimationAnalyzer.Result.NoActiveHumanoidAnimationsFound, AnalysisResultLevel.Pass);
         }
 
         private static void AssertResult(
@@ -566,7 +615,9 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             public void SetFXMask(AvatarMask mask)
             {
-                FX.layers[0].avatarMask = mask;
+                AnimatorControllerLayer[] animatorLayers = FX.layers;
+                animatorLayers[0].avatarMask = mask;
+                FX.layers = animatorLayers;
 
                 int fxLayerIndex = Array.FindIndex(Avatar.baseAnimationLayers, l => l.type == AnimLayerType.FX);
                 CustomAnimLayer existingLayer = Avatar.baseAnimationLayers[fxLayerIndex];

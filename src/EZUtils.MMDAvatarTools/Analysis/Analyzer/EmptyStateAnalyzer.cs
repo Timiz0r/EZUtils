@@ -2,7 +2,6 @@ namespace EZUtils.MMDAvatarTools
 {
     using System.Collections.Generic;
     using System.Linq;
-    using UnityEditor.Animations;
     using VRC.SDK3.Avatars.Components;
 
     //still don't really know why empty states  cause issues, but they always seem to. hence, cant really go harder than warn.
@@ -13,7 +12,8 @@ namespace EZUtils.MMDAvatarTools
     {
         public IReadOnlyList<AnalysisResult> Analyze(VRCAvatarDescriptor avatar)
         {
-            if (avatar.baseAnimationLayers == null)
+            PlayableLayerInformation playableLayerInformation = PlayableLayerInformation.Generate(avatar);
+            if (playableLayerInformation.FX.UnderlyingController == null)
             {
                 return AnalysisResult.Create(
                     Result.FXLayerHasNoEmptyStates,
@@ -22,27 +22,13 @@ namespace EZUtils.MMDAvatarTools
                 );
             }
 
-            //will consider it ub for there to be multiple
-            AnimatorController fxController =
-                (AnimatorController)avatar.baseAnimationLayers
-                .FirstOrDefault(l => l.type == VRCAvatarDescriptor.AnimLayerType.FX)
-                .animatorController;
-            if (fxController == null)
-            {
-                return AnalysisResult.Create(
-                    Result.FXLayerHasNoEmptyStates,
-                    AnalysisResultLevel.Pass,
-                    new GeneralRenderer("FXレイヤーが指定されていません。")
-                );
-            }
-
-            (string layerName, string stateName)[] statesWithEmptyMotions = fxController.layers
-                .SelectMany(l => l.stateMachine.states
-                    .Where(s => s.state.motion == null)
-                    .Select(s => (
-                        layerName: l.name,
-                        states: s.state.name
-                )))
+            (string layerName, string stateName)[] statesWithEmptyMotions = playableLayerInformation.FX.States
+                .Where(s =>
+                    s.LayerIndex != 1
+                    && s.LayerIndex != 2
+                    && !s.IsAlwaysDisabled
+                    && s.UnderlyingState.motion == null)
+                .Select(s => (layerName: s.LayerName, states: s.StateName))
                 .ToArray();
 
             return statesWithEmptyMotions.Length == 0
@@ -57,7 +43,7 @@ namespace EZUtils.MMDAvatarTools
                         "異変が起こる可能性があります。",
                         new AnimatorStateRenderer(
                             "モーションのないステート",
-                            fxController,
+                            playableLayerInformation.FX.UnderlyingController,
                             statesWithEmptyMotions)));
         }
 
