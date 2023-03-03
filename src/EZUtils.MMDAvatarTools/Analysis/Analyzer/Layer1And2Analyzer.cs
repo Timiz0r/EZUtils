@@ -63,7 +63,6 @@ namespace EZUtils.MMDAvatarTools
                 TraverseChain(
                     state,
                     transition,
-                    transition.destinationState,
                     Array.Empty<(AnimatorState sourceState, AnimatorState destinationState)>(),
                     $"({stateMachine}) {state.name}",
                     false);
@@ -75,7 +74,6 @@ namespace EZUtils.MMDAvatarTools
                 TraverseChain(
                     dummyAnyState,
                     transition,
-                    transition.destinationState,
                     Array.Empty<(AnimatorState sourceState, AnimatorState destinationState)>(),
                     $"({stateMachine}) {dummyAnyState.name}",
                     false);
@@ -84,7 +82,6 @@ namespace EZUtils.MMDAvatarTools
             void TraverseChain(
                 AnimatorState previousState,
                 AnimatorStateTransition currentTransition,
-                AnimatorState currentState,
                 (AnimatorState sourceState, AnimatorState destinationState)[] walkedTransitions,
                 string path,
                 bool hasGestureTransition)
@@ -92,27 +89,34 @@ namespace EZUtils.MMDAvatarTools
                 //more than likely a bug on our end
                 if (walkedTransitions.Length > 100) throw new InvalidOperationException("Too many traversals.");
 
-                path = $"{path}->'{currentState.name}'";
                 hasGestureTransition = hasGestureTransition
                     || currentTransition.conditions.Any(c => GestureParameters.Contains(c.parameter));
 
-                if (currentState.transitions.Length == 0
-                    || walkedTransitions.Contains((previousState, currentState)))
+                string currentPart = currentTransition.destinationStateMachine != null
+                    ? $"State machine {currentTransition.destinationStateMachine.name} (not yet supported)"
+                    : currentTransition.isExit
+                        ? "Exit"
+                        : currentTransition.destinationState.name;
+                path = $"{path}->'{currentPart}'";
+
+                if (currentTransition.destinationStateMachine != null //TODO: dont support them yet
+                    || currentTransition.isExit
+                    || currentTransition.destinationState.transitions.Length == 0
+                    || walkedTransitions.Contains((previousState, currentTransition.destinationState)))
                 {
                     if (!hasGestureTransition)
                     {
-                        nonGestureTransitionPaths.Add(path.ToString());
+                        nonGestureTransitionPaths.Add(path);
                     }
                     return;
                 }
-                walkedTransitions = walkedTransitions.Append((previousState, currentState)).ToArray();
+                walkedTransitions = walkedTransitions.Append((previousState, currentTransition.destinationState)).ToArray();
 
-                foreach (AnimatorStateTransition transition in currentState.transitions)
+                foreach (AnimatorStateTransition transition in currentTransition.destinationState.transitions)
                 {
                     TraverseChain(
-                        currentState,
+                        currentTransition.destinationState,
                         transition,
-                        transition.destinationState,
                         walkedTransitions,
                         path,
                         hasGestureTransition);

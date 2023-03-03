@@ -12,8 +12,10 @@ namespace EZUtils.MMDAvatarTools.Tests
     /*
      * TODO analyzers
      * summary of blend shapes
-     * add an analyzer checking the mask of the fx layer. if it allows muscle transforms, then error. warn if fx layer(s) may be off. oh right also gotta see if any animations transform them.
-     * do a manual verification (and implement) for analysis errors
+     * add an analyzer checking the mask of the fx layer.
+     *  if it allows muscle transforms, then error. warn if fx layer(s) may be off.
+     *  oh right also gotta see if any animations transform them.
+     *  do layer masks also cause a problem? probably, so verify and analyze based on that.
      * empty lists dont look good, so indicate they're empty.
      * object fields arent clickable, perhaps because not inspector? either make them clickable, or go with buttons (or both)
      */
@@ -280,7 +282,8 @@ namespace EZUtils.MMDAvatarTools.Tests
             }
         }
 
-        //TODO: could kinda use more thorough testing on different kinds of paths
+        //TODO: could kinda use more thorough testing on different kinds of paths, like exits
+        //will take care of that when adding support for sub state machines
         [Test]
         public void Passes_WhenLayer1and2TransitionPathsHaveGestureParameterConditions()
         {
