@@ -86,7 +86,7 @@ namespace EZUtils.MMDAvatarTools
             Action.TurnOff();
 
             layer = GetLayer(AnimLayerType.FX);
-            FX = new AvatarPlayableLayer(9, playableMixer, GetMask(ifDefault: VrcAvatarMasks.NoMuscle, ifNone: VrcAvatarMasks.NoMuscle));
+            FX = new AvatarPlayableLayer(9, playableMixer, GetMask(ifDefault: VrcAvatarMasks.NoHumanoid, ifNone: VrcAvatarMasks.NoHumanoid));
             FX.BindAnimatorController(GetAnimatorController());
 
             CustomAnimLayer GetLayer(AnimLayerType layerType)

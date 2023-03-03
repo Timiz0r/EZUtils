@@ -10,7 +10,7 @@ namespace EZUtils.MMDAvatarTools
     {
         public static readonly AvatarMask HandsOnly = Load("vrc_HandsOnly.mask");
         public static readonly AvatarMask MuscleOnly = Load("vrc_MusclesOnly.mask");
-        public static readonly AvatarMask NoMuscle = CreateNoMuscleMask();
+        public static readonly AvatarMask NoHumanoid = CreateNoHumanoidMask();
 
         private static AvatarMask Load(string fileName)
         {
@@ -29,9 +29,9 @@ namespace EZUtils.MMDAvatarTools
             return copy;
         }
 
-        private static AvatarMask CreateNoMuscleMask()
+        private static AvatarMask CreateNoHumanoidMask()
         {
-            AvatarMask mask = new AvatarMask() { name = "mmdAvatarTester_NoMuscle" };
+            AvatarMask mask = new AvatarMask() { name = "mmdAvatarTester_NoHumanoid" };
             foreach (AvatarMaskBodyPart bodyPart in Enum.GetValues(typeof(AvatarMaskBodyPart)).Cast<AvatarMaskBodyPart>())
             {
                 if (bodyPart == AvatarMaskBodyPart.LastBodyPart) continue;

@@ -20,22 +20,12 @@ namespace EZUtils.MMDAvatarTools
 
             //since there can be a mix, we return results for each set (if any)
             const bool PossiblyDisabled = true;
-            List<AnalysisResult> results = new List<AnalysisResult>();
-
-            (string layerName, string stateName)[] definitelyDisabledStates = writeDefaultsDisabledStates[!PossiblyDisabled]
-                .ToArray();
-            if (definitelyDisabledStates.Length > 0) results.Add(new AnalysisResult(
-                Result.WriteDefaultsDisabled,
-                AnalysisResultLevel.Error,
-                new GeneralRenderer(
-                    "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。オンにしないと、表情が変化しない可能性が高くなります。",
-                    new AnimatorStateRenderer(
-                        "Write Defaultsがオフになっているステート",
-                        playableLayerInformation.FX.UnderlyingController,
-                        definitelyDisabledStates))));
-
             (string layerName, string stateName)[] possiblyDisabledStates = writeDefaultsDisabledStates[PossiblyDisabled]
                 .ToArray();
+            (string layerName, string stateName)[] definitelyDisabledStates = writeDefaultsDisabledStates[!PossiblyDisabled]
+                .ToArray();
+
+            List<AnalysisResult> results = new List<AnalysisResult>();
             if (possiblyDisabledStates.Length > 0) results.Add(new AnalysisResult(
                 Result.WriteDefaultsPotentiallyDisabled,
                 AnalysisResultLevel.Warning,
@@ -49,6 +39,15 @@ namespace EZUtils.MMDAvatarTools
                         playableLayerInformation.FX.UnderlyingController,
                         possiblyDisabledStates))
             ));
+            if (definitelyDisabledStates.Length > 0) results.Add(new AnalysisResult(
+                Result.WriteDefaultsDisabled,
+                AnalysisResultLevel.Error,
+                new GeneralRenderer(
+                    "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。オンにしないと、表情が変化しない可能性が高くなります。",
+                    new AnimatorStateRenderer(
+                        "Write Defaultsがオフになっているステート",
+                        playableLayerInformation.FX.UnderlyingController,
+                        definitelyDisabledStates))));
 
             return results;
 

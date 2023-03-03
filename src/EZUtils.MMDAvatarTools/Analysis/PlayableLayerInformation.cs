@@ -74,12 +74,15 @@ namespace EZUtils.MMDAvatarTools
                 VRCAvatarDescriptor.CustomAnimLayer layer = avatar.baseAnimationLayers.SingleOrDefault(
                     l => !l.isDefault && l.type == layerType);
                 if (layer.animatorController == null) return new PlayableLayer(
-                    states: Array.Empty<State>(), underlyingController: null);
+                    states: Array.Empty<State>(),
+                    configuredMask: null,
+                    underlyingController: null);
 
                 bool playableLayerPossiblyDisabled = possiblyDisabledPlayableLayers.Contains(layerType);
                 AnimatorController controller = (AnimatorController)layer.animatorController;
+                //dont know if layers can be null, but since a controller can have no layers, do this just in case
                 State[] states = controller.layers
-                    .SelectMany((l, layerIndex) => l.stateMachine.states
+                    ?.SelectMany((l, layerIndex) => l.stateMachine.states
                         .Select(s => new State(
                             layerIndex: layerIndex,
                             layerName: l.name,
@@ -88,8 +91,12 @@ namespace EZUtils.MMDAvatarTools
                                 playableLayerPossiblyDisabled
                                 || possiblyDisabledAnimatorLayers.Contains((layerType, layerIndex)),
                             underlyingState: s.state)))
-                    .ToArray();
-                return new PlayableLayer(states, controller);
+                    ?.ToArray() ?? Array.Empty<State>();
+                return new PlayableLayer(
+                    states,
+                    //as opposed to looking at Cust
+                    layer.mask,
+                    controller);
             }
         }
 
@@ -111,11 +118,14 @@ namespace EZUtils.MMDAvatarTools
         public class PlayableLayer
         {
             public IReadOnlyList<State> States { get; }
+            public AvatarMask ConfiguredMask { get; }
             public AnimatorController UnderlyingController { get; }
 
-            public PlayableLayer(IReadOnlyList<State> states, AnimatorController underlyingController)
+            public PlayableLayer(
+                IReadOnlyList<State> states, AvatarMask configuredMask, AnimatorController underlyingController)
             {
                 States = states;
+                ConfiguredMask = configuredMask;
                 UnderlyingController = underlyingController;
             }
         }

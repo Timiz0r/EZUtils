@@ -1,5 +1,6 @@
 namespace EZUtils.MMDAvatarTools.Tests
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using NUnit.Framework;
@@ -8,6 +9,7 @@ namespace EZUtils.MMDAvatarTools.Tests
     using UnityEngine.TestTools;
     using VRC.SDK3.Avatars.Components;
     using static VRC.SDK3.Avatars.Components.VRCAvatarDescriptor;
+    using Object = UnityEngine.Object;
 
     /*
      * TODO analyzers
@@ -18,7 +20,9 @@ namespace EZUtils.MMDAvatarTools.Tests
      *  do layer masks also cause a problem? probably, so verify and analyze based on that.
      * empty lists dont look good, so indicate they're empty.
      * object fields arent clickable, perhaps because not inspector? either make them clickable, or go with buttons (or both)
-     * for layer1/2 analyzer, nonGestureTransitionPaths should be output, and integrate with upcoming utility. also dont use chain wording; use path.
+     * add instructions for fixing issues
+     * add support for behaviours to tester
+     * exclude 0 weight layers where appropriate. if always 0, then boom. if could be turned on, then b careeful.
      */
     //technically testing is a bit insufficient because we dont test sub state machines and only layers' state machines
     public class MMDAvatarAnalyzerTests
@@ -399,6 +403,65 @@ namespace EZUtils.MMDAvatarTools.Tests
                 Has.Exactly(2).Matches<AnalysisResult>(r => r.Level == AnalysisResultLevel.AnalyzerError));
         }
 
+        [Test]
+        public void Passes_WhenFXLayerHasNoHumanoidAnimations()
+        {
+            TestSetup testSetup = new TestSetup();
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(
+                results, HumanoidTransformAnalyzer.Result.NoActiveHumanoidAnimationsFound, AnalysisResultLevel.Pass);
+        }
+
+        [Test]
+        public void Passes_WhenFXLayerHasNoUserDefinedMaskRegardlessOfHumanoidAnimations()
+        {
+            TestSetup testSetup = new TestSetup();
+            testSetup.SetFXMask(null);
+            AnimationClip clip = new AnimationClip();
+            clip.SetCurve("", typeof(Animator), "Head Turn Left-Right", AnimationCurve.Constant(0, 1, 0));
+            _ = testSetup.AddedFXLayer.AddState("state").motion = clip;
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            //hoping to establish both are true to make life easier for me
+            Assert.That(clip.humanMotion, Is.True);
+            Assert.That(clip.isHumanMotion, Is.True);
+            AssertResult(
+                results, HumanoidTransformAnalyzer.Result.NoActiveHumanoidAnimationsFound, AnalysisResultLevel.Pass);
+        }
+
+        [Test]
+        public void WarnsAndErrors_WhenFXLayerHasUnmaskedOutHumanoidAnimations()
+        {
+            TestSetup testSetup = new TestSetup();
+            testSetup.SetFXMask(VrcAvatarMasks.MuscleOnly);
+            AnimationClip clip = new AnimationClip();
+            clip.SetCurve("", typeof(Animator), "Head Turn Left-Right", AnimationCurve.Constant(0, 1, 0));
+
+            testSetup.FX.AddLayer("active");
+            AnimatorStateMachine active = testSetup.FX.layers.Last().stateMachine;
+            active.AddState("state").motion = clip;
+
+            testSetup.FX.AddLayer("possibly active");
+            AnimatorStateMachine possiblyActive = testSetup.FX.layers.Last().stateMachine;
+            VRCAnimatorLayerControl behavior = possiblyActive.AddStateMachineBehaviour<VRCAnimatorLayerControl>();
+            behavior.goalWeight = 0;
+            behavior.layer = testSetup.FX.layers.Length - 1;
+            behavior.playable = VRC.SDKBase.VRC_AnimatorLayerControl.BlendableLayer.FX;
+            possiblyActive.AddState("state").motion = clip;
+            _ = testSetup.FX.AddMotion(clip);
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(
+                results, HumanoidTransformAnalyzer.Result.PossiblyActiveHumanoidAnimationsFound, AnalysisResultLevel.Warning);
+            AssertResult(
+                results, HumanoidTransformAnalyzer.Result.ActiveHumanoidAnimationsFound, AnalysisResultLevel.Error);
+            LogAssert.Expect(LogType.Error, "AddAssetToSameFile failed because the other asset possibly active is not persistent");
+        }
+
         private static void AssertResult(
             IEnumerable<AnalysisResult> results, AnalysisResultIdentifier result, AnalysisResultLevel level)
         {
@@ -463,7 +526,8 @@ namespace EZUtils.MMDAvatarTools.Tests
                                 animatorController = FX,
                                 isDefault = false,
                                 isEnabled = true,
-                                type = AnimLayerType.FX
+                                type = AnimLayerType.FX,
+                                mask = FX.layers[0].avatarMask
                             }
                         })
                     .AddObject("Body", o => o
@@ -498,6 +562,22 @@ namespace EZUtils.MMDAvatarTools.Tests
                         motion = new AnimationClip()
                     }, Vector3.zero);
                 return result;
+            }
+
+            public void SetFXMask(AvatarMask mask)
+            {
+                FX.layers[0].avatarMask = mask;
+
+                int fxLayerIndex = Array.FindIndex(Avatar.baseAnimationLayers, l => l.type == AnimLayerType.FX);
+                CustomAnimLayer existingLayer = Avatar.baseAnimationLayers[fxLayerIndex];
+                Avatar.baseAnimationLayers[fxLayerIndex] = new CustomAnimLayer
+                {
+                    animatorController = existingLayer.animatorController,
+                    isDefault = existingLayer.isDefault,
+                    isEnabled = existingLayer.isEnabled,
+                    type = AnimLayerType.FX,
+                    mask = mask
+                };
             }
         }
     }
