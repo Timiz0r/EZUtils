@@ -49,44 +49,44 @@ namespace EZUtils.MMDAvatarTools
 
             //since the order and configuration of each layer is specific, we'll explicitly and clearly define each layer
             CustomAnimLayer layer = GetLayer(AnimLayerType.Base);
-            Base = new AvatarPlayableLayer(0, playableMixer, GetMask(null));
+            Base = new AvatarPlayableLayer(0, playableMixer, GetMask(ifDefault: null, ifNone: null));
             Base.BindAnimatorController(GetAnimatorController());
 
             layer = GetLayer(AnimLayerType.Additive);
-            Additive = new AvatarPlayableLayer(1, playableMixer, GetMask(null));
+            Additive = new AvatarPlayableLayer(1, playableMixer, GetMask(ifDefault: null, ifNone: null));
             Additive.BindAnimatorController(GetAnimatorController());
             Additive.SetAdditive();
 
             layer = GetLayer(AnimLayerType.Sitting);
-            StationSitting = new AvatarPlayableLayer(2, playableMixer, GetMask(null));
+            StationSitting = new AvatarPlayableLayer(2, playableMixer, GetMask(ifDefault: null, ifNone: null));
             StationSitting.TurnOff();
-            Sitting = new AvatarPlayableLayer(3, playableMixer, GetMask(null));
+            Sitting = new AvatarPlayableLayer(3, playableMixer, GetMask(ifDefault: null, ifNone: null));
             Sitting.BindAnimatorController(GetAnimatorController());
             Sitting.TurnOff();
 
             layer = GetLayer(AnimLayerType.TPose);
-            TPose = new AvatarPlayableLayer(4, playableMixer, GetMask(VrcAvatarMasks.MuscleOnly));
+            TPose = new AvatarPlayableLayer(4, playableMixer, GetMask(ifDefault: VrcAvatarMasks.MuscleOnly, ifNone: null));
             TPose.BindAnimatorController(GetAnimatorController());
             TPose.TurnOff();
 
             layer = GetLayer(AnimLayerType.IKPose);
-            IKPose = new AvatarPlayableLayer(5, playableMixer, GetMask(VrcAvatarMasks.MuscleOnly));
+            IKPose = new AvatarPlayableLayer(5, playableMixer, GetMask(ifDefault: VrcAvatarMasks.MuscleOnly, ifNone: null));
             IKPose.BindAnimatorController(GetAnimatorController());
             IKPose.TurnOff();
 
             layer = GetLayer(AnimLayerType.Gesture);
-            Gesture = new AvatarPlayableLayer(6, playableMixer, GetMask(VrcAvatarMasks.HandsOnly));
+            Gesture = new AvatarPlayableLayer(6, playableMixer, GetMask(ifDefault: VrcAvatarMasks.HandsOnly, ifNone: null));
             Gesture.BindAnimatorController(GetAnimatorController());
 
             layer = GetLayer(AnimLayerType.Action);
-            StationAction = new AvatarPlayableLayer(7, playableMixer, GetMask(null));
+            StationAction = new AvatarPlayableLayer(7, playableMixer, GetMask(ifDefault: null, ifNone: null));
             StationAction.TurnOff();
-            Action = new AvatarPlayableLayer(8, playableMixer, GetMask(null));
+            Action = new AvatarPlayableLayer(8, playableMixer, GetMask(ifDefault: null, ifNone: null));
             Action.BindAnimatorController(GetAnimatorController());
             Action.TurnOff();
 
             layer = GetLayer(AnimLayerType.FX);
-            FX = new AvatarPlayableLayer(9, playableMixer, VrcAvatarMasks.NoMuscle);
+            FX = new AvatarPlayableLayer(9, playableMixer, GetMask(ifDefault: VrcAvatarMasks.NoMuscle, ifNone: VrcAvatarMasks.NoMuscle));
             FX.BindAnimatorController(GetAnimatorController());
 
             CustomAnimLayer GetLayer(AnimLayerType layerType)
@@ -98,7 +98,12 @@ namespace EZUtils.MMDAvatarTools
                     animatorController = null,
                     mask = null,
                 };
-            AvatarMask GetMask(AvatarMask defaultMask) => layer.isDefault ? defaultMask : layer.mask;
+            AvatarMask GetMask(AvatarMask ifDefault, AvatarMask ifNone)
+                => layer.isDefault
+                    ? ifDefault
+                    : layer.mask == null
+                        ? ifNone
+                        : layer.mask;
             RuntimeAnimatorController GetAnimatorController()
             {
                 if (!layer.isDefault && layer.animatorController != null) return layer.animatorController;
