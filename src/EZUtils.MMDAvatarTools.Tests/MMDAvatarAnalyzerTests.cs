@@ -18,6 +18,7 @@ namespace EZUtils.MMDAvatarTools.Tests
      *  do layer masks also cause a problem? probably, so verify and analyze based on that.
      * empty lists dont look good, so indicate they're empty.
      * object fields arent clickable, perhaps because not inspector? either make them clickable, or go with buttons (or both)
+     * for layer1/2 analyzer, nonGestureTransitionPaths should be output, and integrate with upcoming utility. also dont use chain wording; use path.
      */
     //technically testing is a bit insufficient because we dont test sub state machines and only layers' state machines
     public class MMDAvatarAnalyzerTests

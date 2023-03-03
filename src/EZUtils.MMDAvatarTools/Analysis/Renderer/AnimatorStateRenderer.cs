@@ -14,12 +14,12 @@ namespace EZUtils.MMDAvatarTools
             "Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/AnimatorStateRendererLayerElement.uxml");
         private readonly string title;
         private readonly AnimatorController animatorController;
-        private readonly IReadOnlyList<(string layerName, string stateName)> states;
+        private readonly IReadOnlyList<PlayableLayerInformation.State> states;
 
         public AnimatorStateRenderer(
             string title,
             AnimatorController animatorController,
-            IReadOnlyList<(string layerName, string stateName)> states)
+            IReadOnlyList<PlayableLayerInformation.State> states)
         {
             this.title = title;
             this.animatorController = animatorController;
@@ -33,7 +33,7 @@ namespace EZUtils.MMDAvatarTools
             VisualElement statesContainer = new VisualElement();
             container.Add(statesContainer);
 
-            foreach (IGrouping<string, string> group in states.GroupBy(s => s.layerName, s => s.stateName))
+            foreach (IGrouping<string, string> group in states.GroupBy(s => s.LayerName, s => s.StateName))
             {
                 TemplateContainer layerContainer = layerElement.CloneTree();
                 statesContainer.Add(layerContainer);
