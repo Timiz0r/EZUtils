@@ -8,6 +8,7 @@ namespace EZUtils
     using UnityEngine.Animations;
     using UnityEngine.Playables;
     using VRC.SDK3.Avatars.Components;
+    using VRC.SDKBase;
     using static VRC.SDK3.Avatars.Components.VRCAvatarDescriptor;
 
     public class AvatarPlayableAnimator
@@ -187,9 +188,52 @@ namespace EZUtils
             StationAction.UnbindAnimator();
         }
 
+        public bool IsUsedBy(VRCAvatarDescriptor avatar)
+            => this.avatar == avatar;
+
         [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
         private sealed class AvatarPlayableLayerAttribute : Attribute
         {
+        }
+    }
+
+    public class LayerBlendControl : MonoBehaviour
+    {
+        private static bool initializedInitializers = false;
+        private readonly AvatarPlayableAnimator playableAnimator;
+
+        public LayerBlendControl(AvatarPlayableAnimator playableAnimator)
+        {
+            this.playableAnimator = playableAnimator;
+
+            if (!initializedInitializers)
+            {
+                //a tough decision: do we trust that, if these are non-null, that gesture manager or av3 emulator
+                //will take care of it for us?
+                //if we had a way to detect when a new AnimationPlayableOutput gets used with an avatar we're managing
+                //we could manage this more safely. instead, we'll just trust the user to do the right thing.
+                VRC_PlayableLayerControl.Initialize += InitializeNewPlayableLayerControl;
+                VRC_AnimatorLayerControl.Initialize += InitializeNewAnimatorLayerControl;
+            }
+        }
+
+        public void OnDestroy()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void InitializeNewAnimatorLayerControl(VRC_AnimatorLayerControl obj)
+        => obj.ApplySettings += EvaluateAnimatorLayerControl;
+        private void InitializeNewPlayableLayerControl(VRC_PlayableLayerControl obj)
+        => obj.ApplySettings += EvaluatePlayableLayerControl;
+
+        private void EvaluatePlayableLayerControl(VRC_PlayableLayerControl control, Animator animator)
+        {
+            if (!playableAnimator.IsUsedBy(animator.GetComponent<VRCAvatarDescriptor>())) return;
+        }
+        private void EvaluateAnimatorLayerControl(VRC_AnimatorLayerControl control, Animator animator)
+        {
+            if (!playableAnimator.IsUsedBy(animator.GetComponent<VRCAvatarDescriptor>())) return;
         }
     }
 }
