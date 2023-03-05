@@ -251,6 +251,18 @@ namespace EZUtils.MMDAvatarTools.Tests
         }
 
         [Test]
+        public void Passes_WhenNoCustomFXLayer()
+        {
+            TestSetup testSetup = new TestSetup();
+            testSetup.Avatar.baseAnimationLayers = Array.Empty<CustomAnimLayer>();
+
+            IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
+
+            AssertResult(results, Layer1And2Analyzer.Result.Layer1_IsGestureLayer, AnalysisResultLevel.Pass);
+            AssertResult(results, Layer1And2Analyzer.Result.Layer2_IsGestureLayer, AnalysisResultLevel.Pass);
+        }
+
+        [Test]
         public void Warns_WhenLayer1And2AnyStateTransitionsAreNonGesture()
         {
             TestSetup testSetup = new TestSetup();
@@ -526,7 +538,7 @@ namespace EZUtils.MMDAvatarTools.Tests
                 results,
                 Has.Exactly(1).Matches<AnalysisResult>(r => r.Result == result && r.Level == level),
                 $"Could not find result '{result.Code}' '{level}'. Results:\r\n\t{string.Join("\r\n\t", results.Select(r => $"'{r.Result.Code}' '{r.Level}'"))}");
-            Assert.That(results.Select(r => r.Renderer), Has.All.Not.Null);
+            AssertRenderersNonNull(results);
         }
 
         private static void AssertNoResult(
@@ -536,8 +548,14 @@ namespace EZUtils.MMDAvatarTools.Tests
                 results,
                 Has.Exactly(0).Matches<AnalysisResult>(r => r.Result == result && r.Level == level),
                 $"Found result '{result.Code}' '{level}' that shouldn't exist. Results:\r\n\t{string.Join("\r\n\t", results.Select(r => $"'{r.Result.Code}' '{r.Level}'"))}");
-            Assert.That(results.Select(r => r.Renderer), Has.All.Not.Null);
+            AssertRenderersNonNull(results);
         }
+
+        private static void AssertRenderersNonNull(IEnumerable<AnalysisResult> results)
+            => Assert.That(
+                results.Select(r => r.Renderer),
+                Has.All.Not.Null,
+                $"Found null renderers. Results:\r\n\t{string.Join("\r\n\t", results.Select(r => r.Result.Code))}");
 
         private static void ConfigureMesh(SkinnedMeshRenderer smr)
             => smr.sharedMesh =

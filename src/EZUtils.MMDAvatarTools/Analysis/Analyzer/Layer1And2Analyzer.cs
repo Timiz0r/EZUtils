@@ -22,12 +22,12 @@ namespace EZUtils.MMDAvatarTools
                 new AnalysisResult(
                     Result.Layer1_IsGestureLayer,
                     AnalysisResultLevel.Pass,
-                    null),
+                    new GeneralRenderer("FXレイヤーが指定されていません。")),
                 new AnalysisResult(
                     Result.Layer2_IsGestureLayer,
                     AnalysisResultLevel.Pass,
-                    null),
-            }; //TODO: this should have failed a test
+                    new GeneralRenderer("FXレイヤーが指定されていません。")),
+            };
 
             List<AnalysisResult> results = new List<AnalysisResult>(2)
             {
