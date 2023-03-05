@@ -178,7 +178,7 @@ namespace EZUtils
         {
             Stop();
             if (playableGraph.IsValid()) playableGraph.Destroy();
-            UnityEngine.Object.DestroyImmediate(referenceComponent);
+            UnityEngine.Object.Destroy(referenceComponent);
         }
 
         public void Start()

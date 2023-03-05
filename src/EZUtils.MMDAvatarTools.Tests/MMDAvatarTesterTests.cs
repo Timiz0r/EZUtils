@@ -9,8 +9,6 @@ namespace EZUtils.MMDAvatarTools.Tests
     using VRC.SDK3.Avatars.Components;
     using static VRC.SDK3.Avatars.Components.VRCAvatarDescriptor;
 
-    //TODO: add support for vrc behaviors that blend stuff out. gotta test a bit more, but it appears all 0 weight
-    //things -- animatorlayers, playables -- can help with supporting mmd worlds even with write defaults off.
     public class MMDAvatarTesterTests
     {
         //note for waiting:
@@ -35,33 +33,26 @@ namespace EZUtils.MMDAvatarTools.Tests
 
         [UnityTest]
         [RequiresPlayMode]
+        public IEnumerator Start_ChangesShapeKeys_WhenLayer1and2StatesHaveWriteDefaultsOff()
+        {
+            TestSetup testSetup = new TestSetup();
+            AnimatorControllerLayer[] layers = testSetup.FXLayer.layers;
+            layers[1].stateMachine.defaultState.writeDefaultValues = false;
+            layers[2].stateMachine.defaultState.writeDefaultValues = false;
+            testSetup.FXLayer.layers = layers;
+
+            testSetup.StartMMDTester();
+            yield return new WaitForSeconds(0.5f);
+
+            Assert.That(testSetup.GetBlendShapeWeight("blink_both"), Is.InRange(90f, 110f));
+        }
+
+        [UnityTest]
+        [RequiresPlayMode]
         public IEnumerator Start_DoesNotChangeShapeKeys_WhenFXLayerHasAStateWithWriteDefaultsOff()
         {
             TestSetup testSetup = new TestSetup();
-            VrcDefaultAnimatorControllers animatorControllers = new VrcDefaultAnimatorControllers();
-            AnimatorControllerLayer layer = new AnimatorControllerLayer
-            {
-                defaultWeight = 1,
-                stateMachine = new AnimatorStateMachine()
-                {
-                }
-            };
-            layer.stateMachine.AddState(new AnimatorState()
-            {
-                writeDefaultValues = false,
-                motion = new AnimationClip()
-            }, Vector3.zero);
-            animatorControllers.FX.AddLayer(layer);
-            testSetup.Avatar.baseAnimationLayers = new[]
-            {
-                new CustomAnimLayer
-                {
-                    isEnabled = true,
-                    isDefault = false,
-                    type = AnimLayerType.FX,
-                    animatorController = animatorControllers.FX
-                }
-            };
+            _ = testSetup.AddWriteDefaultsOffState();
 
             testSetup.StartMMDTester();
             yield return new WaitForSeconds(0.5f);
@@ -87,6 +78,43 @@ namespace EZUtils.MMDAvatarTools.Tests
                 Is.EqualTo(initialLeftHandPosition));
         }
 
+        [UnityTest]
+        [RequiresPlayMode]
+        public IEnumerator Start_LetsBlendShapesAnimate_WhenFXLayerHasWriteDefaultsOffButFXIsBlendedOut()
+        {
+            TestSetup testSetup = new TestSetup();
+            AnimatorState state = testSetup.AddWriteDefaultsOffState();
+            VRCPlayableLayerControl behavior = state.AddStateMachineBehaviour<VRCPlayableLayerControl>();
+            behavior.layer = VRC.SDKBase.VRC_PlayableLayerControl.BlendableLayer.FX;
+            behavior.blendDuration = 0.2f;
+            behavior.goalWeight = 0;
+
+            testSetup.StartMMDTester();
+
+            LogAssert.Expect(LogType.Error, "AddAssetToSameFile failed because the other asset  is not persistent");
+            yield return new WaitForSeconds(0.5f);
+            Assert.That(testSetup.GetBlendShapeWeight("blink_both"), Is.InRange(90f, 110f));
+        }
+
+        [UnityTest]
+        [RequiresPlayMode]
+        public IEnumerator Start_LetsBlendShapesAnimate_WhenFXLayerHasWriteDefaultsOffButFXLayerIsBlendedOut()
+        {
+            TestSetup testSetup = new TestSetup();
+            AnimatorState state = testSetup.AddWriteDefaultsOffState();
+            VRCAnimatorLayerControl behavior = state.AddStateMachineBehaviour<VRCAnimatorLayerControl>();
+            behavior.playable = VRC.SDKBase.VRC_AnimatorLayerControl.BlendableLayer.FX;
+            behavior.layer = 3;
+            behavior.blendDuration = 0.2f;
+            behavior.goalWeight = 0;
+
+            testSetup.StartMMDTester();
+
+            LogAssert.Expect(LogType.Error, "AddAssetToSameFile failed because the other asset  is not persistent");
+            yield return new WaitForSeconds(0.5f);
+            Assert.That(testSetup.GetBlendShapeWeight("blink_both"), Is.InRange(90f, 110f));
+        }
+
         private class TestSetup
         {
             private static readonly AnimationClip animation =
@@ -95,6 +123,8 @@ namespace EZUtils.MMDAvatarTools.Tests
             private readonly MmdAvatarTester mmdAvatarTester;
 
             public VRCAvatarDescriptor Avatar { get; }
+
+            public AnimatorController FXLayer { get; }
 
             public TestSetup()
             {
@@ -105,12 +135,44 @@ namespace EZUtils.MMDAvatarTools.Tests
                 Avatar = avatarObject.AddComponent<VRCAvatarDescriptor>();
                 mmdAvatarTester = avatarObject.AddComponent<MmdAvatarTester>();
 
+                VrcDefaultAnimatorControllers animatorControllers = new VrcDefaultAnimatorControllers();
+                Avatar.baseAnimationLayers = new[]
+                {
+                    new CustomAnimLayer
+                    {
+                        isDefault = false,
+                        type = AnimLayerType.FX,
+                        animatorController = FXLayer = animatorControllers.FX
+                    }
+                };
+
                 //to make things more easily viewable in the game view
                 Camera camera = new GameObject("cam").AddComponent<Camera>();
                 camera.transform.SetPositionAndRotation(new Vector3(0, 1.5f, 1), Quaternion.Euler(0, 180, 0));
 
                 Light light = new GameObject("light").AddComponent<Light>();
                 light.type = LightType.Directional;
+            }
+
+            public AnimatorState AddWriteDefaultsOffState()
+            {
+                AnimatorControllerLayer layer = new AnimatorControllerLayer
+                {
+                    defaultWeight = 1,
+                    name = "new layer",
+                    stateMachine = new AnimatorStateMachine()
+                    {
+                    }
+                };
+                AnimatorState state = new AnimatorState()
+                {
+                    writeDefaultValues = false,
+                    motion = new AnimationClip()
+                };
+                layer.stateMachine.AddState(state, Vector3.zero);
+                FXLayer.AddLayer(layer);
+
+                return state;
             }
 
             public void StartMMDTester() => mmdAvatarTester.StartTesting(animation);
