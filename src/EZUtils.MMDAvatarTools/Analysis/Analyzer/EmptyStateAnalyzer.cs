@@ -42,9 +42,10 @@ namespace EZUtils.MMDAvatarTools
                     new GeneralRenderer(
                         "異変が起こる可能性があります。",
                         new AnimatorStateRenderer(
-                            "モーションのないステート",
-                            playableLayerInformation.FX.UnderlyingController,
-                            statesWithEmptyMotions)));
+                            title: "モーションのないステート",
+                            emptyMessage: "モーションのないステートがFXレイヤーに存在しません。",
+                            animatorController: playableLayerInformation.FX.UnderlyingController,
+                            states: statesWithEmptyMotions)));
         }
 
         public static class Result

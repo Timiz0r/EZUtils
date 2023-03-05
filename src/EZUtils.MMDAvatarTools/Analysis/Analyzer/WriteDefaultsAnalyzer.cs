@@ -39,9 +39,10 @@ namespace EZUtils.MMDAvatarTools
                     "このステートがオフにされる場合、表情が変化できますが、FXレイヤーの他のアニメーションが直前に起動しても無効化にされます。" +
                     "そしてオフにされない場合、表情が変化しない可能性が高くなります。",
                     new AnimatorStateRenderer(
-                        "Write Defaultsがオフになっているステート",
-                        playableLayerInformation.FX.UnderlyingController,
-                        possiblyDisabledStates))
+                        title: "Write Defaultsがオフになっているステート",
+                        emptyMessage: "", //we dont output in this case anyway
+                        animatorController: playableLayerInformation.FX.UnderlyingController,
+                        states: possiblyDisabledStates))
             ));
             if (definitelyDisabledStates.Length > 0) results.Add(new AnalysisResult(
                 Result.WriteDefaultsDisabled,
@@ -49,9 +50,10 @@ namespace EZUtils.MMDAvatarTools
                 new GeneralRenderer(
                     "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。オンにしないと、表情が変化しない可能性が高くなります。",
                     new AnimatorStateRenderer(
-                        "Write Defaultsがオフになっているステート",
-                        playableLayerInformation.FX.UnderlyingController,
-                        definitelyDisabledStates))));
+                        title: "Write Defaultsがオフになっているステート",
+                        emptyMessage: "", //we dont output in this case anyway
+                        animatorController: playableLayerInformation.FX.UnderlyingController,
+                        states: definitelyDisabledStates))));
 
             return results;
 

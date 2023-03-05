@@ -30,6 +30,10 @@
     -unity-font-style: bold;
 }
 
+.result-details-emptylist {
+    -unity-font-style: italic;
+}
+
 .analyzer-result-icon {
     width: 20px;
     height: 20px;

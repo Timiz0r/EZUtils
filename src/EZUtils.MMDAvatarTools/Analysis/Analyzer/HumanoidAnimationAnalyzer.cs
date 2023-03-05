@@ -55,9 +55,10 @@ namespace EZUtils.MMDAvatarTools
                     "このアニメーションを持っているレイヤーがオフにされる場合、MMDのアニメーションが再生します。" +
                     "そしてオフにされない場合、MMDのアニメーションが再生しません。",
                     new AnimatorStateRenderer(
-                        "ヒューマノイドのアニメーションがあるステート",
-                        playableLayerInformation.FX.UnderlyingController,
-                        possiblyActiveStates))
+                        title: "ヒューマノイドのアニメーションがあるステート",
+                        emptyMessage: "", //we don't output in this case, anyway
+                        animatorController: playableLayerInformation.FX.UnderlyingController,
+                        states: possiblyActiveStates))
             ));
             if (definitelyActiveStates.Length > 0) results.Add(new AnalysisResult(
                 Result.ActiveHumanoidAnimationsFound,
@@ -65,9 +66,10 @@ namespace EZUtils.MMDAvatarTools
                 new GeneralRenderer(
                     "FXレイヤーに使われてるヒューマノイドのアニメーションがあることによって、MMDのアニメーションが再生しません。",
                     new AnimatorStateRenderer(
-                        "ヒューマノイドのアニメーションがあるステート",
-                        playableLayerInformation.FX.UnderlyingController,
-                        definitelyActiveStates))
+                        title: "ヒューマノイドのアニメーションがあるステート",
+                        emptyMessage: "", //we don't output in this case, anyway
+                        animatorController: playableLayerInformation.FX.UnderlyingController,
+                        states: definitelyActiveStates))
             ));
             return results;
         }

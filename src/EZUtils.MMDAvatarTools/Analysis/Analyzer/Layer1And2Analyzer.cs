@@ -43,7 +43,11 @@ namespace EZUtils.MMDAvatarTools
                     new GeneralRenderer(
                         "MMDワールドはFXレイヤーの第1と第2レイヤーをオフにしますので、" +
                         "ジェスチャー様なアニメーション以外があっていたら、異変が起こる可能性があります。",
-                        new AnimatorStateRenderer("FXレイヤーのレイヤー", controller, layer1and2States)));
+                        new AnimatorStateRenderer(
+                            title: "FXレイヤーのアニメーションレイヤー",
+                            emptyMessage: "アニメーションレイヤーがFXレイヤーに存在しません。",
+                            animatorController: controller,
+                            states: layer1and2States)));
             }
             else
             {

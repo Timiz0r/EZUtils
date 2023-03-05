@@ -16,8 +16,9 @@ namespace EZUtils.MMDAvatarTools
             //while the nonbodymesh analyzer includes inactive, we don't here because we're trying to detect the main
             //meshes, which are likely always on.
             ObjectSelectionRenderer otherMeshRenderer = ObjectSelectionRenderer.Create(
-                "MMD対応メッシュ",
-                avatar
+                listTitle: "MMD対応メッシュ",
+                emptyMessage: "MMD対応メッシュがこのアバターに存在しません。",
+                objects: avatar
                     .GetComponentsInChildren<SkinnedMeshRenderer>()
                     .Where(smr => MmdBlendShapeSummary.Generate(smr).HasAnyMmdBlendShapes)
                     .ToArray()

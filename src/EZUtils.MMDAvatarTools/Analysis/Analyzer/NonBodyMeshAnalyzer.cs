@@ -26,7 +26,9 @@ namespace EZUtils.MMDAvatarTools
                     new GeneralRenderer(
                         "Bodyではないメッシュは表情が変化しません。",
                         ObjectSelectionRenderer.Create(
-                            "MMD対応のブレンドシェープがあるメッシュ", nonBodyMeshesWithMMdBlendShapes)));
+                            listTitle: "MMD対応のブレンドシェープがあるメッシュ",
+                            emptyMessage: "MMD対応のブレンドシェープのあるメッシュが存在しません。",
+                            objects: nonBodyMeshesWithMMdBlendShapes)));
         }
 
         public static class Result

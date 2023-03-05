@@ -13,15 +13,18 @@ namespace EZUtils.MMDAvatarTools
         private readonly VisualTreeAsset layerElement = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
             "Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/AnimatorStateRendererLayerElement.uxml");
         private readonly string title;
+        private readonly string emptyMessage;
         private readonly AnimatorController animatorController;
         private readonly IReadOnlyList<(string layerName, string stateName)> states;
 
         public AnimatorStateRenderer(
             string title,
+            string emptyMessage,
             AnimatorController animatorController,
             IReadOnlyList<(string layerName, string stateName)> states)
         {
             this.title = title;
+            this.emptyMessage = emptyMessage;
             this.animatorController = animatorController;
             this.states = states;
         }
@@ -29,6 +32,12 @@ namespace EZUtils.MMDAvatarTools
         public void Render(VisualElement container)
         {
             container.Add(new Label(title).WithClasses("results-details-title"));
+
+            if (states.Count == 0)
+            {
+                container.Add(new Label(emptyMessage).WithClasses("result-details-emptylist"));
+                return;
+            }
 
             VisualElement statesContainer = new VisualElement();
             container.Add(statesContainer);
