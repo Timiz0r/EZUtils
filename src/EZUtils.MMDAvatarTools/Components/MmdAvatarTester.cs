@@ -5,17 +5,20 @@ namespace EZUtils.MMDAvatarTools
     using UnityEngine;
     using VRC.SDK3.Avatars.Components;
 
-    public class MmdAvatarTester
+    //should not be addable in editor
+    [AddComponentMenu("")]
+    public class MmdAvatarTester : MonoBehaviour
     {
-        private AvatarPlayableAnimator avatarPlayableAnimator = null;
+        private AvatarPlayableAnimator avatarPlayableAnimator;
 
-        public void Start(VRCAvatarDescriptor avatar, AnimationClip animation)
+        public void StartTesting(AnimationClip animation)
         {
             if (avatarPlayableAnimator != null) throw new InvalidOperationException(
                 "Attempted to start while already started.");
 
-            avatarPlayableAnimator = new AvatarPlayableAnimator(avatar);
-            avatarPlayableAnimator.Attach();
+            VRCAvatarDescriptor avatar = GetComponent<VRCAvatarDescriptor>();
+            avatarPlayableAnimator = AvatarPlayableAnimator.Attach(avatar);
+            avatarPlayableAnimator.Start();
 
             avatarPlayableAnimator.FX.SetLayerWeight(1, 0);
             avatarPlayableAnimator.FX.SetLayerWeight(2, 0);
@@ -32,10 +35,20 @@ namespace EZUtils.MMDAvatarTools
             }
         }
 
-        public void Stop()
+        public void OnDestroy()
         {
-            avatarPlayableAnimator?.Destroy();
+            avatarPlayableAnimator?.Detach();
             avatarPlayableAnimator = null;
+        }
+
+        public void OnDisable()
+        {
+            avatarPlayableAnimator?.Stop();
+        }
+
+        public void OnEnable()
+        {
+            avatarPlayableAnimator?.Start();
         }
     }
 }

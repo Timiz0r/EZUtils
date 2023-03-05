@@ -92,7 +92,7 @@ namespace EZUtils.MMDAvatarTools.Tests
             private static readonly AnimationClip animation =
                 AssetDatabase.LoadAssetAtPath<AnimationClip>(
                     "Packages/com.timiz0r.ezutils.mmdavatartools.tests/mmdsample_vrcrobot.anim");
-            private readonly MmdAvatarTester mmdAvatarTester = new MmdAvatarTester();
+            private readonly MmdAvatarTester mmdAvatarTester;
 
             public VRCAvatarDescriptor Avatar { get; }
 
@@ -103,6 +103,7 @@ namespace EZUtils.MMDAvatarTools.Tests
                     AssetDatabase.LoadAssetAtPath<GameObject>(
                         "Packages/com.vrchat.avatars/Samples/Dynamics/Robot Avatar/Tutorial_Robot_Avatar_Dynamics_Demo_v1.fbx"));
                 Avatar = avatarObject.AddComponent<VRCAvatarDescriptor>();
+                mmdAvatarTester = avatarObject.AddComponent<MmdAvatarTester>();
 
                 //to make things more easily viewable in the game view
                 Camera camera = new GameObject("cam").AddComponent<Camera>();
@@ -112,9 +113,9 @@ namespace EZUtils.MMDAvatarTools.Tests
                 light.type = LightType.Directional;
             }
 
-            public void StartMMDTester() => mmdAvatarTester.Start(Avatar, animation);
+            public void StartMMDTester() => mmdAvatarTester.StartTesting(animation);
 
-            public void StopMMDTester() => mmdAvatarTester.Stop();
+            public void StopMMDTester() => mmdAvatarTester.enabled = false;
 
             public float GetBlendShapeWeight(string blendShapeName)
             {

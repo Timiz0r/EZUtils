@@ -13,9 +13,9 @@ namespace EZUtils.MMDAvatarTools
     {
         private readonly UIValidator testerValidation = new UIValidator();
         private readonly UIValidator analysisValidation = new UIValidator();
-        private readonly MmdAvatarTester mmdAvatarTester = new MmdAvatarTester();
 
-        TypedObjectField<VRCAvatarDescriptor> targetAvatar;
+        private TypedObjectField<VRCAvatarDescriptor> targetAvatar;
+        private MmdAvatarTester mmdAvatarTester;
         private VisualTreeAsset analysisResultUxml;
 
         [MenuItem("EZUtils/MMD avatar tester", isValidateFunction: false, priority: 0)]
@@ -72,10 +72,8 @@ namespace EZUtils.MMDAvatarTools
             Button startButton = rootVisualElement.Q<Button>(name: "start");
             startButton.clicked += () =>
             {
-                mmdAvatarTester.Start(
-                    targetAvatar.value,
-                    targetAnimation.value
-                );
+                mmdAvatarTester = targetAvatar.value.gameObject.AddComponent<MmdAvatarTester>();
+                mmdAvatarTester.StartTesting(targetAnimation.value);
                 rootVisualElement.AddToClassList("running");
             };
 
@@ -93,7 +91,7 @@ namespace EZUtils.MMDAvatarTools
 
             void Stop()
             {
-                mmdAvatarTester.Stop();
+                DestroyImmediate(mmdAvatarTester);
                 rootVisualElement.RemoveFromClassList("running");
             }
         }

@@ -13,7 +13,6 @@ namespace EZUtils.MMDAvatarTools.Tests
 
     /*
      * TODO analyzers
-     * summary of blend shapes
      * empty lists dont look good, so indicate they're empty.
      * object fields arent clickable, perhaps because not inspector? either make them clickable, or go with buttons (or both)
      * add instructions for fixing issues

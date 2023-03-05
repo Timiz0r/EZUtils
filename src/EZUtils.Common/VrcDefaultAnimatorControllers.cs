@@ -1,4 +1,4 @@
-namespace EZUtils.MMDAvatarTools
+namespace EZUtils
 {
     using System;
     using System.Collections.Generic;

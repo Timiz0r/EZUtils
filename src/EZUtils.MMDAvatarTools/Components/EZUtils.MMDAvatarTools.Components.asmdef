@@ -1,13 +1,9 @@
 {
-    "name": "EZUtils.MMDAvatarTools",
+    "name": "EZUtils.MMDAvatarTools.Components",
     "references": [
-        "VRC.SDK3A",
-        "EZUtils.Common",
-        "EZUtils.MMDAvatarTools.Components"
+        "EZUtils.Common"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

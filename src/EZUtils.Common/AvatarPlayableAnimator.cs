@@ -1,4 +1,4 @@
-namespace EZUtils.MMDAvatarTools
+namespace EZUtils
 {
     using System;
     using System.Collections.Generic;
@@ -15,6 +15,7 @@ namespace EZUtils.MMDAvatarTools
         private readonly VRCAvatarDescriptor avatar;
         private readonly PlayableGraph playableGraph;
         private readonly AnimationLayerMixerPlayable playableMixer;
+        private readonly AnimationPlayableOutput animationPlayableOutput;
         private readonly VrcDefaultAnimatorControllers defaultControllers = new VrcDefaultAnimatorControllers();
         private static readonly int PlayableLayerCount = typeof(AvatarPlayableAnimator)
             .GetMembers(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
@@ -35,10 +36,15 @@ namespace EZUtils.MMDAvatarTools
 
 
         //written not as a component to be viable both as a component and an ad-hoc tool
-        public AvatarPlayableAnimator(VRCAvatarDescriptor avatar)
+        private AvatarPlayableAnimator(VRCAvatarDescriptor avatar)
         {
             playableGraph = PlayableGraph.Create("AvatarPlayableAnimator");
+            playableGraph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
             playableMixer = AnimationLayerMixerPlayable.Create(playableGraph, PlayableLayerCount);
+            animationPlayableOutput =
+                AnimationPlayableOutput.Create(playableGraph, "AvatarPlayableAnimator", avatar.GetComponent<Animator>());
+            animationPlayableOutput.SetSourcePlayable(playableMixer);
+
             this.avatar = avatar;
 
             //TODO: clean this up, and see if we can use sdk to be the authoritative source
@@ -133,20 +139,30 @@ namespace EZUtils.MMDAvatarTools
             }
         }
 
-        public void Attach()
-        {
-            AnimationPlayableOutput animationPlayableOutput =
-                AnimationPlayableOutput.Create(playableGraph, "AvatarPlayableAnimator", avatar.GetComponent<Animator>());
-            animationPlayableOutput.SetSourcePlayable(playableMixer);
+        //the ctor has more side-effects than a ctor should, so we want the semantics of a static method like this
+        //but with the convenience of having readonly fields set in a ctor
+        public static AvatarPlayableAnimator Attach(VRCAvatarDescriptor avatar) => new AvatarPlayableAnimator(avatar);
 
-            playableGraph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
-            playableGraph.Play();
+        public void Detach()
+        {
+            Stop();
+            if (playableGraph.IsValid()) playableGraph.Destroy();
         }
 
-        //theoretically want a detach for the matching attach as well, but no current need for it
-        public void Destroy()
+        public void Start()
         {
-            if (playableGraph.IsValid()) playableGraph.Destroy();
+            if (playableGraph.IsValid() && !playableGraph.IsPlaying())
+            {
+                playableGraph.Play();
+            }
+        }
+
+        public void Stop()
+        {
+            if (playableGraph.IsValid() && playableGraph.IsPlaying())
+            {
+                playableGraph.Stop();
+            }
             avatar.GetComponent<Animator>().Rebind();
         }
 

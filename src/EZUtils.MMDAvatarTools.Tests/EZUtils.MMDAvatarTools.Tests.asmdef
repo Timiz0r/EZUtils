@@ -1,11 +1,13 @@
 {
     "name": "EZUtils.MMDAvatarTools.Tests",
     "references": [
-        "VRC.SDK3A",
         "UnityEditor.TestRunner",
         "UnityEngine.TestRunner",
+        "VRC.SDK3A",
         "EZUtils.MMDAvatarTools",
-        "EZUtils.TestUtils"
+        "EZUtils.TestUtils",
+        "EZUtils.MMDAvatarTools.Components",
+        "EZUtils.Common"
     ],
     "includePlatforms": [
         "Editor"

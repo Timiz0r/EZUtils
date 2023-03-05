@@ -1,6 +1,7 @@
 {
     "name": "EZUtils.Common",
     "references": [
+        "VRC.SDK3A"
     ],
     "includePlatforms": [
         "Editor"
