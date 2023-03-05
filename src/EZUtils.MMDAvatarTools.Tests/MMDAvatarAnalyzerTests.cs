@@ -16,7 +16,6 @@ namespace EZUtils.MMDAvatarTools.Tests
      * empty lists dont look good, so indicate they're empty.
      * object fields arent clickable, perhaps because not inspector? either make them clickable, or go with buttons (or both)
      * add instructions for fixing issues
-     * add support for behaviours to tester
      */
     //technically testing is a bit insufficient because we dont test sub state machines and only layers' state machines
     public class MMDAvatarAnalyzerTests
