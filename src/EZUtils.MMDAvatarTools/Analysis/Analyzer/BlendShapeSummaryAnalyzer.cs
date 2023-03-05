@@ -13,7 +13,8 @@ namespace EZUtils.MMDAvatarTools
                 Result.BlendShapeSummary,
                 AnalysisResultLevel.Informational,
                 new GeneralRenderer(
-                    "MMD対応のブレンドシェープで表情が変化できます。", new BlendShapeSummaryRenderer(blendShapeSummary)));
+                    "MMD対応のブレンドシェープで表情が変化できます。",
+                    detailRenderer: new BlendShapeSummaryRenderer(blendShapeSummary)));
         }
 
         public static class Result

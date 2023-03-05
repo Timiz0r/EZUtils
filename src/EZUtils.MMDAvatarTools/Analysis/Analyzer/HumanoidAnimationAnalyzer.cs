@@ -54,7 +54,7 @@ namespace EZUtils.MMDAvatarTools
                     "しかし、FXレイヤーまたは中のアニメーションレイヤーをオフにする「VRC Animator Layer Control」や「VRC Playable Layer Control」があります。" +
                     "このアニメーションを持っているレイヤーがオフにされる場合、MMDのアニメーションが再生します。" +
                     "そしてオフにされない場合、MMDのアニメーションが再生しません。",
-                    new AnimatorStateRenderer(
+                    detailRenderer: new AnimatorStateRenderer(
                         title: "ヒューマノイドのアニメーションがあるステート",
                         emptyMessage: "", //we don't output in this case, anyway
                         animatorController: playableLayerInformation.FX.UnderlyingController,
@@ -65,7 +65,7 @@ namespace EZUtils.MMDAvatarTools
                 AnalysisResultLevel.Error,
                 new GeneralRenderer(
                     "FXレイヤーに使われてるヒューマノイドのアニメーションがあることによって、MMDのアニメーションが再生しません。",
-                    new AnimatorStateRenderer(
+                    detailRenderer: new AnimatorStateRenderer(
                         title: "ヒューマノイドのアニメーションがあるステート",
                         emptyMessage: "", //we don't output in this case, anyway
                         animatorController: playableLayerInformation.FX.UnderlyingController,

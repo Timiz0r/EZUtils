@@ -25,7 +25,9 @@ namespace EZUtils.MMDAvatarTools
                     AnalysisResultLevel.Warning,
                     new GeneralRenderer(
                         "Bodyではないメッシュは表情が変化しません。",
-                        ObjectSelectionRenderer.Create(
+                        instructions:
+                            "どうしても使用したい場合、Bodyメッシュに以下に表示されているメッシュをマージしてください。",
+                        detailRenderer: ObjectSelectionRenderer.Create(
                             listTitle: "MMD対応のブレンドシェープがあるメッシュ",
                             emptyMessage: "MMD対応のブレンドシェープのあるメッシュが存在しません。",
                             objects: nonBodyMeshesWithMMdBlendShapes)));

@@ -41,7 +41,11 @@ namespace EZUtils.MMDAvatarTools
                     AnalysisResultLevel.Warning,
                     new GeneralRenderer(
                         "異変が起こる可能性があります。",
-                        new AnimatorStateRenderer(
+                        instructions:
+                            "以下に表示されているステートに、空のアニメーションを入れてください。" +
+                            "空のアニメーションを作成するには、プロジェクトウインドウの＋のボタンをクリックして、" +
+                            "アニメーションをクリックしてください。",
+                        detailRenderer: new AnimatorStateRenderer(
                             title: "モーションのないステート",
                             emptyMessage: "モーションのないステートがFXレイヤーに存在しません。",
                             animatorController: playableLayerInformation.FX.UnderlyingController,

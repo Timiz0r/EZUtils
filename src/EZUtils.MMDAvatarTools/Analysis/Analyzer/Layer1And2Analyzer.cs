@@ -6,6 +6,9 @@ namespace EZUtils.MMDAvatarTools
     using UnityEditor.Animations;
     using VRC.SDK3.Avatars.Components;
 
+    //the design is currently a bit weird in that there are different results for each layer, and we use logic
+    //to select the right ones based on index. could be worth a redesign in the future, but not worth it at the moment.
+
     public class Layer1And2Analyzer : IAnalyzer
     {
         private static readonly HashSet<string> GestureParameters =
@@ -13,54 +16,41 @@ namespace EZUtils.MMDAvatarTools
 
         public IReadOnlyList<AnalysisResult> Analyze(VRCAvatarDescriptor avatar)
         {
-            VRCAvatarDescriptor.CustomAnimLayer fxLayer = avatar.baseAnimationLayers.SingleOrDefault(
-                l => !l.isDefault && l.type == VRCAvatarDescriptor.AnimLayerType.FX);
-            if (fxLayer.animatorController == null) return AnalysisResult.Create(
-                Result.AreGestureLayers,
-                AnalysisResultLevel.Pass,
-                null);
-
-            List<string> nonGestureTransitionPaths = new List<string>();
-            AnimatorController controller = (AnimatorController)fxLayer.animatorController;
-            AnalyzeStateMachine(controller.layers[1].stateMachine, nonGestureTransitionPaths);
-            AnalyzeStateMachine(controller.layers[2].stateMachine, nonGestureTransitionPaths);
-
-            if (nonGestureTransitionPaths.Count > 0)
+            PlayableLayerInformation playableLayerInformation = PlayableLayerInformation.Generate(avatar);
+            if (playableLayerInformation.FX.UnderlyingController == null) return new[]
             {
-                (string layerName, string stateName)[] layer1and2States = controller.layers
-                    .SelectMany((l, i) => l.stateMachine.states
-                        .Select(s => (
-                            layerIndex: i,
-                            layerName: l.name,
-                            stateName: s.state.name
-                        )))
-                    .Where(s => s.layerIndex == 1 || s.layerIndex == 2)
-                    .Select(s => (s.layerName, s.stateName))
-                    .ToArray();
-                return AnalysisResult.Create(
-                    Result.MayNotBeGestureLayers,
-                    AnalysisResultLevel.Warning,
-                    new GeneralRenderer(
-                        "MMDワールドはFXレイヤーの第1と第2レイヤーをオフにしますので、" +
-                        "ジェスチャー様なアニメーション以外があっていたら、異変が起こる可能性があります。",
-                        new AnimatorStateRenderer(
-                            title: "FXレイヤーのアニメーションレイヤー",
-                            emptyMessage: "アニメーションレイヤーがFXレイヤーに存在しません。",
-                            animatorController: controller,
-                            states: layer1and2States)));
-            }
-            else
-            {
-                return AnalysisResult.Create(
-                    Result.AreGestureLayers,
+                new AnalysisResult(
+                    Result.Layer1_IsGestureLayer,
                     AnalysisResultLevel.Pass,
-                    new GeneralRenderer("FXレイヤーの第1と第2レイヤーがジェスチャー様になっているようです。"));
-            }
+                    null),
+                new AnalysisResult(
+                    Result.Layer2_IsGestureLayer,
+                    AnalysisResultLevel.Pass,
+                    null),
+            }; //TODO: this should have failed a test
+
+            List<AnalysisResult> results = new List<AnalysisResult>(2)
+            {
+                AnalyzeStateMachine(playableLayerInformation, 1),
+                AnalyzeStateMachine(playableLayerInformation, 2)
+            };
+
+            return results;
         }
 
-        private static void AnalyzeStateMachine(
-            AnimatorStateMachine stateMachine, List<string> nonGestureTransitionPaths)
+        private static AnalysisResult AnalyzeStateMachine(
+            PlayableLayerInformation playableLayerInformation, int layerIndex)
         {
+            AnimatorController controller = playableLayerInformation.FX.UnderlyingController;
+            if (controller.layers.Length <= layerIndex) return new AnalysisResult(
+                layerIndex == 1 ? Result.Layer1_IsGestureLayer : Result.Layer2_IsGestureLayer,
+                AnalysisResultLevel.Pass,
+                new GeneralRenderer($"FXレイヤーの第{layerIndex}レイヤーが存在しません。"));
+
+            //TODO: output these
+            List<string> nonGestureTransitionPaths = new List<string>();
+
+            AnimatorStateMachine stateMachine = controller.layers[layerIndex].stateMachine;
             AnimatorState state = stateMachine.defaultState;
             foreach (AnimatorStateTransition transition in state.transitions)
             {
@@ -81,6 +71,34 @@ namespace EZUtils.MMDAvatarTools
                     Array.Empty<(AnimatorState sourceState, AnimatorState destinationState)>(),
                     $"({stateMachine}) {dummyAnyState.name}",
                     false);
+            }
+            if (nonGestureTransitionPaths.Count > 0)
+            {
+                (string layerName, string stateName)[] states = playableLayerInformation.FX.States
+                    .Where(s => s.LayerIndex == layerIndex)
+                    .Select(s => (layerName: s.LayerName, stateName: s.StateName))
+                    .ToArray();
+                return new AnalysisResult(
+                    layerIndex == 1 ? Result.Layer1_MayNotBeGestureLayer : Result.Layer2_MayNotBeGestureLayer,
+                    AnalysisResultLevel.Warning,
+                    new GeneralRenderer(
+                        $"MMDワールドはFXレイヤーの第1と第2レイヤーをオフにしますので、" +
+                        "ジェスチャー様なアニメーション以外があっていたら、異変が起こる可能性があります。",
+                        instructions:
+                            $"以下に表示されているステートがオフになっても問題ないことを、確認してください。" +
+                            "問題になると、FXレイヤーの第{layerIndex}レイヤーの場所に空のレイヤーを入れてください。",
+                        detailRenderer: new AnimatorStateRenderer(
+                            title: $"FXレイヤーの第{layerIndex}レイヤー",
+                            emptyMessage: $"FXレイヤーの第{layerIndex}レイヤーにはステートが存在しません。",
+                            animatorController: controller,
+                            states: states)));
+            }
+            else
+            {
+                return new AnalysisResult(
+                    layerIndex == 1 ? Result.Layer1_IsGestureLayer : Result.Layer2_IsGestureLayer,
+                    AnalysisResultLevel.Pass,
+                    new GeneralRenderer($"FXレイヤーの第{layerIndex}レイヤーがジェスチャー様になっているようです。"));
             }
 
             void TraverseChain(
@@ -130,10 +148,14 @@ namespace EZUtils.MMDAvatarTools
 
         public static class Result
         {
-            public static readonly AnalysisResultIdentifier AreGestureLayers =
-                AnalysisResultIdentifier.Create<Layer1And2Analyzer>("FXレイヤーの第1と第2のレイヤーがジェスチャー様");
-            public static readonly AnalysisResultIdentifier MayNotBeGestureLayers =
-                AnalysisResultIdentifier.Create<Layer1And2Analyzer>("FXレイヤーの第1と第2のレイヤーがジェスチャー様ではない可能性があります");
+            public static readonly AnalysisResultIdentifier Layer1_IsGestureLayer =
+                AnalysisResultIdentifier.Create<Layer1And2Analyzer>("FXレイヤーの第1レイヤーがジェスチャー様");
+            public static readonly AnalysisResultIdentifier Layer1_MayNotBeGestureLayer =
+                AnalysisResultIdentifier.Create<Layer1And2Analyzer>("FXレイヤーの第1レイヤーがジェスチャー様ではない可能性があります");
+            public static readonly AnalysisResultIdentifier Layer2_IsGestureLayer =
+                AnalysisResultIdentifier.Create<Layer1And2Analyzer>("FXレイヤーの第2レイヤーがジェスチャー様");
+            public static readonly AnalysisResultIdentifier Layer2_MayNotBeGestureLayer =
+                AnalysisResultIdentifier.Create<Layer1And2Analyzer>("FXレイヤーの第2レイヤーがジェスチャー様ではない可能性があります");
         }
     }
 }

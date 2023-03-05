@@ -14,6 +14,7 @@ namespace EZUtils.MMDAvatarTools.Tests
     /*
      * TODO analyzers
      * add instructions for fixing issues
+     * double check that null renderers fail tests
      */
     //technically testing is a bit insufficient because we dont test sub state machines and only layers' state machines
     public class MMDAvatarAnalyzerTests
@@ -245,7 +246,8 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, Layer1And2Analyzer.Result.AreGestureLayers, AnalysisResultLevel.Pass);
+            AssertResult(results, Layer1And2Analyzer.Result.Layer1_IsGestureLayer, AnalysisResultLevel.Pass);
+            AssertResult(results, Layer1And2Analyzer.Result.Layer2_IsGestureLayer, AnalysisResultLevel.Pass);
         }
 
         [Test]
@@ -264,7 +266,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, Layer1And2Analyzer.Result.MayNotBeGestureLayers, AnalysisResultLevel.Warning);
+            AssertResult(results, Layer1And2Analyzer.Result.Layer1_MayNotBeGestureLayer, AnalysisResultLevel.Warning);
         }
 
         [Test]
@@ -292,7 +294,12 @@ namespace EZUtils.MMDAvatarTools.Tests
 
                 IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-                AssertResult(results, Layer1And2Analyzer.Result.MayNotBeGestureLayers, AnalysisResultLevel.Warning);
+                AssertResult(
+                    results,
+                    layer == 1
+                        ? Layer1And2Analyzer.Result.Layer1_MayNotBeGestureLayer
+                        : Layer1And2Analyzer.Result.Layer2_MayNotBeGestureLayer,
+                    AnalysisResultLevel.Warning);
 
                 void SetNonGestureConditions(AnimatorStateTransition transition)
                     => transition.conditions = new[]
@@ -333,7 +340,12 @@ namespace EZUtils.MMDAvatarTools.Tests
 
                 IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-                AssertResult(results, Layer1And2Analyzer.Result.AreGestureLayers, AnalysisResultLevel.Pass);
+                AssertResult(
+                    results,
+                    layer == 1
+                        ? Layer1And2Analyzer.Result.Layer1_IsGestureLayer
+                        : Layer1And2Analyzer.Result.Layer2_IsGestureLayer,
+                    AnalysisResultLevel.Pass);
 
                 void SetNonGestureConditions(AnimatorStateTransition transition)
                     => transition.conditions = new[]
@@ -380,7 +392,7 @@ namespace EZUtils.MMDAvatarTools.Tests
 
             IReadOnlyList<AnalysisResult> results = testSetup.Analyze();
 
-            AssertResult(results, Layer1And2Analyzer.Result.AreGestureLayers, AnalysisResultLevel.Pass);
+            AssertResult(results, Layer1And2Analyzer.Result.Layer1_IsGestureLayer, AnalysisResultLevel.Pass);
 
             void SetNonGestureConditions(AnimatorStateTransition transition)
                 => transition.conditions = new[]

@@ -35,10 +35,17 @@ namespace EZUtils.MMDAvatarTools
                 AnalysisResultLevel.Warning,
                 new GeneralRenderer(
                     "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。" +
-                    "しかし、FXレイヤーまたは中のアニメーションレイヤーをオフにする「VRC Animator Layer Control」や「VRC Playable Layer Control」があります。" +
-                    "このステートがオフにされる場合、表情が変化できますが、FXレイヤーの他のアニメーションが直前に起動しても無効化にされます。" +
+                    "しかし、FXレイヤーまたは中のアニメーションレイヤーをオフにする" +
+                    "「VRC Animator Layer Control」や「VRC Playable Layer Control」があります。" +
+                    "このステートがオフにされる場合、表情が変化できますが、" +
+                    "FXレイヤーの他のアニメーションが直前に起動しても無効化にされます。" +
                     "そしてオフにされない場合、表情が変化しない可能性が高くなります。",
-                    new AnimatorStateRenderer(
+                    instructions:
+                        "他のアニメーションを使用したい場合、「VRC Animator Layer Control」や「VRC Playable Layer Control」を" +
+                        "使わずにWrite Defaultsをオンにしてください。" +
+                        "ただし、再生モードやMMDワールドで、アバターやアニメーションがWrite Defaultsの対応ができていることを" +
+                        "確認してください。",
+                    detailRenderer: new AnimatorStateRenderer(
                         title: "Write Defaultsがオフになっているステート",
                         emptyMessage: "", //we dont output in this case anyway
                         animatorController: playableLayerInformation.FX.UnderlyingController,
@@ -48,8 +55,13 @@ namespace EZUtils.MMDAvatarTools
                 Result.WriteDefaultsDisabled,
                 AnalysisResultLevel.Error,
                 new GeneralRenderer(
-                    "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。オンにしないと、表情が変化しない可能性が高くなります。",
-                    new AnimatorStateRenderer(
+                    "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。" +
+                    "オンにしないと、表情が変化しない可能性が高くなります。",
+                    instructions:
+                        "以下に表示されているステートのWrite Defaultsをオンにしてください。" +
+                        "ただし、再生モードやMMDワールドで、アバターやアニメーションがWrite Defaultsの対応ができていることを" +
+                        "確認してください。",
+                    detailRenderer: new AnimatorStateRenderer(
                         title: "Write Defaultsがオフになっているステート",
                         emptyMessage: "", //we dont output in this case anyway
                         animatorController: playableLayerInformation.FX.UnderlyingController,
