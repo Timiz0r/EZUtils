@@ -83,20 +83,23 @@ namespace EZUtils
                 if (traversedObjects.Contains(target)) return;
                 _ = traversedObjects.Add(target);
 
-                SerializedObject so = new SerializedObject(target);
-                SerializedProperty targetIterator = so.GetIterator();
-                while (targetIterator.Next(enterChildren: true))
+                using (SerializedObject so = new SerializedObject(target))
                 {
-                    if (targetIterator.propertyType != SerializedPropertyType.ObjectReference
-                        || targetIterator.objectReferenceValue == null) continue;
-
-                    if (objectMap.TryGetValue(targetIterator.objectReferenceValue, out Object newObject))
+                    SerializedProperty targetIterator = so.GetIterator();
+                    while (targetIterator.Next(enterChildren: true))
                     {
-                        targetIterator.objectReferenceValue = newObject;
+                        if (targetIterator.propertyType != SerializedPropertyType.ObjectReference
+                            || targetIterator.objectReferenceValue == null) continue;
+
+                        if (objectMap.TryGetValue(targetIterator.objectReferenceValue, out Object newObject))
+                        {
+                            targetIterator.objectReferenceValue = newObject;
+                        }
+                        //which has potentially changed based on the above swap
+                        //or mayb have already been changed prior, like when we set the new state machines for the new layers
+                        SwapReferences(targetIterator.objectReferenceValue);
                     }
-                    //which has potentially changed based on the above swap
-                    //or mayb have already been changed prior, like when we set the new state machines for the new layers
-                    SwapReferences(targetIterator.objectReferenceValue);
+                    _ = so.ApplyModifiedPropertiesWithoutUndo();
                 }
             }
 
@@ -120,6 +123,12 @@ namespace EZUtils
                     })
                     .ToArray();
                 newStateMachine.behaviours = CopyAll(originalStateMachine.behaviours, b => CopyBehaviour(b));
+                //the copy by reflection causes the default state to be the first state in the state array
+                //so we set it back to the mapped version of the original default state
+                if (newStateMachine.defaultState != null)
+                {
+                    newStateMachine.defaultState = (AnimatorState)objectMap[originalStateMachine.defaultState];
+                }
 
                 return newStateMachine;
             }

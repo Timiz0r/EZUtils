@@ -48,6 +48,8 @@ namespace EZUtils.MMDAvatarTools
 
         public void OnEnable()
         {
+            //one awkward thing is that if destroyed in inspector, enabling wont do anything because we detached
+            //and nullified the animator. users shouldn't do it, so this should be fine.
             avatarPlayableAnimator?.Start();
         }
     }
