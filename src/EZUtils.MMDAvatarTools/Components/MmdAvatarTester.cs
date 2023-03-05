@@ -5,6 +5,10 @@ namespace EZUtils.MMDAvatarTools
     using UnityEngine;
     using VRC.SDK3.Avatars.Components;
 
+    //TODO: note that, in hindsight, a better design might be to turn this back into a non-component, since we don't
+    //need it to be a component. it was originally done for playable/animator layer control, but that ended up
+    //being its own component in order to support AvatarPlayableAnimator
+
     //should not be addable in editor
     [AddComponentMenu("")]
     public class MmdAvatarTester : MonoBehaviour

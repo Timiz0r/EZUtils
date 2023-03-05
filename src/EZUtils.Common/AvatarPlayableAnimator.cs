@@ -13,15 +13,23 @@ namespace EZUtils
 
     public class AvatarPlayableAnimator
     {
+        private static bool initializedInitializers = false;
         private readonly VRCAvatarDescriptor avatar;
+        private readonly Reference referenceComponent;
+
         private readonly PlayableGraph playableGraph;
         private readonly AnimationLayerMixerPlayable playableMixer;
         private readonly AnimationPlayableOutput animationPlayableOutput;
         private readonly VrcDefaultAnimatorControllers defaultControllers = new VrcDefaultAnimatorControllers();
+
+        private readonly Dictionary<VRC_PlayableLayerControl.BlendableLayer, AvatarPlayableLayer> playableLayerControlLayers =
+            new Dictionary<VRC_PlayableLayerControl.BlendableLayer, AvatarPlayableLayer>();
+        private readonly Dictionary<VRC_AnimatorLayerControl.BlendableLayer, AvatarPlayableLayer> animatorLayerControlLayers =
+            new Dictionary<VRC_AnimatorLayerControl.BlendableLayer, AvatarPlayableLayer>();
+
         private static readonly int PlayableLayerCount = typeof(AvatarPlayableAnimator)
             .GetMembers(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
             .Count(m => m.GetCustomAttribute<AvatarPlayableLayerAttribute>() != null);
-
         //the private members here are handled internally as special mechanics
         //also a note that we won't support misconfigured avatars with, for instance, multiple fx layers
         [AvatarPlayableLayer] public AvatarPlayableLayer Base { get; }
@@ -32,6 +40,7 @@ namespace EZUtils
         [AvatarPlayableLayer] private readonly AvatarPlayableLayer IKPose;
         [AvatarPlayableLayer] public AvatarPlayableLayer Gesture { get; }
         [AvatarPlayableLayer] private readonly AvatarPlayableLayer StationAction;
+
         [AvatarPlayableLayer] public AvatarPlayableLayer Action { get; }
         [AvatarPlayableLayer] public AvatarPlayableLayer FX { get; }
 
@@ -39,6 +48,21 @@ namespace EZUtils
         //written not as a component to be viable both as a component and an ad-hoc tool
         private AvatarPlayableAnimator(VRCAvatarDescriptor avatar)
         {
+            if (!initializedInitializers)
+            {
+                //a tough decision: do we trust that, if these are non-null, that gesture manager or av3 emulator
+                //will take care of it for us?
+                //if we had a way to detect when a new AnimationPlayableOutput gets used with an avatar we're managing
+                //we could manage this more safely. instead, we'll just trust the user to do the right thing.
+                VRC_PlayableLayerControl.Initialize += InitializeNewPlayableLayerControl;
+                VRC_AnimatorLayerControl.Initialize += InitializeNewAnimatorLayerControl;
+                initializedInitializers = true;
+            }
+
+            this.avatar = avatar;
+            referenceComponent = avatar.gameObject.AddComponent<Reference>();
+            referenceComponent.avatarPlayableAnimator = this;
+
             playableGraph = PlayableGraph.Create("AvatarPlayableAnimator");
             playableGraph.SetTimeUpdateMode(DirectorUpdateMode.GameTime);
             playableMixer = AnimationLayerMixerPlayable.Create(playableGraph, PlayableLayerCount);
@@ -46,9 +70,6 @@ namespace EZUtils
                 AnimationPlayableOutput.Create(playableGraph, "AvatarPlayableAnimator", avatar.GetComponent<Animator>());
             animationPlayableOutput.SetSourcePlayable(playableMixer);
 
-            this.avatar = avatar;
-
-            //TODO: clean this up, and see if we can use sdk to be the authoritative source
             Dictionary<AnimLayerType, CustomAnimLayer> allLayers =
                 (avatar.baseAnimationLayers ?? Enumerable.Empty<CustomAnimLayer>())
                     .Concat(avatar.specialAnimationLayers ?? Enumerable.Empty<CustomAnimLayer>())
@@ -95,6 +116,15 @@ namespace EZUtils
             layer = GetLayer(AnimLayerType.FX);
             FX = new AvatarPlayableLayer(9, playableMixer, GetMask(ifDefault: VrcAvatarMasks.NoHumanoid, ifNone: VrcAvatarMasks.NoHumanoid));
             FX.BindAnimatorController(GetAnimatorController());
+
+            playableLayerControlLayers[VRC_PlayableLayerControl.BlendableLayer.Additive] = Additive;
+            playableLayerControlLayers[VRC_PlayableLayerControl.BlendableLayer.Action] = Action;
+            playableLayerControlLayers[VRC_PlayableLayerControl.BlendableLayer.Gesture] = Gesture;
+            playableLayerControlLayers[VRC_PlayableLayerControl.BlendableLayer.FX] = FX;
+            animatorLayerControlLayers[VRC_AnimatorLayerControl.BlendableLayer.Additive] = Additive;
+            animatorLayerControlLayers[VRC_AnimatorLayerControl.BlendableLayer.Action] = Action;
+            animatorLayerControlLayers[VRC_AnimatorLayerControl.BlendableLayer.Gesture] = Gesture;
+            animatorLayerControlLayers[VRC_AnimatorLayerControl.BlendableLayer.FX] = FX;
 
             CustomAnimLayer GetLayer(AnimLayerType layerType)
                 => allLayers.TryGetValue(layerType, out CustomAnimLayer l) ? l : new CustomAnimLayer
@@ -148,6 +178,7 @@ namespace EZUtils
         {
             Stop();
             if (playableGraph.IsValid()) playableGraph.Destroy();
+            UnityEngine.Object.DestroyImmediate(referenceComponent);
         }
 
         public void Start()
@@ -188,52 +219,41 @@ namespace EZUtils
             StationAction.UnbindAnimator();
         }
 
-        public bool IsUsedBy(VRCAvatarDescriptor avatar)
-            => this.avatar == avatar;
+        private static void InitializeNewAnimatorLayerControl(VRC_AnimatorLayerControl obj)
+            => obj.ApplySettings += EvaluateAnimatorLayerControl;
+        private static void InitializeNewPlayableLayerControl(VRC_PlayableLayerControl obj)
+            => obj.ApplySettings += EvaluatePlayableLayerControl;
+
+        private static void EvaluatePlayableLayerControl(VRC_PlayableLayerControl control, Animator animator)
+        {
+            Reference reference = animator.GetComponent<Reference>();
+            if (reference == null) return;
+
+            AvatarPlayableLayer layer = reference.avatarPlayableAnimator.playableLayerControlLayers[control.layer];
+            layer.SetGoalWeight(control.goalWeight, control.blendDuration);
+        }
+        private static void EvaluateAnimatorLayerControl(VRC_AnimatorLayerControl control, Animator animator)
+        {
+            Reference reference = animator.GetComponent<Reference>();
+            if (reference == null) return;
+
+            AvatarPlayableLayer layer = reference.avatarPlayableAnimator.animatorLayerControlLayers[control.playable];
+            layer.SetLayerGoalWeight(control.layer, control.goalWeight, control.blendDuration);
+        }
 
         [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
         private sealed class AvatarPlayableLayerAttribute : Attribute
         {
         }
-    }
 
-    public class LayerBlendControl : MonoBehaviour
-    {
-        private static bool initializedInitializers = false;
-        private readonly AvatarPlayableAnimator playableAnimator;
-
-        public LayerBlendControl(AvatarPlayableAnimator playableAnimator)
+        //avoiding making AvatarPlayableAnimator itself a component, since component conventions are really annoying
+        //but it's certainly an option
+        private class Reference : MonoBehaviour
         {
-            this.playableAnimator = playableAnimator;
+            public AvatarPlayableAnimator avatarPlayableAnimator;
 
-            if (!initializedInitializers)
-            {
-                //a tough decision: do we trust that, if these are non-null, that gesture manager or av3 emulator
-                //will take care of it for us?
-                //if we had a way to detect when a new AnimationPlayableOutput gets used with an avatar we're managing
-                //we could manage this more safely. instead, we'll just trust the user to do the right thing.
-                VRC_PlayableLayerControl.Initialize += InitializeNewPlayableLayerControl;
-                VRC_AnimatorLayerControl.Initialize += InitializeNewAnimatorLayerControl;
-            }
-        }
-
-        public void OnDestroy()
-        {
-            throw new NotImplementedException();
-        }
-
-        private void InitializeNewAnimatorLayerControl(VRC_AnimatorLayerControl obj)
-        => obj.ApplySettings += EvaluateAnimatorLayerControl;
-        private void InitializeNewPlayableLayerControl(VRC_PlayableLayerControl obj)
-        => obj.ApplySettings += EvaluatePlayableLayerControl;
-
-        private void EvaluatePlayableLayerControl(VRC_PlayableLayerControl control, Animator animator)
-        {
-            if (!playableAnimator.IsUsedBy(animator.GetComponent<VRCAvatarDescriptor>())) return;
-        }
-        private void EvaluateAnimatorLayerControl(VRC_AnimatorLayerControl control, Animator animator)
-        {
-            if (!playableAnimator.IsUsedBy(animator.GetComponent<VRCAvatarDescriptor>())) return;
+            public void Start() => hideFlags = HideFlags.HideInInspector;
         }
     }
+
 }
