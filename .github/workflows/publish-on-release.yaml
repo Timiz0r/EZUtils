@@ -2,6 +2,9 @@ name: Create releases for updated packages
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
   publish:
@@ -28,6 +31,8 @@ jobs:
             path: ./src/EZUtils.WindowCloser
     steps:
       - uses: actions/checkout@v3
+        with:
+          lfs: 'true'
       - uses: actions/setup-node@v3
         with:
           node-version: 18
