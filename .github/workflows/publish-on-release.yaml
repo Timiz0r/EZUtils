@@ -11,6 +11,9 @@ jobs:
       packages: write
       contents: write
     strategy:
+      # an awkward consequence is that dependencies might not get published
+      # but nothing to do about that in a workflow
+      fail-fast: false
       matrix:
         package:
           - name: com.timiz0r.ezutils.common
@@ -37,38 +40,9 @@ jobs:
           registry=https://pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/
           always-auth=true
           EOF
-          # thrown in here for convenience
-          echo "## Package upload summary" >> $GITHUB_STEP_SUMMARY
-
-      # we dont use matrices because we're slightly preferential to running in the same job
-      # we get better run output this way, ofc at the cost of time to publish, if that were actually a concern
-      - name: Publish package com.timiz0r.ezutils.common
+      - name: Publish package
         uses: ./.github/actions/publish-package
         with:
-          package-path: ./src/EZUtils.Common
-        env:
-            AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
-      - name: Publish package com.timiz0r.ezutils.mmdavatartools
-        uses: ./.github/actions/publish-package
-        with:
-          package-path: ./src/EZUtils.MMDAvatarTools
-        env:
-            AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
-      - name: Publish package com.timiz0r.ezutils.packagemanager
-        uses: ./.github/actions/publish-package
-        with:
-          package-path: ./src/EZUtils.PackageManager
-        env:
-            AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
-      - name: Publish package com.timiz0r.ezutils.repackprefab
-        uses: ./.github/actions/publish-package
-        with:
-          package-path: ./src/EZUtils.RepackPrefab
-        env:
-            AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
-      - name: Publish package com.timiz0r.ezutils.windowcloser
-        uses: ./.github/actions/publish-package
-        with:
-          package-path: ./src/EZUtils.WindowCloser
+          package-path: ${{ matrix.package.path }}
         env:
             AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
