@@ -7,6 +7,7 @@ namespace EZUtils
     using UnityEngine;
     using UnityEngine.UIElements;
 
+    //should this class grow large, would be good to sort methods into different files
     public static class Extensions
     {
         public static IEnumerable<GameObject> GetChildren(this GameObject parent) => Enumerable

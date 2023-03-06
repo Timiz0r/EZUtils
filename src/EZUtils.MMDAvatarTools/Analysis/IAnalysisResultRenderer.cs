@@ -1,5 +1,3 @@
-﻿
-
 namespace EZUtils.MMDAvatarTools
 {
     using UnityEngine.UIElements;

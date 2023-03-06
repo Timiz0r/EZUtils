@@ -23,7 +23,8 @@ namespace EZUtils.MMDAvatarTools
                 .ThenByDescending(r => r.Definition.IsCommon)
                 .GroupBy(r => r.Definition.Target))
             {
-                //TODO: localize. will be the awkward bit of english, but not a big deal.
+                //this will be the awkward bit of english, but it's not worth hard-coding in translations atm
+                //since we'll add localization support later
                 Label groupTitle = new Label(group.Key.ToString());
                 groupTitle.style.fontSize = 16;
                 groupTitle.style.unityFontStyleAndWeight = FontStyle.Bold;

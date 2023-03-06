@@ -1,29 +1,33 @@
 namespace EZUtils
 {
     using System.Collections.Generic;
+    using System.Diagnostics;
     using UnityEngine;
     using UnityEngine.Animations;
     using UnityEngine.Playables;
 
+    [DebuggerDisplay("{playableLayerType}")]
     public class AvatarPlayableLayer
     {
         private AnimationLayerMixerPlayable playableMixer;
         private AnimatorControllerPlayable animatorControllerPlayable;
         private LayerControlPlayableBehaviour layerControl;
-        private readonly int inputIndex;
+        private readonly PlayableLayerType playableLayerType;
+        private readonly int mixerIndex;
 
         //part of me doesn't want the mask parameter, but all layers end up using the same logic
-        public AvatarPlayableLayer(int inputIndex, AnimationLayerMixerPlayable playableMixer, AvatarMask avatarMask)
+        public AvatarPlayableLayer(PlayableLayerType playableLayerType, AnimationLayerMixerPlayable playableMixer, AvatarMask avatarMask)
         {
             this.playableMixer = playableMixer;
-            this.inputIndex = inputIndex;
+            this.playableLayerType = playableLayerType;
+            mixerIndex = (int)playableLayerType;
 
-            if (avatarMask != null) playableMixer.SetLayerMaskFromAvatarMask((uint)inputIndex, avatarMask);
+            if (avatarMask != null) playableMixer.SetLayerMaskFromAvatarMask((uint)mixerIndex, avatarMask);
         }
 
-        public void TurnOn() => playableMixer.SetInputWeight(inputIndex, 1);
+        public void TurnOn() => playableMixer.SetInputWeight(mixerIndex, 1);
 
-        public void TurnOff() => playableMixer.SetInputWeight(inputIndex, 0);
+        public void TurnOff() => playableMixer.SetInputWeight(mixerIndex, 0);
 
         public void BindAnimatorController(RuntimeAnimatorController animatorController)
         {
@@ -37,25 +41,26 @@ namespace EZUtils
             layerControl = layerControlPlayable.GetBehaviour();
             layerControl.playableLayer = this;
             layerControlPlayable.ConnectInput(0, animatorControllerPlayable, 0, 1);
-            playableMixer.ConnectInput(inputIndex, layerControlPlayable, 0, 1);
+            playableMixer.ConnectInput(mixerIndex, layerControlPlayable, 0, 1);
         }
 
         public void UnbindAnimator()
         {
-            playableMixer.DisconnectInput(inputIndex);
+            playableMixer.DisconnectInput(mixerIndex);
             if (!animatorControllerPlayable.IsNull()
                 && animatorControllerPlayable.CanDestroy()) animatorControllerPlayable.Destroy();
         }
 
         public void SetAdditive()
-            => playableMixer.SetLayerAdditive((uint)inputIndex, true);
+            => playableMixer.SetLayerAdditive((uint)mixerIndex, true);
 
-        public float Weight => !animatorControllerPlayable.IsValid() ? 1 : playableMixer.GetInputWeight(inputIndex);
+        public float Weight => !animatorControllerPlayable.IsValid() ? 1 : playableMixer.GetInputWeight(mixerIndex);
         public float GetLayerWeight(int layer) => !animatorControllerPlayable.IsValid() ? 1 : animatorControllerPlayable.GetLayerWeight(layer);
+
         public void SetWeight(float weight)
         {
             if (!animatorControllerPlayable.IsValid()) return;
-            playableMixer.SetInputWeight(inputIndex, weight);
+            playableMixer.SetInputWeight(mixerIndex, weight);
         }
         public void SetLayerWeight(int layer, float weight)
         {

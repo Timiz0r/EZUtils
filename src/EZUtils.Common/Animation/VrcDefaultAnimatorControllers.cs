@@ -106,8 +106,10 @@ namespace EZUtils
             AnimatorStateMachine CopyStateMachine(AnimatorStateMachine originalStateMachine)
             {
                 AnimatorStateMachine newStateMachine = CopyByReflection(originalStateMachine);
-                newStateMachine.anyStateTransitions = CopyAll(originalStateMachine.anyStateTransitions, t => CopyByReflection(t));
-                newStateMachine.entryTransitions = CopyAll(originalStateMachine.entryTransitions, t => CopyByReflection(t));
+                newStateMachine.anyStateTransitions =
+                    CopyAll(originalStateMachine.anyStateTransitions, t => CopyByReflection(t));
+                newStateMachine.entryTransitions =
+                    CopyAll(originalStateMachine.entryTransitions, t => CopyByReflection(t));
                 newStateMachine.states = originalStateMachine.states
                     .Select(cas => new ChildAnimatorState()
                     {

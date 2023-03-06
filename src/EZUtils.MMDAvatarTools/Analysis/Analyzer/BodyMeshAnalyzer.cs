@@ -12,13 +12,12 @@ namespace EZUtils.MMDAvatarTools
         public IReadOnlyList<AnalysisResult> Analyze(VRCAvatarDescriptor avatar)
         {
             Transform body = avatar.transform.Find("Body");
-            //will want to output these eventually, so not a bool
-            //while the nonbodymesh analyzer includes inactive, we don't here because we're trying to detect the main
-            //meshes, which are likely always on.
             ObjectSelectionRenderer existingMmdMeshes = ObjectSelectionRenderer.Create(
                 listTitle: "MMD対応メッシュ",
                 emptyMessage: "MMD対応のメッシュがこのアバターに存在しません。",
                 objects: avatar
+                    //while the nonbodymesh analyzer includes inactive, we don't here because we're trying to detect the main
+                    //meshes, which are likely always on.
                     .GetComponentsInChildren<SkinnedMeshRenderer>()
                     .Where(smr => MmdBlendShapeSummary.Generate(smr).HasAnyMmdBlendShapes)
                     .ToArray()

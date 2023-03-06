@@ -4,7 +4,7 @@ namespace EZUtils.MMDAvatarTools
 
     public class AnalysisResult
     {
-        //design-wise, want the analyzers in MMDAvatarAnalyzer to be transparent to driver ports, in general
+        //design-wise, want the analyzers in MmdAvatarAnalyzer to be transparent to driver ports, in general
         //yet, the unit test driver adapters need to accurately identify the failure
         //otherwise, maybe the intended failure is passing, and another is coincidentally failing
         //

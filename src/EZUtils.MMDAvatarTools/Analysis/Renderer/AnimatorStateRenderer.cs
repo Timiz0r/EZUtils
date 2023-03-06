@@ -15,6 +15,8 @@ namespace EZUtils.MMDAvatarTools
         private readonly string title;
         private readonly string emptyMessage;
         private readonly AnimatorController animatorController;
+        //if PlayableLayerInformation ever supports traversal (for layer1and2 analyzer), then we should be able to
+        //use those classes instead of a tuple
         private readonly IReadOnlyList<(string layerName, string stateName)> states;
 
         public AnimatorStateRenderer(
