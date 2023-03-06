@@ -39,7 +39,9 @@ namespace EZUtils.MMDAvatarTools
             if (humanMotionStates.Count == 0) return AnalysisResult.Create(
                 Result.NoActiveHumanoidAnimationsFound,
                 AnalysisResultLevel.Pass,
-                new GeneralRenderer("設定されてるアバターマスクにはボディ部分がくわえています。それでも、ヒューマノイドのアニメーションがありません。"));
+                new GeneralRenderer(
+                    "設定されてるアバターマスクにはボディ部分がくわえています。" +
+                    "それでも、ヒューマノイドのアニメーションがありません。"));
 
             List<AnalysisResult> results = new List<AnalysisResult>();
             const bool PossiblyDisabled = true;
@@ -51,9 +53,11 @@ namespace EZUtils.MMDAvatarTools
                 AnalysisResultLevel.Warning,
                 new GeneralRenderer(
                     "FXレイヤーに使われてるヒューマノイドのアニメーションがあります。" +
-                    "しかし、FXレイヤーまたは中のアニメーションレイヤーをオフにする「VRC Animator Layer Control」や「VRC Playable Layer Control」があります。" +
+                    "しかし、FXレイヤーまたは中のアニメーションレイヤーをオフにする" +
+                    "「VRC Animator Layer Control」や「VRC Playable Layer Control」があります。" +
                     "このアニメーションを持っているレイヤーがオフにされる場合、MMDのアニメーションが再生します。" +
                     "そしてオフにされない場合、MMDのアニメーションが再生しません。",
+                    instructions: "アバターの説明書にこれの使用方法を確認してください。普通はトグルまたは自動になります。",
                     detailRenderer: new AnimatorStateRenderer(
                         title: "ヒューマノイドのアニメーションがあるステート",
                         emptyMessage: "", //we don't output in this case, anyway
@@ -65,6 +69,9 @@ namespace EZUtils.MMDAvatarTools
                 AnalysisResultLevel.Error,
                 new GeneralRenderer(
                     "FXレイヤーに使われてるヒューマノイドのアニメーションがあることによって、MMDのアニメーションが再生しません。",
+                    instructions:
+                        "修正方法は複数ありますが、普通はGestureレイヤーに、以下に表示されているレイヤーとステートを入れて、" +
+                        "FXレイヤーの第0レイヤーのアバターマスクを解除することになります。",
                     detailRenderer: new AnimatorStateRenderer(
                         title: "ヒューマノイドのアニメーションがあるステート",
                         emptyMessage: "", //we don't output in this case, anyway
