@@ -3,7 +3,13 @@ description: Publishes a new package if it doesn't already exist in the registry
 inputs:
   package-path:
     required: true
-
+outputs:
+  package-name:
+    description: "Package name"
+    value: ${{ steps.package-info.outputs.name }}
+  package-version:
+    description: "Package version"
+    value: ${{ steps.package-info.outputs.version }}
 runs:
   using: composite
   steps:

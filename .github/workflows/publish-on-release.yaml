@@ -3,20 +3,31 @@ name: Create releases for updated packages
 on:
   workflow_dispatch:
 
-#todo: some solution to publishing only packages that have changed, including changes in dependencies
 jobs:
   publish:
+    name: Publish packages
     runs-on: ubuntu-latest
     permissions:
       packages: write
       contents: write
-
+    strategy:
+      matrix:
+        package:
+          - name: com.timiz0r.ezutils.common
+            path: ./src/EZUtils.Common
+          - name: com.timiz0r.ezutils.mmdavatartools
+            path: ./src/EZUtils.MMDAvatarTools
+          - name: com.timiz0r.ezutils.packagemanager
+            path: ./src/EZUtils.PackageManager
+          - name: com.timiz0r.ezutils.repackprefab
+            path: ./src/EZUtils.RepackPrefab
+          - name: com.timiz0r.ezutils.windowcloser
+            path: ./src/EZUtils.WindowCloser
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
           node-version: 18
-
       - name: Setup npmrc
         run: |
           cat <<EOF > ~/.npmrc
@@ -28,9 +39,36 @@ jobs:
           EOF
           # thrown in here for convenience
           echo "## Package upload summary" >> $GITHUB_STEP_SUMMARY
-      - name: Publish package EZUtils.Common
+
+      # we dont use matrices because we're slightly preferential to running in the same job
+      # we get better run output this way, ofc at the cost of time to publish, if that were actually a concern
+      - name: Publish package com.timiz0r.ezutils.common
         uses: ./.github/actions/publish-package
         with:
           package-path: ./src/EZUtils.Common
+        env:
+            AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
+      - name: Publish package com.timiz0r.ezutils.mmdavatartools
+        uses: ./.github/actions/publish-package
+        with:
+          package-path: ./src/EZUtils.MMDAvatarTools
+        env:
+            AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
+      - name: Publish package com.timiz0r.ezutils.packagemanager
+        uses: ./.github/actions/publish-package
+        with:
+          package-path: ./src/EZUtils.PackageManager
+        env:
+            AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
+      - name: Publish package com.timiz0r.ezutils.repackprefab
+        uses: ./.github/actions/publish-package
+        with:
+          package-path: ./src/EZUtils.RepackPrefab
+        env:
+            AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
+      - name: Publish package com.timiz0r.ezutils.windowcloser
+        uses: ./.github/actions/publish-package
+        with:
+          package-path: ./src/EZUtils.WindowCloser
         env:
             AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
