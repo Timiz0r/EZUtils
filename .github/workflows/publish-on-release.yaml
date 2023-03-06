@@ -5,7 +5,7 @@ on:
 
 jobs:
   publish:
-    name: Publish packages
+    name: Publish ${{ matrix.name }}
     runs-on: ubuntu-latest
     permissions:
       packages: write

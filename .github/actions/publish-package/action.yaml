@@ -38,20 +38,20 @@ runs:
         echo "Package name: $published_versions"
         echo "Version exists: $version_exists"
     - name: Publish package
-      if: "!fromJson(steps.package-info.outputs.version-exists)"
+      if: fromJson(steps.package-info.outputs.version-exists) == 'false'
       working-directory: ${{ inputs.package-path }}
       shell: bash
       run: npm publish --loglevel=silly
     - uses: softprops/action-gh-release@v1
-      if: "!fromJson(steps.package-info.outputs.version-exists)"
+      if: fromJson(steps.package-info.outputs.version-exists) == 'false'
       with:
         tag_name: ${{ steps.package-info.outputs.name }}-${{ steps.package-info.outputs.version }}
         prerelease: ${{ contains(steps.package-info.outputs.version, 'preview') }}
     - shell: bash
-      if: success() && !fromJson(steps.package-info.outputs.version-exists)
+      if: success() && steps.package-info.outputs.version-exists == 'false'
       run: echo "### Successfully uploaded package" >> $GITHUB_STEP_SUMMARY
     - shell: bash
-      if: success() && fromJson(steps.package-info.outputs.version-exists)
+      if: success() && steps.package-info.outputs.version-exists == 'true'
       run: echo "### Package upload not required" >> $GITHUB_STEP_SUMMARY
     - shell: bash
       if: failure()
