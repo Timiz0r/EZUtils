@@ -28,10 +28,10 @@ runs:
         )"
         version_exists=$(echo $published_versions | jq -c "any(. == \"$package_version\")")
 
-        echo "name='$package_name'" >> $GITHUB_OUTPUT
-        echo "version='$package_version'" >> $GITHUB_OUTPUT
-        echo "published-versions='$published_versions'" >> $GITHUB_OUTPUT
-        echo "version-exists='$version_exists'" >> $GITHUB_OUTPUT
+        echo "name=$package_name" >> $GITHUB_OUTPUT
+        echo "version=$package_version" >> $GITHUB_OUTPUT
+        echo "published-versions=$published_versions" >> $GITHUB_OUTPUT
+        echo "version-exists=$version_exists" >> $GITHUB_OUTPUT
 
         echo "Package name: $package_name"
         echo "Package version: $package_version"
