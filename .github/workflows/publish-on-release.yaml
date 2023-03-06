@@ -1,25 +1,7 @@
-name: Create release
-run-name: Create release for ${{inputs.package}}-${{inputs.version}}
+name: Create releases for updated packages
 
 on:
   workflow_dispatch:
-    inputs:
-      package:
-        description: 'Target package'
-        required: true
-        type: choice
-        options:
-        - EZUtils.PackageManager
-        - EZUtils.RepackPrefab
-      version:
-        description: 'Version to publish'
-        required: true
-        type: string
-      is_prerelease:
-        description: 'Is pre-release'
-        required: true
-        type: boolean
-        default: true
 
 #todo: some solution to publishing only packages that have changed, including changes in dependencies
 jobs:
@@ -34,6 +16,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 18
+
       - run: |
           cat <<EOF > ~/.npmrc
           //pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/:username=timiz0r
@@ -44,26 +27,8 @@ jobs:
           EOF
           echo Generated .npmrc:
           cat ~/.npmrc
-      - run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          npm --no-git-tag-version version ${{inputs.version}}
-          git add package.json
-          git commit -m "Generate release ${{inputs.package}}-${{inputs.version}}"
-          git tag ${{inputs.package}}-${{inputs.version}}
-          git push origin
-          git push --tags
-        working-directory: ./src/${{inputs.package}}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: npm publish --loglevel=silly
-        working-directory: ./src/${{inputs.package}}
-        env:
-          AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
-
-      - uses: softprops/action-gh-release@v1
+      - uses: ./.github/actions/publish-package
         with:
-          tag_name: ${{inputs.package}}-${{inputs.version}}
-          prerelease: ${{inputs.is_prerelease}}
+          package-path: ./src/EZUtils.Common
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}

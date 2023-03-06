@@ -1,0 +1,32 @@
+name: Publish package
+description: Publishes a new package if it doesn't already exist in the registry
+inputs:
+  package-path:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Get package info
+      id: package-info
+      working-directory: ${{ inputs.package-path }}
+      shell: bash
+      run: |
+        package_name="$(node -p "require('./package.json').name")"
+        package_version="$(node -p "require('./package.json').version")"
+        # avoid -j output, since versions already outputs it, and will output an error object if package doesnt exist
+        # we only want an array
+        published_versions="$(npm view $package_name versions || echo "[]")"
+        echo "name='$package_name'" >> $GITHUB_OUTPUT
+        echo "version='$package_version'" >> $GITHUB_OUTPUT
+        echo "published-versions='$published_versions'" >> $GITHUB_OUTPUT
+    - name: Publish package
+      if: "!contains(fromJson(steps.package-info.outputs.published-versions), steps.package-info.outputs.version)"
+      working-directory: ${{ inputs.package-path }}
+      shell: bash
+      run: npm publish --loglevel=silly
+    - uses: softprops/action-gh-release@v1
+      if: "!contains(fromJson(steps.package-info.outputs.published-versions), steps.package-info.outputs.version)"
+      with:
+        tag_name: ${{ steps.package-info.outputs.name }}-${{ steps.package-info.outputs.version }}
+        prerelease: ${{ contains(steps.package-info.outputs.version, 'preview') }}
