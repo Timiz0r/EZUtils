@@ -17,7 +17,8 @@ jobs:
         with:
           node-version: 18
 
-      - run: |
+      - name: Setup npmrc
+        run: |
           cat <<EOF > ~/.npmrc
           //pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/:username=timiz0r
           //pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/:_password=\${AZURE_ARTIFACTS_PAT}
@@ -25,9 +26,10 @@ jobs:
           registry=https://pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/
           always-auth=true
           EOF
-          echo Generated .npmrc:
-          cat ~/.npmrc
-      - uses: ./.github/actions/publish-package
+          # thrown in here for convenience
+          echo "## Package upload summary" >> $GITHUB_STEP_SUMMARY
+      - name: Publish package EZUtils.Common
+        uses: ./.github/actions/publish-package
         with:
           package-path: ./src/EZUtils.Common
         env:
