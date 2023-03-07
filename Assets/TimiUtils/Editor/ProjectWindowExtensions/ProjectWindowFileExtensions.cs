@@ -1,54 +1,50 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using UnityEditor;
-using UnityEngine;
-
-namespace Utils
+namespace EZUtils
 {
+    using System;
+    using System.IO;
+    using UnityEditor;
+    using UnityEngine;
+
     public static class ProjectWindowFileExtensions
     {
-        [InitializeOnLoadMethod]
-        public static void Initialize()
+        //https://github.com/Unity-Technologies/UnityCsReference/blob/2019.4/Editor/Mono/GUI/TreeView/TreeViewGUI.cs
+        private const float LabelShift =
+            16f //icon
+            + 2f; //gap between icon and file name label
+        //fyi `EditorStyles.label` does not appear accessible thru cctor, hence lazy (or creating each time)
+        //would have been nice if we didnt need to adjust the style
+        //either the style we get isn't exactly what's used in the underlying treeview, or we're doing something not quite right
+        private static readonly Lazy<GUIStyle> labelStyle = new Lazy<GUIStyle>(() => new GUIStyle("TV Line")
         {
-            MulticastDelegateHelper.Register(
-                ref EditorApplication.projectWindowItemOnGUI,
-                nameof(ProjectWindowFileExtensions),
-                ForProjectWindowItem);
-        }
+            alignment = TextAnchor.MiddleLeft
+        });
+
+        [InitializeOnLoadMethod]
+        public static void Initialize() => EditorApplication.projectWindowItemOnGUI += ForProjectWindowItem;
 
         private static void ForProjectWindowItem(string guid, Rect selectionRect)
         {
+            if (Event.current.type != EventType.Repaint) return;
+
+            //we wont support the larger views because, most often, the file name gets truncated anyway
+            if (selectionRect.height > 16) return;
+
             string path = AssetDatabase.GUIDToAssetPath(guid);
-            if (string.IsNullOrEmpty(path) || Directory.Exists(path))
-            {
-                return;
-            }
+            if (string.IsNullOrEmpty(path) || Directory.Exists(path)) return;
 
             FileInfo file = new FileInfo(path);
-            if (string.IsNullOrEmpty(file.Extension))
-            {
-                return;
-            }
+            if (string.IsNullOrEmpty(file.Extension)) return;
 
-            GUIContent labelContent = new GUIContent(file.Extension);
-            //fyi `EditorStyles.label` does not appear accessible thru cctor
-            GUIStyle labelStyle = new GUIStyle(EditorStyles.label);
-            labelStyle.active.textColor = Color.white;
+            //while this technically works, projectWindowItemOnGUI only gets called when the mouse click is released,
+            //while the selection effect changes the gui when initially pressed. this means there's delay, which looks
+            //worse than an inconsistent color
+            //bool isFocused = Array.IndexOf(Selection.assetGUIDs, guid) >= 0;
+            bool isFocused = false;
 
-            Vector2 size = labelStyle.CalcSize(labelContent);
-            Vector2 predictedFileNameSize = labelStyle.CalcSize(new GUIContent(Path.GetFileNameWithoutExtension(file.Name)));
-            const float iconSize = 16;
-            Rect labelRect = new Rect(
-                new Vector2(
-                    selectionRect.x + predictedFileNameSize.x - iconSize + 34, //idk
-                    selectionRect.yMin + 1),
-                size);
-
-            //EditorGUI.DrawRect(selectionRect, new Color32(255, 255, 255, 30));
-
-            EditorGUI.LabelField(labelRect, labelContent, labelStyle);
+            Vector2 predictedFileNameSize = labelStyle.Value.CalcSize(new GUIContent(Path.GetFileNameWithoutExtension(file.Name)));
+            Rect labelRect = selectionRect;
+            labelRect.x += predictedFileNameSize.x + LabelShift;
+            labelStyle.Value.Draw(labelRect, file.Extension, isHover: false, isActive: false, on: true, hasKeyboardFocus: isFocused);
         }
     }
 }
