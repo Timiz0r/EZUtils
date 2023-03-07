@@ -18,7 +18,11 @@ namespace EZUtils.EditorEnhancements
         //either the style we get isn't exactly what's used in the underlying treeview, or we're doing something not quite right
         private static readonly Lazy<GUIStyle> labelStyle = new Lazy<GUIStyle>(() => new GUIStyle("TV Line")
         {
-            alignment = TextAnchor.MiddleLeft
+            alignment = TextAnchor.MiddleLeft,
+            //in testing, for some reason, there's sometimes a left padding of 1 and sometimes not
+            //not sure if it's some hidden behavior or i somehow mutated it on my machine (should be immutable)
+            //setting it to 1 from the start should fix that
+            padding = new RectOffset(left: 1, right: 1, top: 0, bottom: 0)
         });
 
         [InitializeOnLoadMethod]

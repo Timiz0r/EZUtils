@@ -1,7 +1,7 @@
 {
     "$schema": "../emptyschema.json",
     "name": "com.timiz0r.ezutils.editorenhancements",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Improves the editor experience.",
     "displayName": "EZUtils Editor Enhancements",
     "unity": "2019.4",
