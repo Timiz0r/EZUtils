@@ -29,6 +29,8 @@ jobs:
             path: ./src/EZUtils.RepackPrefab
           - name: com.timiz0r.ezutils.windowcloser
             path: ./src/EZUtils.WindowCloser
+          - name: com.timiz0r.ezutils.editorenhancements
+            path: ./src/EZUtils.EditorEnhancements
     steps:
       - uses: actions/checkout@v3
         with:
