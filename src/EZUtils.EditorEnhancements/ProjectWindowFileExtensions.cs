@@ -1,4 +1,4 @@
-namespace EZUtils
+namespace EZUtils.EditorEnhancements
 {
     using System;
     using System.IO;
@@ -7,10 +7,12 @@ namespace EZUtils
 
     public static class ProjectWindowFileExtensions
     {
+        public static readonly string PrefName = "EZUtils.EditorEnhancements.ProjectWindowFileExtensions";
         //https://github.com/Unity-Technologies/UnityCsReference/blob/2019.4/Editor/Mono/GUI/TreeView/TreeViewGUI.cs
         private const float LabelShift =
             16f //icon
-            + 2f; //gap between icon and file name label
+            + 2f //gap between icon and file name label
+            + 0f; //magic constant not currently needed
         //fyi `EditorStyles.label` does not appear accessible thru cctor, hence lazy (or creating each time)
         //would have been nice if we didnt need to adjust the style
         //either the style we get isn't exactly what's used in the underlying treeview, or we're doing something not quite right
@@ -25,6 +27,8 @@ namespace EZUtils
         private static void ForProjectWindowItem(string guid, Rect selectionRect)
         {
             if (Event.current.type != EventType.Repaint) return;
+
+            if (!EditorPrefs.GetBool(PrefName, true)) return;
 
             //we wont support the larger views because, most often, the file name gets truncated anyway
             if (selectionRect.height > 16) return;

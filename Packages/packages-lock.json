@@ -6,11 +6,21 @@
       "source": "local",
       "dependencies": {}
     },
+    "com.timiz0r.ezutils.editorenhancements": {
+      "version": "file:../src/EZUtils.EditorEnhancements",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.timiz0r.ezutils.common": "1.0.1"
+      }
+    },
     "com.timiz0r.ezutils.mmdavatartools": {
       "version": "file:../src/EZUtils.MMDAvatarTools",
       "depth": 0,
       "source": "local",
-      "dependencies": {}
+      "dependencies": {
+        "com.timiz0r.ezutils.common": "1.0.0"
+      }
     },
     "com.timiz0r.ezutils.mmdavatartools.tests": {
       "version": "file:../src/EZUtils.MMDAvatarTools.Tests",
