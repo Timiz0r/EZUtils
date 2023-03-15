@@ -9,7 +9,14 @@
   <VisualElement>
     <Style src="EditorEnhancementsEditorWindow.uss" />
 
-    <Toggle name="projectWindowFileExtensions" label="プロジェクトウインドウのファイル拡張子" />
-    <Toggle name="showSceneWindowOnPlay" label="再生モードに入ったらシーンウインドウを開く" />
+    <VisualElement class="section">
+      <Label class="section-title" text="一般" />
+      <Toggle name="projectWindowFileExtensions" label="プロジェクトウインドウのファイル拡張子" />
+      <Toggle name="showSceneWindowOnPlay" label="再生モードに入ったらシーンウインドウを開く" />
+    </VisualElement>
+    <VisualElement class="section">
+      <Label class="section-title" text="Unity Editorの言語" />
+      <VisualElement class="section-unityeditorlanguage" />
+    </VisualElement>
   </VisualElement>
 </UXML>

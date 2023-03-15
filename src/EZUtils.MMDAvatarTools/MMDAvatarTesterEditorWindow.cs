@@ -29,7 +29,7 @@ namespace EZUtils.MMDAvatarTools
         {
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 "Packages/com.timiz0r.EZUtils.MMDAvatarTools/MmdAvatarTesterEditorWindow.uxml");
-            visualTree.CloneTree(rootVisualElement);
+            visualTree.CommonUIClone(rootVisualElement);
 
             //not allowed to go in cctor, so here is as good as any other place
             if (analysisResultUxml == null)
@@ -115,7 +115,7 @@ namespace EZUtils.MMDAvatarTools
                 resultsContainer.Clear();
                 foreach (AnalysisResult result in results.OrderByDescending(r => r.Level))
                 {
-                    VisualElement resultElement = analysisResultUxml.CloneTree();
+                    VisualElement resultElement = analysisResultUxml.CommonUIClone();
                     resultsContainer.Add(resultElement);
 
                     resultElement

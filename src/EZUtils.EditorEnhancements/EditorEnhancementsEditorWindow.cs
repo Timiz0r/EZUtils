@@ -17,7 +17,7 @@ namespace EZUtils.EditorEnhancements
         {
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 "Packages/com.timiz0r.EZUtils.EditorEnhancements/EditorEnhancementsEditorWindow.uxml");
-            visualTree.CloneTree(rootVisualElement);
+            visualTree.CommonUIClone(rootVisualElement);
 
             _ = rootVisualElement.Q<Toggle>(name: "projectWindowFileExtensions")
                 .ForPref(ProjectWindowFileExtensions.PrefName, true)
@@ -28,7 +28,12 @@ namespace EZUtils.EditorEnhancements
                     //without a repaint, the toggle wont do anything until the user interacts with it, like hover
                     window.Repaint();
                 });
+
             _ = rootVisualElement.Q<Toggle>(name: "showSceneWindowOnPlay").ForPref(AutoSceneWindow.PrefName, true);
+
+            rootVisualElement
+                .Q<VisualElement>(className: "section-unityeditorlanguage")
+                .Add(new EditorLanguageSettings());
         }
     }
 }

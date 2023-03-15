@@ -32,7 +32,7 @@ namespace EZUtils.MMDAvatarTools
 
                 foreach (BlendShapeSummaryResult result in group)
                 {
-                    VisualElement item = itemElement.CloneTree();
+                    VisualElement item = itemElement.CommonUIClone();
                     container.Add(item);
 
                     VisualElement status =

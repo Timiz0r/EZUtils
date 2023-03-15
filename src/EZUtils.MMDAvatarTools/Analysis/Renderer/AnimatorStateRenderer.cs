@@ -46,7 +46,7 @@ namespace EZUtils.MMDAvatarTools
 
             foreach (IGrouping<string, string> group in states.GroupBy(s => s.layerName, s => s.stateName))
             {
-                TemplateContainer layerContainer = layerElement.CloneTree();
+                VisualElement layerContainer = layerElement.CommonUIClone();
                 statesContainer.Add(layerContainer);
 
                 layerContainer.Q<Label>(className: "analyzer-result-details-state-layer-name").text = group.Key;
