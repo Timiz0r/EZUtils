@@ -42,8 +42,27 @@ namespace EZUtils.UIElements
         }
 
         private static SettingsProvider[] GetSettingsProviders()
-            => (SettingsProvider[])typeof(SettingsService)
+        {
+            SettingsProvider[] settingsProviders = (SettingsProvider[])typeof(SettingsService)
                 .GetMethod("FetchSettingsProviders", BindingFlags.Static | BindingFlags.NonPublic)
                 .Invoke(null, Array.Empty<object>());
+
+            EditorWindow preferencesWindow = SettingsService.OpenUserPreferences();
+            EditorWindow projectSettingsWindow = SettingsService.OpenProjectSettings();
+            PropertyInfo windowProperty =
+                typeof(SettingsProvider).GetProperty("settingsWindow", BindingFlags.Instance | BindingFlags.NonPublic);
+            foreach (SettingsProvider settingsProvider in settingsProviders)
+            {
+                if (settingsProvider.scope == SettingsScope.User)
+                {
+                    windowProperty.SetValue(settingsProvider, preferencesWindow);
+                }
+                else
+                {
+                    windowProperty.SetValue(settingsProvider, projectSettingsWindow);
+                }
+            }
+            return settingsProviders;
+        }
     }
 }
