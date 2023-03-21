@@ -4,6 +4,7 @@ namespace EZUtils.UIElements
     using System.Linq;
     using System.Reflection;
     using UnityEditor;
+    using UnityEngine;
     using UnityEngine.UIElements;
 
     public class SettingsProviderContainer : VisualElement
@@ -47,20 +48,13 @@ namespace EZUtils.UIElements
                 .GetMethod("FetchSettingsProviders", BindingFlags.Static | BindingFlags.NonPublic)
                 .Invoke(null, Array.Empty<object>());
 
-            EditorWindow preferencesWindow = SettingsService.OpenUserPreferences();
-            EditorWindow projectSettingsWindow = SettingsService.OpenProjectSettings();
+            EditorWindow unshownSettingsWindow =
+                (EditorWindow)ScriptableObject.CreateInstance(Type.GetType("UnityEditor.SettingsWindow, UnityEditor"));
             PropertyInfo windowProperty =
                 typeof(SettingsProvider).GetProperty("settingsWindow", BindingFlags.Instance | BindingFlags.NonPublic);
             foreach (SettingsProvider settingsProvider in settingsProviders)
             {
-                if (settingsProvider.scope == SettingsScope.User)
-                {
-                    windowProperty.SetValue(settingsProvider, preferencesWindow);
-                }
-                else
-                {
-                    windowProperty.SetValue(settingsProvider, projectSettingsWindow);
-                }
+                windowProperty.SetValue(settingsProvider, unshownSettingsWindow);
             }
             return settingsProviders;
         }
