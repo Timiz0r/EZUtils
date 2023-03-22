@@ -37,7 +37,17 @@ namespace EZUtils.UIElements
                 //that often at all.
                 ve.Add(new IMGUIContainer(() =>
                 {
-                    settingsProvider.guiHandler(string.Empty);
+                    try
+                    {
+                        settingsProvider.guiHandler(string.Empty);
+                    }
+                    catch (NullReferenceException)
+                    {
+                        //is because a settings window isn't set. happens in an innocuous place, so wont be an issue.
+                        //CreateInstanceing a window doesn't work as well, since it'll get added to the layout.
+                        //and dont really want to show a window that doesnt need to be shown
+                        //is fixed in later unities tho
+                    }
                 }));
             }
         }
@@ -48,14 +58,6 @@ namespace EZUtils.UIElements
                 .GetMethod("FetchSettingsProviders", BindingFlags.Static | BindingFlags.NonPublic)
                 .Invoke(null, Array.Empty<object>());
 
-            EditorWindow unshownSettingsWindow =
-                (EditorWindow)ScriptableObject.CreateInstance(Type.GetType("UnityEditor.SettingsWindow, UnityEditor"));
-            PropertyInfo windowProperty =
-                typeof(SettingsProvider).GetProperty("settingsWindow", BindingFlags.Instance | BindingFlags.NonPublic);
-            foreach (SettingsProvider settingsProvider in settingsProviders)
-            {
-                windowProperty.SetValue(settingsProvider, unshownSettingsWindow);
-            }
             return settingsProviders;
         }
     }
