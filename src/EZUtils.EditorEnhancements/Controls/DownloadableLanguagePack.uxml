@@ -9,9 +9,11 @@
       UnityEditor.UIElements ../../../UIElementsSchema/UnityEditor.UIElements.xsd
       EZUtils.UIElements ../../../UIElementsSchema/EZUtils.UIElements.xsd"
 >
-  <VisualElement>
-    <Style src="EditorLanguageSettings.uss" />
-    <ezutils:SettingsProviderContainer settingsPath="Preferences/Languages" />
-    <ListView item-height="30" />
+  <VisualElement class="language-pack">
+    <VisualElement class="language-pack-details">
+      <Label name="name" />
+      <Label name="status" />
+    </VisualElement>
+    <Button text="インストール" />
   </VisualElement>
 </UXML>
