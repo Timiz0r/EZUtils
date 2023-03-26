@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xmlns:ezutils="EZUtils.UIElements"
+    xsi:schemaLocation="
+      UnityEngine.UIElements ../../../UIElementsSchema/UnityEngine.UIElements.fixed.xsd
+      UnityEditor.UIElements ../../../UIElementsSchema/UnityEditor.UIElements.xsd
+      EZUtils.UIElements ../../../UIElementsSchema/EZUtils.UIElements.xsd"
+>
+  <VisualElement>
+    <Style src="EditorLanguageSettings.uss" />
+    <ezutils:SettingsProviderContainer settingsPath="Preferences/Languages" />
+
+    <VisualElement class="section-language-download-list">
+      <Label text="Download language (restart required)" />
+      <ListView item-height="30" />
+    </VisualElement>
+  </VisualElement>
+</UXML>

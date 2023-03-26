@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UXML
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="UnityEngine.UIElements"
+  xmlns:editor="UnityEditor.UIElements"
+  xsi:schemaLocation="
+    UnityEngine.UIElements ../../UIElementsSchema/UnityEngine.UIElements.fixed.xsd
+    UnityEditor.UIElements ../../UIElementsSchema/UnityEditor.UIElements.xsd">
+  <VisualElement>
+    <Style src="EditorEnhancementsEditorWindow.uss" />
+
+    <VisualElement class="section">
+      <Label class="section-title" text="一般" />
+      <Toggle name="projectWindowFileExtensions" label="プロジェクトウインドウのファイル拡張子" />
+      <Toggle name="showSceneWindowOnPlay" label="再生モードに入ったらシーンウインドウを開く" />
+    </VisualElement>
+    <VisualElement class="section">
+      <Label class="section-title" text="Unity Editor Language" />
+      <VisualElement class="section-unityeditorlanguage" />
+    </VisualElement>
+  </VisualElement>
+</UXML>

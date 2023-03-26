@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="UnityEngine.UIElements"
+    xmlns:editor="UnityEditor.UIElements"
+    xsi:schemaLocation="
+      UnityEngine.UIElements ../../../UIElementsSchema/UnityEngine.UIElements.fixed.xsd
+      UnityEditor.UIElements ../../../UIElementsSchema/UnityEditor.UIElements.xsd"
+>
+  <VisualElement>
+    <Style src="AnalysisResultElement.uss" />
+    <VisualElement class="result">
+      <VisualElement class="analyzer-result-header">
+        <VisualElement class="analyzer-result-title">
+          <VisualElement class="analyzer-result-icon" />
+          <Label class="analyzer-result-friendlyname" />
+        </VisualElement>
+        <Label class="analyzer-result-code" />
+      </VisualElement>
+
+      <VisualElement class="analyzer-result-details">
+      </VisualElement>
+    </VisualElement>
+  </VisualElement>
+</UXML>

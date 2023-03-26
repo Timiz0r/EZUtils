@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="$(SrcRoot)\EZUtils.MMDAvatarTools\EZUtils.MMDAvatarTools.csproj" />
+    <ProjectReference Include="$(SrcRoot)\EZUtils.TestUtils\EZUtils.TestUtils.csproj" />
+
+    <!--
+      referencing the generated csproj doesnt seem to work
+      aside from this workaround, the other option would be to create an sdk-type csproj referencing all those files
+    -->
+    <Reference Include="UnityEngine.TestRunner">
+        <HintPath>$(RepoRoot)\Library\ScriptAssemblies\UnityEngine.TestRunner.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.TestRunner">
+        <HintPath>$(RepoRoot)\Library\ScriptAssemblies\UnityEditor.TestRunner.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

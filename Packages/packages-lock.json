@@ -1,7 +1,35 @@
 {
   "dependencies": {
+    "com.timiz0r.ezutils.common": {
+      "version": "file:../src/EZUtils.Common",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.timiz0r.ezutils.localization": {
       "version": "file:../src/EZUtils.Localization",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
+    "com.timiz0r.ezutils.editorenhancements": {
+      "version": "file:../src/EZUtils.EditorEnhancements",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.timiz0r.ezutils.common": "1.0.2"
+      }
+    },
+    "com.timiz0r.ezutils.mmdavatartools": {
+      "version": "file:../src/EZUtils.MMDAvatarTools",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.timiz0r.ezutils.common": "1.0.2"
+      }
+    },
+    "com.timiz0r.ezutils.mmdavatartools.tests": {
+      "version": "file:../src/EZUtils.MMDAvatarTools.Tests",
       "depth": 0,
       "source": "local",
       "dependencies": {}
@@ -13,6 +41,32 @@
       "dependencies": {
         "com.unity.nuget.newtonsoft-json": "2.0.2"
       }
+    },
+    "com.timiz0r.ezutils.repackprefab": {
+      "version": "file:../src/EZUtils.RepackPrefab",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {
+        "com.timiz0r.ezutils.common": "1.0.0"
+      }
+    },
+    "com.timiz0r.ezutils.repackprefab.tests": {
+      "version": "file:../src/EZUtils.RepackPrefab.Tests",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
+    "com.timiz0r.ezutils.testutils": {
+      "version": "file:../src/EZUtils.TestUtils",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
+    "com.timiz0r.ezutils.windowcloser": {
+      "version": "file:../src/EZUtils.WindowCloser",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
     },
     "com.unity.addressables": {
       "version": "1.19.19",
@@ -45,8 +99,8 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ext.nunit": {
-      "version": "1.0.6",
-      "depth": 1,
+      "version": "2.0.3",
+      "depth": 0,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
@@ -61,7 +115,7 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "2.0.16",
+      "version": "2.0.17",
       "depth": 0,
       "source": "registry",
       "dependencies": {
@@ -108,11 +162,11 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.test-framework": {
-      "version": "1.1.29",
+      "version": "2.0.1-exp.1",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.unity.ext.nunit": "1.0.6",
+        "com.unity.ext.nunit": "2.0.2",
         "com.unity.modules.imgui": "1.0.0",
         "com.unity.modules.jsonserialize": "1.0.0"
       },
@@ -148,19 +202,11 @@
         "com.unity.modules.imgui": "1.0.0"
       }
     },
-    "com.unity.xr.oculus.standalone": {
-      "version": "2.38.4",
+    "com.vrchat.avatars": {
+      "version": "file:com.vrchat.avatars",
       "depth": 0,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.xr.openvr.standalone": {
-      "version": "2.0.5",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.vrchat.base": {
       "version": "file:com.vrchat.base",

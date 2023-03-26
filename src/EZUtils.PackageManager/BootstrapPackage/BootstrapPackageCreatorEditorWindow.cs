@@ -45,36 +45,32 @@ namespace EZUtils.PackageManager
 
                 string bootstrapPackageFolder = EnsureFolderCreated(Path.Combine(generationRoot, targetPackageName));
 
-                AssetDatabase.StartAssetEditing();
-                try
-                {
-                    string pass2Package =
-                        Path.Combine(bootstrapPackageFolder, $"Pass2.unitypackage");
-                    AssetDatabase.ExportPackage(
-                        new[]
-                        {
-                            CopyScript("PackageVersion.cs"),
-                            CopyScript("PackageRepository.cs"),
-                            CopyScript("PackageInformation.cs"),
-                            CopyBootstrapScript("BootstrapPackage/BootstrapperPass2.cs")
-                        },
-                        pass2Package);
+                _ = CreatePackage(
+                    Path.Combine(bootstrapPackageFolder, $"Install-{targetPackageName}.unitypackage"),
+                    CopyScript("UPMPackageClient.cs"),
+                    CopyBootstrapScript("BootstrapPackage/BootstrapperPass1.cs"),
+                    CreatePackage(
+                        Path.Combine(bootstrapPackageFolder, $"Pass2.unitypackage"),
+                        CopyScript("PackageVersion.cs"),
+                        CopyScript("PackageRepository.cs"),
+                        CopyScript("PackageInformation.cs"),
+                        CopyBootstrapScript("BootstrapPackage/BootstrapperPass2.cs")));
 
-                    string pass1Package =
-                        Path.Combine(bootstrapPackageFolder, $"Install-{targetPackageName}.unitypackage");
-                    AssetDatabase.ExportPackage(
-                        new[]
-                        {
-                            CopyScript("UPMPackageClient.cs"),
-                            CopyBootstrapScript("BootstrapPackage/BootstrapperPass1.cs"),
-                            pass2Package
-                        },
-                        pass1Package);
-                }
-                finally
+                string CreatePackage(string packagePath, params string[] paths)
                 {
-                    AssetDatabase.StopAssetEditing();
-                    AssetDatabase.Refresh();
+                    AssetDatabase.StartAssetEditing();
+                    try
+                    {
+                        AssetDatabase.ExportPackage(
+                            paths,
+                            packagePath);
+                        return packagePath;
+                    }
+                    finally
+                    {
+                        AssetDatabase.StopAssetEditing();
+                        AssetDatabase.Refresh();
+                    }
                 }
 
                 string CopyScript(string relativePath)

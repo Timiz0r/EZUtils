@@ -62,7 +62,11 @@ namespace EZUtils.PackageManager.UIElements
             packageVersions.Clear();
             packageVersions.AddRange(packageInformation.Versions);
 
-            this.Q<PopupField<PackageVersion>>().value = packageInformation.InstalledVersion ?? packageVersions.First();
+            PopupField<PackageVersion> packageVersionPopup = this.Q<PopupField<PackageVersion>>();
+            packageVersionPopup.value = packageInformation.InstalledVersion ?? packageVersions.First();
+            packageVersionPopup.SetEnabled(packageInformation.IsAvailable);
+            this.Query<Button>(className: "package-modification-operation")
+                .ForEach(e => e.SetEnabled(packageInformation.IsAvailable));
 
             EnableInClassList("package-installed", packageInformation.InstalledVersion != null);
             EnableInClassList("package-uninstalled", packageInformation.InstalledVersion == null);

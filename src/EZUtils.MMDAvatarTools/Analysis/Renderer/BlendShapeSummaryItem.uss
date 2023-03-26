@@ -1,0 +1,37 @@
+.analyzer-result-details-blendshape {
+    flex-direction: row;
+    align-items: center;
+}
+
+.analyzer-result-details-blendshape-status {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    margin-right: 4px;
+}
+.analyzer-result-details-blendshape-status-exists {
+    background-image: url("../Icons/Pass.psd");
+}
+
+.analyzer-result-details-blendshape-term {
+    flex-direction: row;
+}
+.analyzer-result-details-blendshape-term-main {
+    font-size: 12px;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: black;
+}
+.analyzer-result-details-blendshape-term-all {
+    flex-direction: row;
+}
+.analyzer-result-details-blendshape-term-all > Label {
+    font-size: 12px;
+    border-width: 1px;
+    border-radius: 4px;
+    border-color: black;
+    margin-left: 2px;
+}
+.analyzer-result-details-blendshape-term-exists {
+    border-color: rgb(0, 195, 0);
+}

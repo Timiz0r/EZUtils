@@ -1,0 +1,57 @@
+.result {
+    margin-bottom: 8px;
+}
+
+.analyzer-result-header {
+    margin-top: 4px;
+}
+.analyzer-result-title {
+    flex-direction: row;
+    align-items: center;
+}
+.analyzer-result-friendlyname {
+    font-size: 20px;
+    -unity-font-style: bold;
+    white-space: normal;
+    flex-shrink: 1;
+}
+.analyzer-result-code {
+    font-size: 10px;
+    -unity-font-style: italic;
+    /*wont wrap it since not as critical to users*/
+}
+
+.analyzer-result-details-description {
+    margin-bottom: 8px;
+}
+
+.results-details-title {
+    font-size: 16px;
+    -unity-font-style: bold;
+}
+
+.result-details-emptylist {
+    -unity-font-style: italic;
+}
+
+.analyzer-result-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    margin-right: 4px;
+}
+.analyzer-result-icon-pass {
+    background-image: url("Icons/Pass.psd");
+}
+.analyzer-result-icon-informational {
+    background-image: url("Icons/Informational.psd");
+}
+.analyzer-result-icon-warning {
+    background-image: url("Icons/Warning.psd");
+}
+.analyzer-result-icon-error {
+    background-image: url("Icons/Error.psd");
+}
+.analyzer-result-icon-analyzererror {
+    background-image: url("Icons/Error.psd");
+}

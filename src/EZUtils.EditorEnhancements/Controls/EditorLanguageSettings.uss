@@ -1,0 +1,19 @@
+.language-pack {
+    flex-direction: row;
+}
+.language-pack-details {
+    flex-direction: column;
+    flex-grow: 1;
+}
+#status {
+    font-size: 10px;
+    -unity-font-style: italic;
+}
+ListView {
+    height: 120px;
+}
+
+.section-language-download-list > Label {
+    margin-top: 8px;
+    font-size: 14px;
+}

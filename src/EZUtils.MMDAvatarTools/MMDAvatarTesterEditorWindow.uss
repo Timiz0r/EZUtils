@@ -1,0 +1,31 @@
+.analyzer {
+    flex-shrink: 1;
+}
+
+.show-play-mode {
+    display: none;
+}
+.play-mode .show-play-mode {
+    display: flex;
+}
+
+.show-edit-mode {
+    display: flex;
+}
+.play-mode .show-edit-mode {
+    display: none;
+}
+
+.show-running {
+    display: none;
+}
+.running .show-running {
+    display: flex;
+}
+
+.show-not-running {
+    display: flex;
+}
+.running .show-not-running {
+    display: none;
+}

@@ -14,5 +14,6 @@ namespace EZUtils.PackageManager
         public string Name { get; }
         public PackageVersion InstalledVersion { get; }
         public IReadOnlyList<PackageVersion> Versions { get; }
+        public bool IsAvailable => Versions.Count != 0 && !(Versions.Count == 1 && Versions[0] == PackageVersion.Unavailable);
     }
 }

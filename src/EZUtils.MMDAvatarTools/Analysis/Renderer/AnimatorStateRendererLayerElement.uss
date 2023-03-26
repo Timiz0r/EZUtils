@@ -1,0 +1,8 @@
+.analyzer-result-details-state-layer {
+    flex-direction: row;
+    align-items: center;
+}
+
+.analyzer-result-details-state-list {
+    padding-left: 20px;
+}

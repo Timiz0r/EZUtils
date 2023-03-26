@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UXML
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="UnityEngine.UIElements"
+  xmlns:editor="UnityEditor.UIElements"
+  xsi:schemaLocation="
+    UnityEngine.UIElements ../../UIElementsSchema/UnityEngine.UIElements.fixed.xsd
+    UnityEditor.UIElements ../../UIElementsSchema/UnityEditor.UIElements.xsd">
+  <VisualElement style="padding: 2px">
+    <Style src="MmdAvatarTesterEditorWindow.uss" />
+
+    <Label text="アバター" />
+    <editor:ObjectField name="targetAvatar" />
+
+    <VisualElement class="section tester">
+      <Label class="section-title" text="再生モードで試す" />
+      <VisualElement class="show-edit-mode">
+        <Label text="再生モードに入っていません" />
+      </VisualElement>
+
+      <VisualElement class="show-play-mode">
+        <Label text="アニメーション" />
+        <editor:ObjectField name="targetAnimation" />
+        <Button class="show-not-running" name="start" text="アニメーション再生" />
+        <Button class="show-running" name="stop" text="アニメーション停止" />
+      </VisualElement>
+    </VisualElement>
+
+    <VisualElement class="section analyzer">
+      <Label class="section-title" text="アバター解析" />
+      <Button name="analyze" text="再解析" />
+      <ScrollView class="analyzer-result-container" />
+    </VisualElement>
+  </VisualElement>
+</UXML>

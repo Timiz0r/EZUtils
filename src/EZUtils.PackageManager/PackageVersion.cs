@@ -11,6 +11,8 @@ namespace EZUtils.PackageManager
         private readonly IReadOnlyList<PreReleasePart> preReleaseParts = Array.Empty<PreReleasePart>();
         private readonly int hashcode;
 
+        public static PackageVersion Unavailable { get; } = new PackageVersion(isUnavailable: true);
+
         public PackageVersion(int major, int minor, int patch, string preRelease)
         {
             Major = major;
@@ -25,6 +27,13 @@ namespace EZUtils.PackageManager
 
             string preReleaseSuffix = string.IsNullOrEmpty(preRelease) ? string.Empty : $"-{preRelease}";
             FullVersion = $"{major}.{minor}.{patch}{preReleaseSuffix}";
+            hashcode = FullVersion.GetHashCode();
+        }
+
+        private PackageVersion(bool isUnavailable) : this(0, 0, 0, string.Empty)
+        {
+            if (!isUnavailable) throw new InvalidOperationException("This ctor is meant for unavailable versions.");
+            FullVersion = "Unavailable";
             hashcode = FullVersion.GetHashCode();
         }
 
