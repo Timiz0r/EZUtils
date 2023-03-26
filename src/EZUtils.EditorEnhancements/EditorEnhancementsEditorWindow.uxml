@@ -15,7 +15,7 @@
       <Toggle name="showSceneWindowOnPlay" label="再生モードに入ったらシーンウインドウを開く" />
     </VisualElement>
     <VisualElement class="section">
-      <Label class="section-title" text="Unity Editorの言語" />
+      <Label class="section-title" text="Unity Editor Language" />
       <VisualElement class="section-unityeditorlanguage" />
     </VisualElement>
   </VisualElement>

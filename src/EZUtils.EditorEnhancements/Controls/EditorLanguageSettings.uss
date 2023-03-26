@@ -8,9 +8,12 @@
 #status {
     font-size: 10px;
     -unity-font-style: italic;
-    display: none;
 }
 ListView {
     height: 120px;
-    margin-top: 4px;
+}
+
+.section-language-download-list > Label {
+    margin-top: 8px;
+    font-size: 14px;
 }

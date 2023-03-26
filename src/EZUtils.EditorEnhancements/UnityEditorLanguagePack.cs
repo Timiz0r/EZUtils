@@ -39,9 +39,32 @@ namespace EZUtils.EditorEnhancements
             IsInstalled = File.Exists(filePath);
         }
 
-        public Task Install()
+        public async Task Install()
         {
-            return Task.CompletedTask;
+            HttpResponseMessage response = await httpClient.GetAsync(downloadUrl);
+            using (FileStream fs = new FileStream(filePath, FileMode.CreateNew))
+            {
+                await response.EnsureSuccessStatusCode().Content.CopyToAsync(fs);
+            }
+
+            if (!string.IsNullOrEmpty(onDiskManifestPath))
+            {
+                JArray manifest;
+                using (StreamReader sr = new StreamReader(onDiskManifestPath))
+                using (JsonTextReader jr = new JsonTextReader(sr))
+                {
+                    manifest = await JArray.LoadAsync(jr);
+
+                    JToken module = manifest.Single(j => j["name"].Value<string>() == Name);
+                    module["selected"] = true;
+                }
+
+                using (StreamWriter sw = new StreamWriter(onDiskManifestPath))
+                using (JsonTextWriter jw = new JsonTextWriter(sw))
+                {
+                    await manifest.WriteToAsync(jw);
+                }
+            }
         }
 
         public static Task<IReadOnlyList<UnityEditorLanguagePack>> GetAvailable()

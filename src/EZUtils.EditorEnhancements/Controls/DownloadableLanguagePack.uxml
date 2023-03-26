@@ -14,6 +14,6 @@
       <Label name="name" />
       <Label name="status" />
     </VisualElement>
-    <Button text="インストール" />
+    <Button text="Download" />
   </VisualElement>
 </UXML>

@@ -12,6 +12,10 @@
   <VisualElement>
     <Style src="EditorLanguageSettings.uss" />
     <ezutils:SettingsProviderContainer settingsPath="Preferences/Languages" />
-    <ListView item-height="30" />
+
+    <VisualElement class="section-language-download-list">
+      <Label text="Download language (restart required)" />
+      <ListView item-height="30" />
+    </VisualElement>
   </VisualElement>
 </UXML>

@@ -6,9 +6,11 @@ namespace EZUtils.EditorEnhancements
     using UnityEditor;
     using UnityEngine.UIElements;
 
+    //will generally prefer basic english for this portion, since it's the most viable single language
+    //TODO: the most ideal thing to do, at least at time of writing, is to translate each item
+    //in the language pack list to its own language
     public class EditorLanguageSettings : VisualElement
     {
-
         public EditorLanguageSettings()
         {
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
@@ -22,8 +24,9 @@ namespace EZUtils.EditorEnhancements
             {
                 UnityEditorLanguagePack languagePack = ((IReadOnlyList<UnityEditorLanguagePack>)listView.itemsSource)[i];
                 e.Q<Label>(name: "name").text = languagePack.Name;
-                e.Q<Label>(name: "status").text = languagePack.IsInstalled ? "インストール済み" : "インストールされてない";
+                e.Q<Label>(name: "status").text = languagePack.IsInstalled ? "Installed" : "Not installed";
                 e.SetEnabled(!languagePack.IsInstalled);
+                e.Q<Button>().clicked += async () => await languagePack.Install();
             };
 
             _ = Load();
