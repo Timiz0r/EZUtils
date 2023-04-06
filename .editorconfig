@@ -1043,3 +1043,5 @@ dotnet_diagnostic.CA2007.severity = none
 dotnet_diagnostic.IDE0041.severity = none
 #this allows public and internal non-static methods to exist even if they dont access instance data
 dotnet_code_quality.CA1822.api_surface = private
+#defaults to english -- the most common native language for a codebase
+dotnet_code_quality.CA1304.excluded_symbol_names = M:EZUtils.Localization.EZLocalization.ForCatalogUnder(System.String)

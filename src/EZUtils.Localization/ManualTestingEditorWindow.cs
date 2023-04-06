@@ -8,29 +8,16 @@ namespace EZUtils.Localization
     public class ManualTestingEditorWindow : EditorWindow
     {
         private static readonly EZLocalization loc = EZLocalization.ForCatalogUnder("Packages/com.timiz0r.ezutils.editorenhancements");
-        //TODO: remove; just prototyping
-        // private static readonly EZLocalization tempffff = new EZLocalization(
-        //     catalog: null,
-        //     localeSelector: LocaleSelector.ForCurrentAssembly()
-        // );
 
         [MenuItem("EZUtils/Localization Manual Testing", isValidateFunction: false, priority: 0)]
         public static void ManualTesting()
         {
             ManualTestingEditorWindow window = GetWindow<ManualTestingEditorWindow>();
             window.Show();
-            if (new System.Random().Next(0, 2) == 0)
-            {
-                loc.Test(CultureInfo.GetCultureInfo("en"));
-            }
-            else
-            {
-                loc.Test(CultureInfo.GetCultureInfo("ja"));
-            }
-            ReloadGui();
+            Retranslate();
         }
 
-        private static void ReloadGui()
+        private static void Retranslate()
         {
             //the only known way to cause CreateGUI to get reloaded again
             //well, without much more invasive means
@@ -51,7 +38,15 @@ namespace EZUtils.Localization
             //            .GetProperty("currentEditorLanguage", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static)
             //            .GetValue(null)
             //    });
-            EditorUtility.RequestScriptReload();
+            //EditorUtility.RequestScriptReload();
+            if (new System.Random().Next(0, 2) == 0)
+            {
+                loc.Test(CultureInfo.GetCultureInfo("en"));
+            }
+            else
+            {
+                loc.Test(CultureInfo.GetCultureInfo("ja"));
+            }
         }
 
         public void CreateGUI()
@@ -59,20 +54,8 @@ namespace EZUtils.Localization
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 "Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml");
             visualTree.CloneTree(rootVisualElement);
-            loc.T(this, "EZLocalization manual testing");
-
-            foreach (VisualElement element in rootVisualElement.Query().Descendents<VisualElement>().ToList())
-            {
-
-                if (element is Button button && button.text.StartsWith("loc:", StringComparison.Ordinal))
-                {
-                    button.text = loc.T(button.text.Substring(4));
-                }
-                else if (element is Label label && label.text.StartsWith("loc:", StringComparison.Ordinal))
-                {
-                    label.text = loc.T(label.text.Substring(4));
-                }
-            }
+            loc.TranslateElementTree(rootVisualElement);
+            loc.TranslateWindow(this, titleText: "EZLocalization manual testing");
 
 
             // string Localize(string text)
