@@ -4,220 +4,55 @@ namespace EZUtils.Localization
     using System.Collections.Generic;
     using System.Globalization;
     using System.IO;
-    using System.Linq;
     using UnityEditor;
-    using UnityEditor.Localization;
-    using UnityEditor.Localization.Addressables;
-    using UnityEngine;
-    using UnityEngine.Localization;
-    using UnityEngine.Localization.Metadata;
-    using UnityEngine.Localization.Settings;
+    using UnityEngine.UIElements;
 
+    //ports-and-adapters-wise, EZLocalization is a driver adapter connecting unity editor to a catalog
     public class EZLocalization
     {
-        private static readonly Dictionary<string, EZLocalization> initializedLocalizations = new Dictionary<string, EZLocalization>();
+        private CatalogReference catalog;
+        private LocaleSelector localeSelector;
+        private readonly List<(UnityEngine.Object obj, Action action)> retranslatableObjects =
+            new List<(UnityEngine.Object obj, Action action)>();
 
-        private readonly LocalizationSettings localizationSettings;
-        private readonly string path;
-        private readonly LocaleIdentifier[] supportedLocales;
-
-        public static IReadOnlyList<EZLocalization> InitializedLocalizations => initializedLocalizations.Values.ToArray();
-        public bool IsInEditMode => LocalizationEditorSettings.ActiveLocalizationSettings == localizationSettings;
-
-        public string Name => localizationSettings.name;
-
-        public Locale SelectedLocale { get; }
-
-        public IReadOnlyList<Locale> AvailableLocales { get; }
-
-        private EZLocalization(
-            LocalizationSettings localizationSettings, string path, LocaleIdentifier[] supportedLocales)
+        private EZLocalization(CatalogReference catalog, LocaleSelector localeSelector)
         {
-            this.localizationSettings = localizationSettings;
-            this.path = path;
-            this.supportedLocales = supportedLocales;
-
-            SystemLocaleSelector localeSelector = new SystemLocaleSelector();
-            ILocalesProvider locales = localizationSettings.GetAvailableLocales();
-            //we don't use localizationSettings.SetSelectedLocale it's kinda useless for us
-            //all of the calls to the localization databases end up going thru the static LocalizationSettings
-            //and we want per-EZLocalization capability
-            //though even if we later go with a static across all EZUtils, we still dont want other tools that could use
-            //unity localization to be able to mess things up, or for us to mess other things up
-            SelectedLocale = localeSelector.GetStartupLocale(locales)
-                ?? locales.Locales.FirstOrDefault(
-                    l => l.Identifier.CultureInfo.TwoLetterISOLanguageName.Equals(
-                        "en", StringComparison.OrdinalIgnoreCase))
-                ?? locales.Locales.FirstOrDefault();
-
-            AvailableLocales = localizationSettings.GetAvailableLocales().Locales;
+            this.catalog = catalog;
+            this.localeSelector = localeSelector;
         }
 
-        public static EZLocalization Create(string directory, params LocaleIdentifier[] supportedLocales)
+        public static EZLocalization ForCatalogUnder(string root, CultureInfo nativeLocale)
         {
-            //we have this cache because it's very supported to have multiple instantiations of the same instance
-            if (initializedLocalizations.TryGetValue(directory, out EZLocalization existing))
-            {
-                //TODO: would be good to ensure locales are in-sync
-                return existing;
-            }
-
-            LocalizationSettings localizationSettings = AssetDatabase.LoadAssetAtPath<LocalizationSettings>(directory);
-            if (localizationSettings == null)
-            {
-                localizationSettings = ScriptableObject.CreateInstance<LocalizationSettings>();
-                //so the last path component of the directory
-                localizationSettings.name = Path.GetFileNameWithoutExtension(directory);
-                localizationSettings.GetMetadata().AddMetadata(new Marker());
-                _ = Directory.CreateDirectory(directory);
-                AssetDatabase.CreateAsset(
-                    localizationSettings, Path.Combine(directory, $"{localizationSettings.name}.asset"));
-            }
-            //will see if we can get away with not using addressibles, since we generate don't need it for editor applications
-            //not that we cant use them, but I suspect it would pollute other projects in undesirable ways
-            _ = localizationSettings.GetInitializationOperation().WaitForCompletion();
-
-            EZLocalization result = new EZLocalization(localizationSettings, directory, supportedLocales);
-            initializedLocalizations.Add(directory, result);
+            root = root.TrimEnd(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+            CatalogReference catalog = CatalogDatabase.GetCatalogReference(root, nativeLocale);
+            LocaleSelector localeSelector = LocaleSelector.Create(root, catalog);
+            EZLocalization result = new EZLocalization(catalog, localeSelector);
             return result;
         }
+        public static EZLocalization ForCatalogUnder(string root)
+            => ForCatalogUnder(root, CultureInfo.GetCultureInfo("en"));
 
-
-
-        public void EnterEditMode()
+        //TODO: remove locale selection; will actually eventually replace with something that returns a control capable of selecting this instance's locale
+        //the retranslation stuff will probably integrate in some way into locale selector
+        public void Test(CultureInfo locale)
         {
-            if (IsInEditMode) return;
-            if (LocalizationEditorSettings.ActiveLocalizationSettings != null)
-            {
-                MetadataCollection metadata = LocalizationEditorSettings.ActiveLocalizationSettings.GetMetadata();
-                if (metadata.HasMetadata<Marker>() && InitializedLocalizations.Count != 0) throw new InvalidOperationException(
-                    $"'{LocalizationEditorSettings.ActiveLocalizationSettings.name}' is already being edited.");
-            }
-
-            LocalizationEditorSettings.ActiveLocalizationSettings = localizationSettings;
-
-            //TODO: double check this is set. might not be upon first creation of localizationsettings
-            string pattern = $"EZLocalization-{localizationSettings.name}";
-            AddressableGroupRules addressableGroupRules = ScriptableObject.CreateInstance<AddressableGroupRules>();
-            addressableGroupRules.LocaleResolver = new GroupResolver(pattern, pattern);
-            addressableGroupRules.AssetResolver = new GroupResolver(pattern, pattern);
-            addressableGroupRules.StringTablesResolver = new GroupResolver(pattern, pattern);
-            addressableGroupRules.AssetTablesResolver = new GroupResolver(pattern, pattern);
-            AddressableGroupRules.Instance = addressableGroupRules;
-
-            List<Locale> addedLocales = new List<Locale>();
-            foreach (LocaleIdentifier localeIdentifier in supportedLocales)
-            {
-                if (LocalizationEditorSettings.GetLocale(localeIdentifier) != null) return;
-
-                Locale locale = ScriptableObject.CreateInstance<Locale>();
-                locale.Identifier = localeIdentifier;
-                locale.name = localeIdentifier.CultureInfo.EnglishName;
-                string localePath = Path.Combine(path, $"{localeIdentifier.CultureInfo.EnglishName}.asset");
-                AssetDatabase.CreateAsset(locale, localePath);
-                LocalizationEditorSettings.AddLocale(locale);
-                addedLocales.Add(locale);
-            }
-
-            if (addedLocales.Count == 0) return;
-
-            //logic more or less referenced from LocaleGeneratorWindow
-            IReadOnlyCollection<Locale> allLocales = LocalizationEditorSettings.GetLocales();
-            Dictionary<string, Locale> localeMap =
-                allLocales.ToDictionary(l => l.Identifier.Code, l => l);
-            foreach (Locale locale in allLocales)
-            {
-                CultureInfo currentCultureInfo = locale.Identifier.CultureInfo?.Parent;
-                while (currentCultureInfo != null && currentCultureInfo == CultureInfo.InvariantCulture)
-                {
-                    if (localeMap.TryGetValue(currentCultureInfo.Name, out Locale foundParent))
-                    {
-                        locale.Metadata.AddMetadata(new FallbackLocale(foundParent));
-                        EditorUtility.SetDirty(locale);
-                        break;
-                    }
-
-                    currentCultureInfo = currentCultureInfo.Parent;
-                }
-            }
-
-            localizationSettings.ResetState();
-            _ = localizationSettings.GetInitializationOperation().WaitForCompletion();
+            localeSelector.SelectLocale(locale);
+            // _ = retranslatableObjects.RemoveAll(t => t.obj == null); //aka destroyed
+            // foreach ((_, Action action) in retranslatableObjects)
+            // {
+            //     action();
+            // }
         }
 
-        public static void StopEditing()
+        public void T(VisualElement rootVisualElement) => throw new NotImplementedException();
+        public string T(string id) => catalog.Catalog.T(id);
+        public void T(EditorWindow window, string id)
+            => TrackRetranslatable(window, () => window.titleContent.text = T(id));
+
+        private void TrackRetranslatable(UnityEngine.Object obj, Action action)
         {
-            LocalizationEditorSettings.ActiveLocalizationSettings = null;
-            AddressableGroupRules.Instance = null;
-        }
-
-        public LocalizationContext GetContext(string group, string keyPrefix)
-        {
-            string groupDirectory = Path.Combine(path, group);
-            _ = Directory.CreateDirectory(groupDirectory);
-            string stringTableName = $"{group}-Strings";
-            string assetTableName = $"{group}-Assets";
-
-            if (IsInEditMode)
-            {
-                EnsureGroupExists();
-            }
-            LocalizedStringDatabase stringDatabase = localizationSettings.GetStringDatabase();
-            LocalizedAssetDatabase assetDatabase = localizationSettings.GetAssetDatabase();
-            LocalizationContext context = new LocalizationContext(
-                this,
-                keyPrefix,
-                stringDatabase, stringTableName,
-                assetDatabase, assetTableName);
-            return context;
-
-            void EnsureGroupExists()
-            {
-                StringTableCollection stringTableCollection =
-                    LocalizationEditorSettings.GetStringTableCollection(stringTableName);
-                if (stringTableCollection == null)
-                {
-                    _ = LocalizationEditorSettings.CreateStringTableCollection(
-                        stringTableName,
-                        groupDirectory,
-                        localizationSettings.GetAvailableLocales().Locales);
-                }
-                else
-                {
-                    EnsureTablesExist(stringTableCollection);
-                }
-
-                AssetTableCollection assetTableCollection = LocalizationEditorSettings.GetAssetTableCollection(assetTableName);
-                if (assetTableCollection == null)
-                {
-                    _ = LocalizationEditorSettings.CreateAssetTableCollection(
-                        assetTableName,
-                        groupDirectory,
-                        localizationSettings.GetAvailableLocales().Locales);
-                }
-                else
-                {
-                    EnsureTablesExist(assetTableCollection);
-                }
-
-                localizationSettings.ResetState();
-                _ = localizationSettings.GetInitializationOperation().WaitForCompletion();
-
-                void EnsureTablesExist(LocalizationTableCollection tableCollection)
-                {
-                    foreach (Locale locale in localizationSettings.GetAvailableLocales().Locales)
-                    {
-                        if (tableCollection.ContainsTable(locale.Identifier)) return;
-                        _ = tableCollection.AddNewTable(locale.Identifier);
-                    }
-                }
-            }
-        }
-
-        [Metadata(AllowedTypes = MetadataType.LocalizationSettings)]
-        [Serializable]
-        public class Marker : IMetadata
-        {
+            retranslatableObjects.Add((obj, action));
+            action();
         }
     }
 }

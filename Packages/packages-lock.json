@@ -6,19 +6,20 @@
       "source": "local",
       "dependencies": {}
     },
-    "com.timiz0r.ezutils.localization": {
-      "version": "file:../src/EZUtils.Localization",
-      "depth": 0,
-      "source": "local",
-      "dependencies": {}
-    },
     "com.timiz0r.ezutils.editorenhancements": {
       "version": "file:../src/EZUtils.EditorEnhancements",
       "depth": 0,
       "source": "local",
       "dependencies": {
-        "com.timiz0r.ezutils.common": "1.0.2"
+        "com.timiz0r.ezutils.common": "1.0.2",
+        "com.timiz0r.ezutils.localization": "0.0.1"
       }
+    },
+    "com.timiz0r.ezutils.localization": {
+      "version": "file:../src/EZUtils.Localization",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
     },
     "com.timiz0r.ezutils.mmdavatartools": {
       "version": "file:../src/EZUtils.MMDAvatarTools",
@@ -68,20 +69,6 @@
       "source": "local",
       "dependencies": {}
     },
-    "com.unity.addressables": {
-      "version": "1.19.19",
-      "depth": 1,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.scriptablebuildpipeline": "1.19.6",
-        "com.unity.modules.assetbundle": "1.0.0",
-        "com.unity.modules.imageconversion": "1.0.0",
-        "com.unity.modules.jsonserialize": "1.0.0",
-        "com.unity.modules.unitywebrequest": "1.0.0",
-        "com.unity.modules.unitywebrequestassetbundle": "1.0.0"
-      },
-      "url": "https://packages.unity.com"
-    },
     "com.unity.burst": {
       "version": "1.4.11",
       "depth": 1,
@@ -130,16 +117,6 @@
       "dependencies": {},
       "hash": "aca83a6ba054d4a97d3848f1937c28846fe6d018"
     },
-    "com.unity.localization": {
-      "version": "1.3.2",
-      "depth": 0,
-      "source": "registry",
-      "dependencies": {
-        "com.unity.addressables": "1.19.19",
-        "com.unity.nuget.newtonsoft-json": "2.0.2"
-      },
-      "url": "https://packages.unity.com"
-    },
     "com.unity.mathematics": {
       "version": "1.2.5",
       "depth": 1,
@@ -150,13 +127,6 @@
     "com.unity.nuget.newtonsoft-json": {
       "version": "2.0.2",
       "depth": 0,
-      "source": "registry",
-      "dependencies": {},
-      "url": "https://packages.unity.com"
-    },
-    "com.unity.scriptablebuildpipeline": {
-      "version": "1.19.6",
-      "depth": 2,
       "source": "registry",
       "dependencies": {},
       "url": "https://packages.unity.com"
@@ -201,6 +171,20 @@
         "com.unity.modules.ui": "1.0.0",
         "com.unity.modules.imgui": "1.0.0"
       }
+    },
+    "com.unity.xr.oculus.standalone": {
+      "version": "2.38.4",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.xr.openvr.standalone": {
+      "version": "2.0.5",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
     },
     "com.vrchat.avatars": {
       "version": "file:com.vrchat.avatars",
