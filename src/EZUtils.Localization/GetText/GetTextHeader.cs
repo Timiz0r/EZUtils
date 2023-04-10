@@ -1,7 +1,9 @@
 namespace EZUtils.Localization
 {
     using System;
+    using System.Collections.Generic;
     using System.Globalization;
+    using System.Linq;
     using System.Text;
     using System.Text.RegularExpressions;
 
@@ -9,9 +11,27 @@ namespace EZUtils.Localization
     //this design decision mainly depends on how we go about generating documenting for new languages
     public class GetTextHeader
     {
-        public CultureInfo Locale { get; }
+        //did this by eye scanning over all cultures; not so authoritative
+        private static readonly List<(string getTextVariant, string cultureInfoVariant)> variants = new List<(string getTextVariant, string cultureInfoVariant)>()
+        {
+            ("latin", "Latn"),
+            ("cyrillic", "Cyrl"),
+            ("adlam", "Adlm"),
+            ("javanese", "Java"),
+            ("arabic", "Arab"),
+            ("devanagari", "Deva"),
+            ("mongolian", "Mong"),
+            ("bangla", "Beng"),
+            ("gurmukhi", "Guru"),
+            ("olchiki", "Olck"),
+            ("tifinagh", "Tfng"),
+            ("vai", "Vaii"),
+            ("simplified", "Hans"),
+            ("traditional", "Hant"),
+        };
+        public Locale Locale { get; }
 
-        public GetTextHeader(CultureInfo locale)
+        public GetTextHeader(Locale locale)
         {
             Locale = locale;
         }
@@ -19,21 +39,26 @@ namespace EZUtils.Localization
         //we dont currently allow custom plural forms or charsets
         //and otherwise have no other potentially useful data atm
 
-        public GetTextEntry ToEntry(int pluralForms)
+        public GetTextEntry ToEntry()
         {
-            if (pluralForms < 1) throw new ArgumentOutOfRangeException(nameof(pluralForms), "There must be at least one plural form.");
 
             StringBuilder sb = new StringBuilder();
-            sb.Append($"Language: {Locale.TwoLetterISOLanguageName}\n");
-            sb.Append("MIME-Version: 1.0\n");
-            sb.Append("Content-Type: text/plain; charset=UTF-8\n");
-            sb.Append("Content-Transfer-Encoding: 8bit\n");
-            sb.Append($"Plural-Forms: nplurals={pluralForms}; ");
-            for (int i = 1; i < pluralForms; i++)
+            string language = GetGetTextLanguageFromCultureInfo(Locale.CultureInfo);
+            _ = sb.Append($"Language: {language}\n");
+            _ = sb.Append("MIME-Version: 1.0\n");
+            _ = sb.Append("Content-Type: text/plain; charset=UTF-8\n");
+            _ = sb.Append("Content-Transfer-Encoding: 8bit\n");
+
+            //we generate these so that poedit or other tools can see the plural strings property
+            int pluralFormCount = Locale.PluralRules.Count;
+            if (Locale.UseSpecialZero) pluralFormCount++;
+            if (pluralFormCount < 1) throw new InvalidOperationException("There must be at least one plural form.");
+            _ = sb.Append($"Plural-Forms: nplurals={pluralFormCount}; ");
+            for (int i = 1; i < pluralFormCount; i++)
             {
-                sb.Append($"n == {i} ? {i} : ");
+                _ = sb.Append($"n == {i} ? {i} : ");
             }
-            sb.Append("0;\n");
+            _ = sb.Append("0;\n");
 
             GetTextEntry entry = new GetTextEntryBuilder()
                 .ConfigureId(string.Empty)
@@ -44,40 +69,67 @@ namespace EZUtils.Localization
 
         public static GetTextHeader FromEntry(GetTextEntry entry)
         {
-            CultureInfo locale = null;
             Match match = Regex.Match(entry.Value, "(?i)Language: (?'lang'[a-z]+)(?:_(?'country'[a-z]+))?(?:@(?'variant'[a-z]+))?");
-            if (match.Success)
-            {
-                string code = match.Groups["lang"].Value;
-                if (match.Groups["variant"].Success)
-                {
-                    //did this by eye scanning over all cultures; not so authoritative
-                    string variant = match.Groups["variant"].Value;
-                    if (variant == "latin") variant = "Latn";
-                    if (variant == "cyrillic") variant = "Cyrl";
-                    if (variant == "adlam") variant = "Adlm";
-                    if (variant == "javanese") variant = "Java";
-                    if (variant == "arabic") variant = "Arab";
-                    if (variant == "devanagari") variant = "Deva";
-                    if (variant == "mongolian") variant = "Mong";
-                    if (variant == "bangla") variant = "Beng";
-                    if (variant == "gurmukhi") variant = "Guru";
-                    if (variant == "olchiki") variant = "Olck";
-                    if (variant == "tifinagh") variant = "Tfng";
-                    if (variant == "vai") variant = "Vaii";
-                    if (variant == "simplified") variant = "Hans";
-                    if (variant == "traditional") variant = "Hant";
+            CultureInfo cultureInfo = match.Success
+                ? GetCultureInfoFromGetTextLanguage(
+                    language: match.Groups["lang"].Value,
+                    country: match.Groups["country"].Value,
+                    variant: match.Groups["variant"].Value)
+                //is basically the most important field
+                : throw new InvalidOperationException($"Language field not found.");
 
-                    code = $"{code}-{variant}";
-                }
-                if (match.Groups["country"].Success)
-                {
-                    code = $"{code}-{match.Groups["country"].Value}";
-                }
-                locale = CultureInfo.GetCultureInfo(code);
+            //TODO: read plural rules
+            Locale locale = new Locale(cultureInfo);
+            GetTextHeader result = new GetTextHeader(locale);
+            return result;
+        }
+
+        private static CultureInfo GetCultureInfoFromGetTextLanguage(string language, string country, string variant)
+        {
+            string code = language;
+            if (!string.IsNullOrEmpty(variant))
+            {
+                variant = variants
+                    .SingleOrDefault(v => v.getTextVariant.Equals(variant, StringComparison.OrdinalIgnoreCase))
+                    .cultureInfoVariant
+                    ?? throw new InvalidOperationException($"Unsupported variant '{variant}'.");
+                code = $"{code}-{variant}";
+            }
+            if (!string.IsNullOrEmpty(country))
+            {
+                code = $"{code}-{country}";
             }
 
-            GetTextHeader result = new GetTextHeader(locale);
+            CultureInfo result = CultureInfo.GetCultureInfo(code);
+            return result;
+        }
+
+        private static string GetGetTextLanguageFromCultureInfo(CultureInfo cultureInfo)
+        {
+            string[] components = cultureInfo.Name.Split('-');
+            string language = components[0];
+            string country = null;
+            string variant = null;
+            if (components.Length == 2)
+            {
+                //the 2/2 component can be either a variant or country
+                variant = variants
+                    .SingleOrDefault(v => v.cultureInfoVariant.Equals(components[1], StringComparison.OrdinalIgnoreCase))
+                    .getTextVariant;
+                if (variant == null)
+                {
+                    country = components[1];
+                }
+            }
+            if (components.Length == 3)
+            {
+                variant = components[1];
+                country = components[2];
+            }
+
+            string result = language;
+            if (country != null) result = $"{result}_{country}";
+            if (variant != null) result = $"{result}@{variant}";
             return result;
         }
     }

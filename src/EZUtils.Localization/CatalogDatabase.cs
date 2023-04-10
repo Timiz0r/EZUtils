@@ -16,7 +16,7 @@ namespace EZUtils.Localization
         private static readonly Dictionary<string, CatalogReference> catalogs = new Dictionary<string, CatalogReference>();
 
         //
-        public static CatalogReference GetCatalogReference(string root, CultureInfo nativeLocale)
+        public static CatalogReference GetCatalogReference(string root, Locale nativeLocale)
         {
             root = root.Replace('\\', '/');
             if (catalogs.TryGetValue(root, out CatalogReference catalogReference))
@@ -79,7 +79,7 @@ namespace EZUtils.Localization
             }
         }
 
-        private static GetTextCatalog GetFreshCatalog(string root, CultureInfo nativeLocale) => new GetTextCatalog(
+        private static GetTextCatalog GetFreshCatalog(string root, Locale nativeLocale) => new GetTextCatalog(
             documents
                 .Where(kvp => kvp.Key.StartsWith(root, StringComparison.OrdinalIgnoreCase))
                 .Select(kvp => kvp.Value)

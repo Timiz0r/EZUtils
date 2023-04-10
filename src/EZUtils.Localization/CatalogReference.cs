@@ -11,12 +11,12 @@ namespace EZUtils.Localization
             new List<(UnityEngine.Object obj, Action action)>();
         private readonly List<(VisualElement element, Action action)> retranslatableElements =
             new List<(VisualElement element, Action action)>();
-        private CultureInfo selectedLocale;
+        private Locale selectedLocale;
 
         public GetTextCatalog Catalog { get; private set; }
-        public CultureInfo NativeLocale { get; }
+        public Locale NativeLocale { get; }
 
-        public CatalogReference(CultureInfo nativeLocale)
+        public CatalogReference(Locale nativeLocale)
         {
             NativeLocale = selectedLocale = nativeLocale;
         }
@@ -27,11 +27,16 @@ namespace EZUtils.Localization
             Catalog.SelectLocale(selectedLocale);
         }
 
-        public void SelectLocale(CultureInfo locale)
+        public void SelectLocale(Locale locale)
         {
             selectedLocale = locale;
             Catalog.SelectLocale(locale);
         }
+        public Locale SelectLocale(CultureInfo cultureInfo) => selectedLocale = Catalog.SelectLocale(cultureInfo);
+        public Locale SelectLocaleOrNative(params Locale[] locales)
+            => selectedLocale = Catalog.SelectLocaleOrNative(locales);
+        public Locale SelectLocaleOrNative(params CultureInfo[] cultureInfos)
+            => selectedLocale = Catalog.SelectLocaleOrNative(cultureInfos);
 
         public void Retranslate()
         {

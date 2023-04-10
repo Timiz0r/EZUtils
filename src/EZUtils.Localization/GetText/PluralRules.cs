@@ -6,79 +6,373 @@ namespace EZUtils.Localization
     using System.Linq;
     using System.Xml.Linq;
 
+    //TODO: once we get around to unit testing, plural rule parsing can be considered its own application
+    //once thing we'll do is parse the whole xml, since we get free test cases
+    //also note that empty rules (with or without samples) probably dont parse right. giganto xml parsing should work there
+    //but dont get lazy and just parse xml, since it's harder to reason about there
+    //or do idk
     public class PluralRules
     {
-        private readonly Dictionary<string, RuleSet> rules = new Dictionary<string, RuleSet>();
+        private static readonly IReadOnlyDictionary<CultureInfo, PluralRules> defaultPluralRules = LoadDefaultPluralRules();
+        private readonly Func<Operands, bool> zeroExpression;
+        private readonly Func<Operands, bool> oneExpression;
+        private readonly Func<Operands, bool> twoExpression;
+        private readonly Func<Operands, bool> fewExpression;
+        private readonly Func<Operands, bool> manyExpression;
+        //this is realistically always true, but the rule has examples we'll want to test on
+        private readonly Func<Operands, bool> otherExpression;
+        public string Zero { get; }
+        public string One { get; }
+        public string Two { get; }
+        public string Few { get; }
+        public string Many { get; }
+        public string Other { get; }
+        public int Count { get; }
 
-        private PluralRules(Dictionary<string, RuleSet> rules)
+        public PluralRules(
+            string zero = null,
+            string one = null,
+            string two = null,
+            string few = null,
+            string many = null,
+            string other = null)
         {
-            this.rules = rules;
+            zeroExpression = PluralRuleParser.Parse(zero);
+            oneExpression = PluralRuleParser.Parse(one);
+            twoExpression = PluralRuleParser.Parse(two);
+            fewExpression = PluralRuleParser.Parse(few);
+            manyExpression = PluralRuleParser.Parse(many);
+            //every set of pluralrules should have the catch-all other
+            //though we wont stop someone from making the poor move of actually providing a more restrictive expression
+            otherExpression = zero == null
+                ? o => true
+                : PluralRuleParser.Parse(other);
+            Zero = zero;
+            One = one;
+            Two = two;
+            Few = few;
+            Many = many;
+            Other = other ?? string.Empty;
+
+            //there's always other
+            Count = 1;
+            if (zero != null) Count++;
+            if (one != null) Count++;
+            if (two != null) Count++;
+            if (few != null) Count++;
+            if (many != null) Count++;
         }
 
-        public PluralType Evaluate(CultureInfo cultureInfo, decimal value)
+
+        public PluralType Evaluate(decimal value) => Evaluate(value, out _);
+
+        public PluralType Evaluate(decimal value, out int index)
         {
-            RuleSet ruleSet = rules[cultureInfo.TwoLetterISOLanguageName];
-            PluralType result = ruleSet.Evaluate(value);
-            return result;
+            //note: if for some reason we care about perf later, precompute zeroIndex, etc., and return those
+            index = 0;
+            Operands operands = new Operands(value);
+            if (zeroExpression != null && ++index > 0 && zeroExpression(operands)) return PluralType.Zero;
+            if (oneExpression != null && ++index > 0 && oneExpression(operands)) return PluralType.One;
+            if (twoExpression != null && ++index > 0 && twoExpression(operands)) return PluralType.Two;
+            if (fewExpression != null && ++index > 0 && fewExpression(operands)) return PluralType.Few;
+            if (manyExpression != null && ++index > 0 && manyExpression(operands)) return PluralType.Many;
+            if (otherExpression != null && ++index > 0 && otherExpression(operands)) return PluralType.Other;
+            throw new InvalidOperationException("No rules evaluated to true.");
         }
 
-        public static PluralRules LoadFrom(XDocument document)
+        public static PluralRules GetDefault(CultureInfo cultureInfo)
         {
-            Dictionary<string, RuleSet> rules = document.Root
+            while (cultureInfo != CultureInfo.InvariantCulture)
+            {
+                if (defaultPluralRules.TryGetValue(cultureInfo, out PluralRules pluralRules)) return pluralRules;
+                cultureInfo = cultureInfo.Parent;
+            }
+            throw new ArgumentOutOfRangeException(
+                nameof(cultureInfo), $"Default plural rules for culture '{cultureInfo}' not found.");
+        }
+
+        private static IReadOnlyDictionary<CultureInfo, PluralRules> LoadDefaultPluralRules()
+        {
+            XDocument document = XDocument.Parse(DefaultPluralRuleFile);
+            IReadOnlyDictionary<CultureInfo, PluralRules> rules = document.Root
                 .Element("plurals")
                 .Elements("pluralRules")
                 .SelectMany(pr =>
                 {
                     string[] locales = pr.Attribute("locales").Value.Split(' ');
-                    RuleSet ruleSet = new RuleSet(
-                        zero: Parse("zero"),
-                        one: Parse("one"),
-                        two: Parse("two"),
-                        few: Parse("few"),
-                        many: Parse("many")
+                    PluralRules pluralRules = new PluralRules(
+                        zero: GetRule("zero"),
+                        one: GetRule("one"),
+                        two: GetRule("two"),
+                        few: GetRule("few"),
+                        many: GetRule("many"),
+                        other: GetRule("other")
                     );
-                    return locales.Select(l => (l, ruleSet));
+                    return locales.Select(l => (l, pluralRules));
 
-                    Func<Operands, bool> Parse(string kind)
-                        => PluralRuleParser.Parse(pr.Elements("pluralRule").SingleOrDefault(e => e.Attribute("count")?.Value == kind)?.Value);
+                    string GetRule(string kind)
+                        => pr.Elements("pluralRule").SingleOrDefault(e => e.Attribute("count")?.Value == kind)?.Value;
                 })
-                .ToDictionary(e => e.l, e => e.ruleSet, StringComparer.OrdinalIgnoreCase);
+                .ToDictionary(e => CultureInfo.GetCultureInfo(e.l), e => e.pluralRules);
 
-            return new PluralRules(rules);
+            return rules;
         }
 
-        private class RuleSet
-        {
-            private readonly Func<Operands, bool> Zero;
-            private readonly Func<Operands, bool> One;
-            private readonly Func<Operands, bool> Two;
-            private readonly Func<Operands, bool> Few;
-            private readonly Func<Operands, bool> Many;
+        //pluralrules code is meant tobe unity-agnostic, and there isn't a good way to discover the file
+        //we could expose a method to initialize them that gets called from unity land, but this is a bit easier
+        //and not that bad
+        private static readonly string DefaultPluralRuleFile = @"
+<?xml version=""1.0"" encoding=""UTF-8"" ?>
+<!DOCTYPE supplementalData SYSTEM ""../../common/dtd/ldmlSupplemental.dtd"">
+<!--
+Copyright © 1991-2022 Unicode, Inc.
+For terms of use, see http://www.unicode.org/copyright.html
+SPDX-License-Identifier: Unicode-DFS-2016
+CLDR data files are interpreted according to the LDML specification (http://unicode.org/reports/tr35/)
+-->
+<supplementalData>
+    <version number=""$Revision$""/>
+    <plurals type=""cardinal"">
+        <!-- For a canonicalized list, use GeneratedPluralSamples -->
 
-            public RuleSet(
-                Func<Operands, bool> zero,
-                Func<Operands, bool> one,
-                Func<Operands, bool> two,
-                Func<Operands, bool> few,
-                Func<Operands, bool> many)
-            {
-                Zero = zero;
-                One = one;
-                Two = two;
-                Few = few;
-                Many = many;
-            }
+        <!-- 1: other -->
 
-            public PluralType Evaluate(decimal value)
-            {
-                Operands operands = new Operands(value);
-                if (Zero?.Invoke(operands) == true) return PluralType.Zero;
-                if (One?.Invoke(operands) == true) return PluralType.One;
-                if (Two?.Invoke(operands) == true) return PluralType.Two;
-                if (Few?.Invoke(operands) == true) return PluralType.Few;
-                if (Many?.Invoke(operands) == true) return PluralType.Many;
-                return PluralType.Other;
-            }
-        }
+        <pluralRules locales=""bm bo dz hnj id ig ii in ja jbo jv jw kde kea km ko lkt lo ms my nqo osa root sah ses sg su th to tpi vi wo yo yue zh"">
+            <pluralRule count=""other""> @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+
+        <!-- 2: one,other -->
+
+        <pluralRules locales=""am as bn doi fa gu hi kn pcm zu"">
+            <pluralRule count=""one"">i = 0 or n = 1 @integer 0, 1 @decimal 0.0~1.0, 0.00~0.04</pluralRule>
+            <pluralRule count=""other""> @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 1.1~2.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""ff hy kab"">
+            <pluralRule count=""one"">i = 0,1 @integer 0, 1 @decimal 0.0~1.5</pluralRule>
+            <pluralRule count=""other""> @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 2.0~3.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""ast de en et fi fy gl ia io ji lij nl sc scn sv sw ur yi"">
+            <pluralRule count=""one"">i = 1 and v = 0 @integer 1</pluralRule>
+            <pluralRule count=""other""> @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""si"">
+            <pluralRule count=""one"">n = 0,1 or i = 0 and f = 1 @integer 0, 1 @decimal 0.0, 0.1, 1.0, 0.00, 0.01, 1.00, 0.000, 0.001, 1.000, 0.0000, 0.0001, 1.0000</pluralRule>
+            <pluralRule count=""other""> @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.2~0.9, 1.1~1.8, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""ak bho guw ln mg nso pa ti wa"">
+            <pluralRule count=""one"">n = 0..1 @integer 0, 1 @decimal 0.0, 1.0, 0.00, 1.00, 0.000, 1.000, 0.0000, 1.0000</pluralRule>
+            <pluralRule count=""other""> @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""tzm"">
+            <pluralRule count=""one"">n = 0..1 or n = 11..99 @integer 0, 1, 11~24 @decimal 0.0, 1.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 21.0, 22.0, 23.0, 24.0</pluralRule>
+            <pluralRule count=""other""> @integer 2~10, 100~106, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""af an asa az bal bem bez bg brx ce cgg chr ckb dv ee el eo eu fo fur gsw ha haw hu jgo jmc ka kaj kcg kk kkj kl ks ksb ku ky lb lg mas mgo ml mn mr nah nb nd ne nn nnh no nr ny nyn om or os pap ps rm rof rwk saq sd sdh seh sn so sq ss ssy st syr ta te teo tig tk tn tr ts ug uz ve vo vun wae xh xog"">
+            <pluralRule count=""one"">n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000</pluralRule>
+            <pluralRule count=""other""> @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""da"">
+            <pluralRule count=""one"">n = 1 or t != 0 and i = 0,1 @integer 1 @decimal 0.1~1.6</pluralRule>
+            <pluralRule count=""other""> @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 2.0~3.4, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""is"">
+            <pluralRule count=""one"">t = 0 and i % 10 = 1 and i % 100 != 11 or t % 10 = 1 and t % 100 != 11 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 0.1, 1.0, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1, …</pluralRule>
+            <pluralRule count=""other""> @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 0.2~0.9, 1.2~1.8, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""mk"">
+            <pluralRule count=""one"">v = 0 and i % 10 = 1 and i % 100 != 11 or f % 10 = 1 and f % 100 != 11 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 0.1, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1, …</pluralRule>
+            <pluralRule count=""other""> @integer 0, 2~16, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 0.2~1.0, 1.2~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""ceb fil tl"">
+            <pluralRule count=""one"">v = 0 and i = 1,2,3 or v = 0 and i % 10 != 4,6,9 or v != 0 and f % 10 != 4,6,9 @integer 0~3, 5, 7, 8, 10~13, 15, 17, 18, 20, 21, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.3, 0.5, 0.7, 0.8, 1.0~1.3, 1.5, 1.7, 1.8, 2.0, 2.1, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+            <pluralRule count=""other""> @integer 4, 6, 9, 14, 16, 19, 24, 26, 104, 1004, … @decimal 0.4, 0.6, 0.9, 1.4, 1.6, 1.9, 2.4, 2.6, 10.4, 100.4, 1000.4, …</pluralRule>
+        </pluralRules>
+
+        <!-- 3: zero,one,other -->
+
+        <pluralRules locales=""lv prg"">
+            <pluralRule count=""zero"">n % 10 = 0 or n % 100 = 11..19 or v = 2 and f % 100 = 11..19 @integer 0, 10~20, 30, 40, 50, 60, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+            <pluralRule count=""one"">n % 10 = 1 and n % 100 != 11 or v = 2 and f % 10 = 1 and f % 100 != 11 or v != 2 and f % 10 = 1 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 0.1, 1.0, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1, …</pluralRule>
+            <pluralRule count=""other""> @integer 2~9, 22~29, 102, 1002, … @decimal 0.2~0.9, 1.2~1.9, 10.2, 100.2, 1000.2, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""lag"">
+            <pluralRule count=""zero"">n = 0 @integer 0 @decimal 0.0, 0.00, 0.000, 0.0000</pluralRule>
+            <pluralRule count=""one"">i = 0,1 and n != 0 @integer 1 @decimal 0.1~1.6</pluralRule>
+            <pluralRule count=""other""> @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 2.0~3.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""ksh"">
+            <pluralRule count=""zero"">n = 0 @integer 0 @decimal 0.0, 0.00, 0.000, 0.0000</pluralRule>
+            <pluralRule count=""one"">n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000</pluralRule>
+            <pluralRule count=""other""> @integer 2~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+
+        <!-- 3: one,two,other -->
+
+        <pluralRules locales=""he iw"">
+            <pluralRule count=""one"">i = 1 and v = 0 or i = 0 and v != 0 @integer 1 @decimal 0.0~0.9, 0.00~0.05</pluralRule>
+            <pluralRule count=""two"">i = 2 and v = 0 @integer 2</pluralRule>
+            <pluralRule count=""other""> @integer 0, 3~17, 100, 1000, 10000, 100000, 1000000, … @decimal 1.0~2.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""iu naq sat se sma smi smj smn sms"">
+            <pluralRule count=""one"">n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000</pluralRule>
+            <pluralRule count=""two"">n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000</pluralRule>
+            <pluralRule count=""other""> @integer 0, 3~17, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+
+        <!-- 3: one,few,other -->
+
+        <pluralRules locales=""shi"">
+            <pluralRule count=""one"">i = 0 or n = 1 @integer 0, 1 @decimal 0.0~1.0, 0.00~0.04</pluralRule>
+            <pluralRule count=""few"">n = 2..10 @integer 2~10 @decimal 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 2.00, 3.00, 4.00, 5.00, 6.00, 7.00, 8.00</pluralRule>
+            <pluralRule count=""other""> @integer 11~26, 100, 1000, 10000, 100000, 1000000, … @decimal 1.1~1.9, 2.1~2.7, 10.1, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""mo ro"">
+            <pluralRule count=""one"">i = 1 and v = 0 @integer 1</pluralRule>
+            <pluralRule count=""few"">v != 0 or n = 0 or n != 1 and n % 100 = 1..19 @integer 0, 2~16, 101, 1001, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+            <pluralRule count=""other""> @integer 20~35, 100, 1000, 10000, 100000, 1000000, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""bs hr sh sr"">
+            <pluralRule count=""one"">v = 0 and i % 10 = 1 and i % 100 != 11 or f % 10 = 1 and f % 100 != 11 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 0.1, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1, …</pluralRule>
+            <pluralRule count=""few"">v = 0 and i % 10 = 2..4 and i % 100 != 12..14 or f % 10 = 2..4 and f % 100 != 12..14 @integer 2~4, 22~24, 32~34, 42~44, 52~54, 62, 102, 1002, … @decimal 0.2~0.4, 1.2~1.4, 2.2~2.4, 3.2~3.4, 4.2~4.4, 5.2, 10.2, 100.2, 1000.2, …</pluralRule>
+            <pluralRule count=""other""> @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 0.5~1.0, 1.5~2.0, 2.5~2.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+
+        <!-- 3: one,many,other -->
+
+        <pluralRules locales=""fr"">
+            <pluralRule count=""one"">i = 0,1 @integer 0, 1 @decimal 0.0~1.5</pluralRule>
+            <pluralRule count=""many"">e = 0 and i != 0 and i % 1000000 = 0 and v = 0 or e != 0..5 @integer 1000000, 1c6, 2c6, 3c6, 4c6, 5c6, 6c6, … @decimal 1.0000001c6, 1.1c6, 2.0000001c6, 2.1c6, 3.0000001c6, 3.1c6, …</pluralRule>
+            <pluralRule count=""other""> @integer 2~17, 100, 1000, 10000, 100000, 1c3, 2c3, 3c3, 4c3, 5c3, 6c3, … @decimal 2.0~3.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, 1.0001c3, 1.1c3, 2.0001c3, 2.1c3, 3.0001c3, 3.1c3, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""pt"">
+            <pluralRule count=""one"">i = 0..1 @integer 0, 1 @decimal 0.0~1.5</pluralRule>
+            <pluralRule count=""many"">e = 0 and i != 0 and i % 1000000 = 0 and v = 0 or e != 0..5 @integer 1000000, 1c6, 2c6, 3c6, 4c6, 5c6, 6c6, … @decimal 1.0000001c6, 1.1c6, 2.0000001c6, 2.1c6, 3.0000001c6, 3.1c6, …</pluralRule>
+            <pluralRule count=""other""> @integer 2~17, 100, 1000, 10000, 100000, 1c3, 2c3, 3c3, 4c3, 5c3, 6c3, … @decimal 2.0~3.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, 1.0001c3, 1.1c3, 2.0001c3, 2.1c3, 3.0001c3, 3.1c3, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""ca it pt_PT vec"">
+            <pluralRule count=""one"">i = 1 and v = 0 @integer 1</pluralRule>
+            <pluralRule count=""many"">e = 0 and i != 0 and i % 1000000 = 0 and v = 0 or e != 0..5 @integer 1000000, 1c6, 2c6, 3c6, 4c6, 5c6, 6c6, … @decimal 1.0000001c6, 1.1c6, 2.0000001c6, 2.1c6, 3.0000001c6, 3.1c6, …</pluralRule>
+            <pluralRule count=""other""> @integer 0, 2~16, 100, 1000, 10000, 100000, 1c3, 2c3, 3c3, 4c3, 5c3, 6c3, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, 1.0001c3, 1.1c3, 2.0001c3, 2.1c3, 3.0001c3, 3.1c3, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""es"">
+            <pluralRule count=""one"">n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000</pluralRule>
+            <pluralRule count=""many"">e = 0 and i != 0 and i % 1000000 = 0 and v = 0 or e != 0..5 @integer 1000000, 1c6, 2c6, 3c6, 4c6, 5c6, 6c6, … @decimal 1.0000001c6, 1.1c6, 2.0000001c6, 2.1c6, 3.0000001c6, 3.1c6, …</pluralRule>
+            <pluralRule count=""other""> @integer 0, 2~16, 100, 1000, 10000, 100000, 1c3, 2c3, 3c3, 4c3, 5c3, 6c3, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, 1.0001c3, 1.1c3, 2.0001c3, 2.1c3, 3.0001c3, 3.1c3, …</pluralRule>
+        </pluralRules>
+
+        <!-- 4: one,two,few,other -->
+
+        <pluralRules locales=""gd"">
+            <pluralRule count=""one"">n = 1,11 @integer 1, 11 @decimal 1.0, 11.0, 1.00, 11.00, 1.000, 11.000, 1.0000</pluralRule>
+            <pluralRule count=""two"">n = 2,12 @integer 2, 12 @decimal 2.0, 12.0, 2.00, 12.00, 2.000, 12.000, 2.0000</pluralRule>
+            <pluralRule count=""few"">n = 3..10,13..19 @integer 3~10, 13~19 @decimal 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 3.00</pluralRule>
+            <pluralRule count=""other""> @integer 0, 20~34, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.1, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""sl"">
+            <pluralRule count=""one"">v = 0 and i % 100 = 1 @integer 1, 101, 201, 301, 401, 501, 601, 701, 1001, …</pluralRule>
+            <pluralRule count=""two"">v = 0 and i % 100 = 2 @integer 2, 102, 202, 302, 402, 502, 602, 702, 1002, …</pluralRule>
+            <pluralRule count=""few"">v = 0 and i % 100 = 3..4 or v != 0 @integer 3, 4, 103, 104, 203, 204, 303, 304, 403, 404, 503, 504, 603, 604, 703, 704, 1003, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+            <pluralRule count=""other""> @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""dsb hsb"">
+            <pluralRule count=""one"">v = 0 and i % 100 = 1 or f % 100 = 1 @integer 1, 101, 201, 301, 401, 501, 601, 701, 1001, … @decimal 0.1, 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, 7.1, 10.1, 100.1, 1000.1, …</pluralRule>
+            <pluralRule count=""two"">v = 0 and i % 100 = 2 or f % 100 = 2 @integer 2, 102, 202, 302, 402, 502, 602, 702, 1002, … @decimal 0.2, 1.2, 2.2, 3.2, 4.2, 5.2, 6.2, 7.2, 10.2, 100.2, 1000.2, …</pluralRule>
+            <pluralRule count=""few"">v = 0 and i % 100 = 3..4 or f % 100 = 3..4 @integer 3, 4, 103, 104, 203, 204, 303, 304, 403, 404, 503, 504, 603, 604, 703, 704, 1003, … @decimal 0.3, 0.4, 1.3, 1.4, 2.3, 2.4, 3.3, 3.4, 4.3, 4.4, 5.3, 5.4, 6.3, 6.4, 7.3, 7.4, 10.3, 100.3, 1000.3, …</pluralRule>
+            <pluralRule count=""other""> @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 0.5~1.0, 1.5~2.0, 2.5~2.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+
+        <!-- 4: one,few,many,other -->
+
+        <pluralRules locales=""cs sk"">
+            <pluralRule count=""one"">i = 1 and v = 0 @integer 1</pluralRule>
+            <pluralRule count=""few"">i = 2..4 and v = 0 @integer 2~4</pluralRule>
+            <pluralRule count=""many"">v != 0   @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+            <pluralRule count=""other""> @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""pl"">
+            <pluralRule count=""one"">i = 1 and v = 0 @integer 1</pluralRule>
+            <pluralRule count=""few"">v = 0 and i % 10 = 2..4 and i % 100 != 12..14 @integer 2~4, 22~24, 32~34, 42~44, 52~54, 62, 102, 1002, …</pluralRule>
+            <pluralRule count=""many"">v = 0 and i != 1 and i % 10 = 0..1 or v = 0 and i % 10 = 5..9 or v = 0 and i % 100 = 12..14 @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, …</pluralRule>
+            <pluralRule count=""other"">   @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""be"">
+            <pluralRule count=""one"">n % 10 = 1 and n % 100 != 11 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 1.0, 21.0, 31.0, 41.0, 51.0, 61.0, 71.0, 81.0, 101.0, 1001.0, …</pluralRule>
+            <pluralRule count=""few"">n % 10 = 2..4 and n % 100 != 12..14 @integer 2~4, 22~24, 32~34, 42~44, 52~54, 62, 102, 1002, … @decimal 2.0, 3.0, 4.0, 22.0, 23.0, 24.0, 32.0, 33.0, 102.0, 1002.0, …</pluralRule>
+            <pluralRule count=""many"">n % 10 = 0 or n % 10 = 5..9 or n % 100 = 11..14 @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+            <pluralRule count=""other"">   @decimal 0.1~0.9, 1.1~1.7, 10.1, 100.1, 1000.1, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""lt"">
+            <pluralRule count=""one"">n % 10 = 1 and n % 100 != 11..19 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, … @decimal 1.0, 21.0, 31.0, 41.0, 51.0, 61.0, 71.0, 81.0, 101.0, 1001.0, …</pluralRule>
+            <pluralRule count=""few"">n % 10 = 2..9 and n % 100 != 11..19 @integer 2~9, 22~29, 102, 1002, … @decimal 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 22.0, 102.0, 1002.0, …</pluralRule>
+            <pluralRule count=""many"">f != 0   @decimal 0.1~0.9, 1.1~1.7, 10.1, 100.1, 1000.1, …</pluralRule>
+            <pluralRule count=""other""> @integer 0, 10~20, 30, 40, 50, 60, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""ru uk"">
+            <pluralRule count=""one"">v = 0 and i % 10 = 1 and i % 100 != 11 @integer 1, 21, 31, 41, 51, 61, 71, 81, 101, 1001, …</pluralRule>
+            <pluralRule count=""few"">v = 0 and i % 10 = 2..4 and i % 100 != 12..14 @integer 2~4, 22~24, 32~34, 42~44, 52~54, 62, 102, 1002, …</pluralRule>
+            <pluralRule count=""many"">v = 0 and i % 10 = 0 or v = 0 and i % 10 = 5..9 or v = 0 and i % 100 = 11..14 @integer 0, 5~19, 100, 1000, 10000, 100000, 1000000, …</pluralRule>
+            <pluralRule count=""other"">   @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+
+        <!-- 5: one,two,few,many,other -->
+
+        <pluralRules locales=""br"">
+            <pluralRule count=""one"">n % 10 = 1 and n % 100 != 11,71,91 @integer 1, 21, 31, 41, 51, 61, 81, 101, 1001, … @decimal 1.0, 21.0, 31.0, 41.0, 51.0, 61.0, 81.0, 101.0, 1001.0, …</pluralRule>
+            <pluralRule count=""two"">n % 10 = 2 and n % 100 != 12,72,92 @integer 2, 22, 32, 42, 52, 62, 82, 102, 1002, … @decimal 2.0, 22.0, 32.0, 42.0, 52.0, 62.0, 82.0, 102.0, 1002.0, …</pluralRule>
+            <pluralRule count=""few"">n % 10 = 3..4,9 and n % 100 != 10..19,70..79,90..99 @integer 3, 4, 9, 23, 24, 29, 33, 34, 39, 43, 44, 49, 103, 1003, … @decimal 3.0, 4.0, 9.0, 23.0, 24.0, 29.0, 33.0, 34.0, 103.0, 1003.0, …</pluralRule>
+            <pluralRule count=""many"">n != 0 and n % 1000000 = 0 @integer 1000000, … @decimal 1000000.0, 1000000.00, 1000000.000, 1000000.0000, …</pluralRule>
+            <pluralRule count=""other""> @integer 0, 5~8, 10~20, 100, 1000, 10000, 100000, … @decimal 0.0~0.9, 1.1~1.6, 10.0, 100.0, 1000.0, 10000.0, 100000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""mt"">
+            <pluralRule count=""one"">n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000</pluralRule>
+            <pluralRule count=""two"">n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000</pluralRule>
+            <pluralRule count=""few"">n = 0 or n % 100 = 3..10 @integer 0, 3~10, 103~109, 1003, … @decimal 0.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 103.0, 1003.0, …</pluralRule>
+            <pluralRule count=""many"">n % 100 = 11..19 @integer 11~19, 111~117, 1011, … @decimal 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 111.0, 1011.0, …</pluralRule>
+            <pluralRule count=""other""> @integer 20~35, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.1, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""ga"">
+            <pluralRule count=""one"">n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000</pluralRule>
+            <pluralRule count=""two"">n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000</pluralRule>
+            <pluralRule count=""few"">n = 3..6 @integer 3~6 @decimal 3.0, 4.0, 5.0, 6.0, 3.00, 4.00, 5.00, 6.00, 3.000, 4.000, 5.000, 6.000, 3.0000, 4.0000, 5.0000, 6.0000</pluralRule>
+            <pluralRule count=""many"">n = 7..10 @integer 7~10 @decimal 7.0, 8.0, 9.0, 10.0, 7.00, 8.00, 9.00, 10.00, 7.000, 8.000, 9.000, 10.000, 7.0000, 8.0000, 9.0000, 10.0000</pluralRule>
+            <pluralRule count=""other""> @integer 0, 11~25, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~0.9, 1.1~1.6, 10.1, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""gv"">
+            <pluralRule count=""one"">v = 0 and i % 10 = 1 @integer 1, 11, 21, 31, 41, 51, 61, 71, 101, 1001, …</pluralRule>
+            <pluralRule count=""two"">v = 0 and i % 10 = 2 @integer 2, 12, 22, 32, 42, 52, 62, 72, 102, 1002, …</pluralRule>
+            <pluralRule count=""few"">v = 0 and i % 100 = 0,20,40,60,80 @integer 0, 20, 40, 60, 80, 100, 120, 140, 1000, 10000, 100000, 1000000, …</pluralRule>
+            <pluralRule count=""many"">v != 0   @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+            <pluralRule count=""other""> @integer 3~10, 13~19, 23, 103, 1003, …</pluralRule>
+        </pluralRules>
+
+        <!-- 6: zero,one,two,few,many,other -->
+
+        <pluralRules locales=""kw"">
+            <pluralRule count=""zero"">n = 0 @integer 0 @decimal 0.0, 0.00, 0.000, 0.0000</pluralRule>
+            <pluralRule count=""one"">n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000</pluralRule>
+            <pluralRule count=""two"">n % 100 = 2,22,42,62,82 or n % 1000 = 0 and n % 100000 = 1000..20000,40000,60000,80000 or n != 0 and n % 1000000 = 100000 @integer 2, 22, 42, 62, 82, 102, 122, 142, 1000, 10000, 100000, … @decimal 2.0, 22.0, 42.0, 62.0, 82.0, 102.0, 122.0, 142.0, 1000.0, 10000.0, 100000.0, …</pluralRule>
+            <pluralRule count=""few"">n % 100 = 3,23,43,63,83 @integer 3, 23, 43, 63, 83, 103, 123, 143, 1003, … @decimal 3.0, 23.0, 43.0, 63.0, 83.0, 103.0, 123.0, 143.0, 1003.0, …</pluralRule>
+            <pluralRule count=""many"">n != 1 and n % 100 = 1,21,41,61,81 @integer 21, 41, 61, 81, 101, 121, 141, 161, 1001, … @decimal 21.0, 41.0, 61.0, 81.0, 101.0, 121.0, 141.0, 161.0, 1001.0, …</pluralRule>
+            <pluralRule count=""other""> @integer 4~19, 100, 1004, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.1, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""ar ars"">
+            <pluralRule count=""zero"">n = 0 @integer 0 @decimal 0.0, 0.00, 0.000, 0.0000</pluralRule>
+            <pluralRule count=""one"">n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000</pluralRule>
+            <pluralRule count=""two"">n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000</pluralRule>
+            <pluralRule count=""few"">n % 100 = 3..10 @integer 3~10, 103~110, 1003, … @decimal 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 103.0, 1003.0, …</pluralRule>
+            <pluralRule count=""many"">n % 100 = 11..99 @integer 11~26, 111, 1011, … @decimal 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 111.0, 1011.0, …</pluralRule>
+            <pluralRule count=""other""> @integer 100~102, 200~202, 300~302, 400~402, 500~502, 600, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.1, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+        <pluralRules locales=""cy"">
+            <pluralRule count=""zero"">n = 0 @integer 0 @decimal 0.0, 0.00, 0.000, 0.0000</pluralRule>
+            <pluralRule count=""one"">n = 1 @integer 1 @decimal 1.0, 1.00, 1.000, 1.0000</pluralRule>
+            <pluralRule count=""two"">n = 2 @integer 2 @decimal 2.0, 2.00, 2.000, 2.0000</pluralRule>
+            <pluralRule count=""few"">n = 3 @integer 3 @decimal 3.0, 3.00, 3.000, 3.0000</pluralRule>
+            <pluralRule count=""many"">n = 6 @integer 6 @decimal 6.0, 6.00, 6.000, 6.0000</pluralRule>
+            <pluralRule count=""other""> @integer 4, 5, 7~20, 100, 1000, 10000, 100000, 1000000, … @decimal 0.1~0.9, 1.1~1.7, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …</pluralRule>
+        </pluralRules>
+    </plurals>
+</supplementalData>
+";
     }
 }

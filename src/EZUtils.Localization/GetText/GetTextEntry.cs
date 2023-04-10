@@ -2,6 +2,7 @@ namespace EZUtils.Localization
 {
     using System;
     using System.Collections.Generic;
+    using System.Globalization;
     using System.Linq;
     using System.Text;
 
@@ -14,7 +15,6 @@ namespace EZUtils.Localization
             "msgid_plural",
             "msgstr",
         };
-        private readonly IReadOnlyList<GetTextLine> lines;
 
         public GetTextEntryHeader Header { get; }
         public string Context { get; }
@@ -23,6 +23,7 @@ namespace EZUtils.Localization
         //null if plural
         public string Value { get; }
         public IReadOnlyList<string> PluralValues { get; }
+        public IReadOnlyList<GetTextLine> Lines { get; }
 
         //is only public because of the builder. not many good alternatives.
         //but since users should prefer the builder over this, not really a problem.
@@ -35,7 +36,7 @@ namespace EZUtils.Localization
             string value,
             IReadOnlyList<string> pluralValues)
         {
-            this.lines = lines;
+            Lines = lines;
             Header = header;
             Context = context;
             Id = id;
@@ -43,6 +44,8 @@ namespace EZUtils.Localization
             Value = value;
             PluralValues = pluralValues;
         }
+
+        public string GetFormattedValue(CultureInfo locale, params object[] args) => string.Format(locale, Value, args);
 
         public static GetTextEntry Parse(IReadOnlyList<GetTextLine> lines)
         {
@@ -72,7 +75,7 @@ namespace EZUtils.Localization
                 {
                     if (currentKeyword == null) throw new InvalidOperationException(
                         $"Found a string-only line without a prior keyworded line: {line.RawLine}");
-                    currentKeyword.Append(value);
+                    _ = currentKeyword.Append(value);
                 }
             }
 

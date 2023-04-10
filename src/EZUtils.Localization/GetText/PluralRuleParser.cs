@@ -35,10 +35,10 @@ namespace EZUtils.Localization
                 {
                     index += 2;
                     SkipSpaces();
-                    
+
                     expression = Expression.OrElse(expression, ReadAndCondition());
                 }
-                
+
                 return expression;
             }
 
@@ -49,17 +49,17 @@ namespace EZUtils.Localization
                 {
                     index += 3;
                     SkipSpaces();
-                    
+
                     andCondition = Expression.AndAlso(andCondition, ReadRelation());
                 }
-                
+
                 return andCondition;
             }
 
             Expression ReadRelation()
             {
                 Expression expr = ReadExpr();
-                
+
                 bool isEqualityOperation;
                 if (condition[index] == '=')
                 {
@@ -73,7 +73,7 @@ namespace EZUtils.Localization
                 }
                 else throw new InvalidOperationException($"Expected '=' or '!='. Was '{condition.Substring(index, 2)}'.");
                 SkipSpaces();
-                
+
                 Expression relation = ReadRangeListAndConstructRelation(expr, isEqualityOperation);
 
                 while (index < condition.Length && condition[index] == ',')
@@ -82,7 +82,7 @@ namespace EZUtils.Localization
                     SkipSpaces();
                     relation = Expression.OrElse(relation, ReadRangeListAndConstructRelation(expr, isEqualityOperation));
                 }
-                
+
                 return relation;
             }
 
@@ -91,7 +91,7 @@ namespace EZUtils.Localization
                 string operandName = condition[index++].ToString();
                 SkipSpaces();
 
-                Expression expr = 
+                Expression expr =
                     operandName == "n" ? Expression.Field(operandsParameter, nameof(Operands.n)) :
                     operandName == "i" ? Expression.Field(operandsParameter, nameof(Operands.i)) :
                     operandName == "v" ? Expression.Field(operandsParameter, nameof(Operands.v)) :
@@ -102,16 +102,16 @@ namespace EZUtils.Localization
                     operandName == "c" ? Expression.Constant(0m) :
                     operandName == "e" ? (Expression)Expression.Constant(0m) :
                     throw new InvalidOperationException($"Unknown operand '{operandName}'");
-                
+
                 if (condition[index] == '%')
                 {
                     index++;
                     SkipSpaces();
-                    
+
                     Expression value = ReadValue();
                     expr = Expression.Modulo(expr, value);
                 }
-                
+
                 return expr;
             }
 
@@ -119,12 +119,12 @@ namespace EZUtils.Localization
             {
                 ConstantExpression firstValue = ReadValue();
                 Expression rangeList;
-                
+
                 if (index < condition.Length && condition[index] == '.' && condition[index + 1] == '.')
                 {
                     index += 2;
                     SkipSpaces(); //may not be necessary idk
-                    
+
                     ConstantExpression secondValue = ReadValue();
                     rangeList = Expression.AndAlso(
                         Expression.GreaterThanOrEqual(expr, firstValue),
@@ -134,12 +134,12 @@ namespace EZUtils.Localization
                 {
                     rangeList = Expression.Equal(expr, firstValue);
                 }
-                
+
                 if (!isEqualityOperation)
                 {
                     rangeList = Expression.Not(rangeList);
                 }
-                
+
                 return rangeList;
             }
 
@@ -151,7 +151,7 @@ namespace EZUtils.Localization
 
                 while (index + count < condition.Length && char.IsDigit(condition, index + count)) count++;
                 if (count == 0) throw new InvalidOperationException($"Expected digit. Got '{condition[index]}'.");
-                
+
                 ConstantExpression valueExpression = Expression.Constant(decimal.Parse(condition.Substring(index, count), CultureInfo.InvariantCulture));
                 index += count;
                 SkipSpaces();
@@ -186,7 +186,7 @@ namespace EZUtils.Localization
         private static IEnumerable<decimal> ParseRawSingleSample(string sample)
         {
             if (sample == "..." || sample == "…") yield break;
-            
+
             decimal[] split = sample
                 .Split('~')
                 .Select(s => s.Trim())
@@ -200,10 +200,10 @@ namespace EZUtils.Localization
                 yield return split[0];
                 yield break;
             }
-            
+
             int decimalDigits = decimal.GetBits(split[0])[3] >> ScaleShift & 31;
             decimal increment = increments[decimalDigits];
-            for (decimal i = split[0]; i <= split[1]; i+= increment)
+            for (decimal i = split[0]; i <= split[1]; i += increment)
             {
                 yield return i;
             }
