@@ -75,7 +75,7 @@ namespace EZUtils.Localization
         //TODO: when extracting, add a comment for real format.
         //while we could hypothetically maintain the actual format and do some magic to swap numbers back in,
         //it would be nice to have a more universally compatible po file (granted we do non-standard plurals)
-        //TODO: perhaps we could try to generate plural rules that, while not equivalent, are close.
+        //TODO: perhaps we could try to generate plural forms that, while not equivalent, are close.
         public string T(FormattableString id) => T(new StringHelper(id));
         private string T(StringHelper id) => id.GetEntryValue(
             GetSelectedLocale(),

@@ -60,6 +60,14 @@ namespace EZUtils.Localization
             }
             _ = sb.Append("0;\n");
 
+            if (Locale.PluralRules.Zero is string zero) _ = sb.Append($"X-PluralRules-Zero: {zero}\n");
+            if (Locale.PluralRules.One is string one) _ = sb.Append($"X-PluralRules-One: {one}\n");
+            if (Locale.PluralRules.Two is string two) _ = sb.Append($"X-PluralRules-Two: {two}\n");
+            if (Locale.PluralRules.Few is string few) _ = sb.Append($"X-PluralRules-Few: {few}\n");
+            if (Locale.PluralRules.Many is string many) _ = sb.Append($"X-PluralRules-Many: {many}\n");
+            if (Locale.PluralRules.Other is string other) _ = sb.Append($"X-PluralRules-Other: {other}\n");
+            if (Locale.UseSpecialZero) _ = sb.Append($"X-PluralRules-SpecialZero: \n");
+
             GetTextEntry entry = new GetTextEntryBuilder()
                 .ConfigureId(string.Empty)
                 .ConfigureValue(sb.ToString())
@@ -78,10 +86,23 @@ namespace EZUtils.Localization
                 //is basically the most important field
                 : throw new InvalidOperationException($"Language field not found.");
 
-            //TODO: read plural rules
-            Locale locale = new Locale(cultureInfo);
+            PluralRules pluralRules = new PluralRules(
+                zero: GetPluralRule("Zero"),
+                one: GetPluralRule("One"),
+                two: GetPluralRule("Two"),
+                few: GetPluralRule("Few"),
+                many: GetPluralRule("Many"),
+                other: GetPluralRule("Other"));
+            bool useSpecialZero = GetPluralRule("SpecialZero") != null;
+
+            Locale locale = new Locale(cultureInfo, pluralRules, useSpecialZero);
             GetTextHeader result = new GetTextHeader(locale);
             return result;
+
+            string GetPluralRule(string kind)
+                => Regex.Match(entry.Value, $"(?i)X-PluralRules-{kind}: ([^\n]+)") is Match m && m.Success
+                    ? match.Groups[1].Value
+                    : null;
         }
 
         private static CultureInfo GetCultureInfoFromGetTextLanguage(string language, string country, string variant)
