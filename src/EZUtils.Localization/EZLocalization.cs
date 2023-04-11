@@ -91,6 +91,10 @@ namespace EZUtils.Localization
         //TODO: plural implementation? kinda hard to do since this is recursive.
         //perhaps we need to exclude plural ones in the recursive one, and have the plural overload not be recursive
         //still gotta decide how to get the value inside. easiest is {0}
+        //but ofc we have plural forms to consider, so...
+        //locplural:one/id:type2:type3:type4
+        //and which one each maps to depends on native locale
+        //and will need to escape : with ::, ofc only if a localplural: prefix
         public void TranslateElementTree(VisualElement rootElement)
             //descendents includes element, as well
             => rootElement.Query().Descendents<VisualElement>().ForEach(element =>
@@ -117,9 +121,172 @@ namespace EZUtils.Localization
                     catalog.TrackRetranslatable(element, () => labelProperty.SetValue(element, T(lbOriginalValue)));
                 }
             });
-        public string T(string id) => catalog.Catalog.T(id);
         public void TranslateWindowTitle(EditorWindow window, string titleText)
             => catalog.TrackRetranslatable(window, () => window.titleContent.text = T(titleText));
+
+        public string T(RawString id) => catalog.Catalog.T(id);
+        public string T(FormattableString id) => catalog.Catalog.T(id);
+        public string T(string context, RawString id) => catalog.Catalog.T(context, id);
+        public string T(string context, FormattableString id) => catalog.Catalog.T(context, id);
+
+        public string T(
+            RawString id,
+            decimal count,
+            FormattableString zero = default,
+            FormattableString two = default,
+            FormattableString few = default,
+            FormattableString many = default,
+            FormattableString other = default,
+            RawString specialZero = default) => catalog.Catalog.T(
+                id: id,
+                count: count,
+                zero: zero,
+                two: two,
+                few: few,
+                many: many,
+                other: other,
+                specialZero: specialZero);
+        public string T(
+            FormattableString id,
+            decimal count,
+            FormattableString zero = default,
+            FormattableString two = default,
+            FormattableString few = default,
+            FormattableString many = default,
+            FormattableString other = default,
+            FormattableString specialZero = default) => catalog.Catalog.T(
+                id: id,
+                count: count,
+                zero: zero,
+                two: two,
+                few: few,
+                many: many,
+                other: other,
+                specialZero: specialZero);
+        public string T(
+            string context,
+            RawString id,
+            decimal count,
+            FormattableString zero = default,
+            FormattableString two = default,
+            FormattableString few = default,
+            FormattableString many = default,
+            FormattableString other = default,
+            RawString specialZero = default) => catalog.Catalog.T(
+                context: context,
+                id: id,
+                count: count,
+                zero: zero,
+                two: two,
+                few: few,
+                many: many,
+                other: other,
+                specialZero: specialZero);
+        public string T(
+            string context,
+            FormattableString id,
+            decimal count,
+            FormattableString zero = default,
+            FormattableString two = default,
+            FormattableString few = default,
+            FormattableString many = default,
+            FormattableString other = default,
+            FormattableString specialZero = default) => catalog.Catalog.T(
+                context: context,
+                id: id,
+                count: count,
+                zero: zero,
+                two: two,
+                few: few,
+                many: many,
+                other: other,
+                specialZero: specialZero);
+
+        public string T(
+            FormattableString otherPluralForm,
+            decimal count) => catalog.Catalog.T(
+                otherPluralForm: otherPluralForm,
+                count: count);
+        public string T(
+            string context,
+            FormattableString otherPluralForm,
+            decimal count) => catalog.Catalog.T(
+                context: context,
+                otherPluralForm: otherPluralForm,
+                count: count);
+
+        public string T(
+            RawString id,
+            decimal count,
+            FormattableString otherPluralForm,
+            RawString specialZero) => catalog.Catalog.T(
+                id: id,
+                count: count,
+                otherPluralForm: otherPluralForm,
+                specialZero: specialZero);
+        public string T(
+            FormattableString id,
+            decimal count,
+            FormattableString otherPluralForm,
+            FormattableString specialZero) => catalog.Catalog.T(
+                id: id,
+                count: count,
+                otherPluralForm: otherPluralForm,
+                specialZero: specialZero);
+        public string T(
+            RawString id,
+            decimal count,
+            FormattableString otherPluralForm) => catalog.Catalog.T(
+                id: id,
+                count: count,
+                otherPluralForm: otherPluralForm);
+        public string T(
+            FormattableString id,
+            decimal count,
+            FormattableString otherPluralForm) => catalog.Catalog.T(
+                id: id,
+                count: count,
+                otherPluralForm: otherPluralForm);
+        public string T(
+            string context,
+            RawString id,
+            decimal count,
+            FormattableString otherPluralForm,
+            RawString specialZero) => catalog.Catalog.T(
+                context: context,
+                id: id,
+                count: count,
+                otherPluralForm: otherPluralForm,
+                specialZero: specialZero);
+        public string T(
+            string context,
+            FormattableString id,
+            decimal count,
+            FormattableString otherPluralForm,
+            FormattableString specialZero) => catalog.Catalog.T(
+                context: context,
+                id: id,
+                count: count,
+                otherPluralForm: otherPluralForm,
+                specialZero: specialZero);
+        public string T(
+            string context,
+            RawString id,
+            decimal count,
+            FormattableString otherPluralForm) => catalog.Catalog.T(
+                context: context,
+                id: id,
+                count: count,
+                otherPluralForm: otherPluralForm);
+        public string T(
+            string context,
+            FormattableString id,
+            decimal count,
+            FormattableString otherPluralForm) => catalog.Catalog.T(
+                context: context,
+                id: id,
+                count: count,
+                otherPluralForm: otherPluralForm);
 
         //when the language is changed, we get a domain reload
         //so tracking language changes requires persisting it somewhere and looking it up, all from a cctor

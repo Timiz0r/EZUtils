@@ -71,15 +71,17 @@ namespace EZUtils.Localization
             return nativeLocale;
         }
 
-        public string T(RawString id) => T(new StringHelper(id));
+        public string T(RawString id) => T(context: null, id: new StringHelper(id));
+        public string T(string context, RawString id) => T(context, new StringHelper(id));
         //TODO: when extracting, add a comment for real format.
         //while we could hypothetically maintain the actual format and do some magic to swap numbers back in,
         //it would be nice to have a more universally compatible po file (granted we do non-standard plurals)
         //TODO: perhaps we could try to generate plural forms that, while not equivalent, are close.
-        public string T(FormattableString id) => T(new StringHelper(id));
-        private string T(StringHelper id) => id.GetEntryValue(
+        public string T(FormattableString id) => T(context: null, id: new StringHelper(id));
+        public string T(string context, FormattableString id) => T(context, new StringHelper(id));
+        private string T(string context, StringHelper id) => id.GetEntryValue(
             GetSelectedLocale(),
-            FindEntry(id.GetUnformattedValue())?.Id);
+            FindEntry(id.GetUnformattedValue(), context: context)?.Id);
 
         //for plural methods, aside from these big ones, we dont use optional parameters
         //they make overloading weird and hard to reason about.
@@ -119,6 +121,46 @@ namespace EZUtils.Localization
                 many: new StringHelper(many),
                 other: new StringHelper(other),
                 specialZero: new StringHelper(specialZero));
+        public string T(
+            string context,
+            RawString id,
+            decimal count,
+            FormattableString zero = default,
+            FormattableString two = default,
+            FormattableString few = default,
+            FormattableString many = default,
+            FormattableString other = default,
+            RawString specialZero = default)
+            => T(
+                context: context,
+                id: new StringHelper(id),
+                count: count,
+                zero: new StringHelper(zero),
+                two: new StringHelper(two),
+                few: new StringHelper(few),
+                many: new StringHelper(many),
+                other: new StringHelper(other),
+                specialZero: new StringHelper(specialZero));
+        public string T(
+            string context,
+            FormattableString id,
+            decimal count,
+            FormattableString zero = default,
+            FormattableString two = default,
+            FormattableString few = default,
+            FormattableString many = default,
+            FormattableString other = default,
+            FormattableString specialZero = default)
+            => T(
+                context: context,
+                id: new StringHelper(id),
+                count: count,
+                zero: new StringHelper(zero),
+                two: new StringHelper(two),
+                few: new StringHelper(few),
+                many: new StringHelper(many),
+                other: new StringHelper(other),
+                specialZero: new StringHelper(specialZero));
         //design-wise, one thought was to not allow these, since we expect at least one other plural form
         //for (native) languages with just one form (other), you'd typically provide the same value in id and plural
         //but this is convenient, so keeping it, even if it may actually be user error, since english is the usual
@@ -129,6 +171,16 @@ namespace EZUtils.Localization
             FormattableString otherPluralForm,
             decimal count)
             => T(
+                //note that since such languages only have other and not one, id's string will never be returned
+                id: new StringHelper(otherPluralForm),
+                count: count,
+                other: new StringHelper(otherPluralForm));
+        public string T(
+            string context,
+            FormattableString otherPluralForm,
+            decimal count)
+            => T(
+                context: context,
                 //note that since such languages only have other and not one, id's string will never be returned
                 id: new StringHelper(otherPluralForm),
                 count: count,
@@ -174,11 +226,56 @@ namespace EZUtils.Localization
                 id: new StringHelper(id),
                 count: count,
                 other: new StringHelper(otherPluralForm));
+        public string T(
+            string context,
+            RawString id,
+            decimal count,
+            FormattableString otherPluralForm,
+            RawString specialZero)
+            => T(
+                context: context,
+                id: new StringHelper(id),
+                count: count,
+                other: new StringHelper(otherPluralForm),
+                specialZero: new StringHelper(specialZero));
+        public string T(
+            string context,
+            FormattableString id,
+            decimal count,
+            FormattableString otherPluralForm,
+            FormattableString specialZero)
+            => T(
+                context: context,
+                id: new StringHelper(id),
+                count: count,
+                other: new StringHelper(otherPluralForm),
+                specialZero: new StringHelper(specialZero));
+        public string T(
+            string context,
+            RawString id,
+            decimal count,
+            FormattableString otherPluralForm)
+            => T(
+                context: context,
+                id: new StringHelper(id),
+                count: count,
+                other: new StringHelper(otherPluralForm));
+        public string T(
+            string context,
+            FormattableString id,
+            decimal count,
+            FormattableString otherPluralForm)
+            => T(
+                context: context,
+                id: new StringHelper(id),
+                count: count,
+                other: new StringHelper(otherPluralForm));
 
         //PluralStringHelper and these private methods give us a common and performant common implementation
         //the public methods contain a mix of normal strings and formattable strings to cover the expected
         //cases of formattability performantly
         private string T(
+            string context,
             StringHelper id,
             decimal count,
             StringHelper zero = default,
@@ -191,16 +288,40 @@ namespace EZUtils.Localization
             Locale selectedLocale = GetSelectedLocale();
             PluralType pluralType = selectedLocale.PluralRules.Evaluate(count, out int index);
 
-            GetTextEntry entry = FindEntry(id.GetUnformattedValue());
+            string idValue = id.GetUnformattedValue();
+            GetTextEntry entry = FindEntry(id: idValue, context: context);
             string targetEntryString;
             StringHelper targetStringHelper;
-            if (count == 0m && selectedLocale.UseSpecialZero)
+            if (count == 0m
+                && selectedLocale.UseSpecialZero
+                //if a po file is marked with special zero, there can be an additional, optional plural value for special zero
+                && entry.PluralValues.Count == selectedLocale.PluralRules.Count + 1
+                && entry.PluralValues[entry.PluralValues.Count - 1] is string specialZeroValue
+                && !string.IsNullOrEmpty(specialZeroValue))
             {
-                //if a po file is marked with special zero, we specify that the last plural value is the special zero one
-                targetEntryString = entry.PluralValues[entry.PluralValues.Count - 1];
+                targetEntryString = specialZeroValue;
                 targetStringHelper = specialZero;
             }
-            else if (pluralType != PluralType.One)
+            else if (pluralType == PluralType.One)
+            {
+                targetEntryString = entry.Id;
+                targetStringHelper = id;
+            }
+            else if (index >= entry.PluralValues.Count)
+            {
+                //TODO: need a bit more thought on this, since generally prefer not to throw when translating
+                //because it may be on a hot path that really shouldn't disrupt things
+                //one options is to validate and throw on load -- fail fast and up front
+                //another options is to return the error as a string here
+                //another options is to not throw on load but expose the success or failure as a result
+                //will probably do options 2+3, allowing unit tests to work, result to be logged, and not throw anywhere
+                //for this low-pri hot-path code.
+                //TODO: also audit exceptions as a whole for this project
+                throw new InvalidOperationException(
+                    $"Cannot get plural value '{index} ({pluralType})' because only {entry.PluralValues.Count} " +
+                    $"plural values are provided for entry '{idValue}'.");
+            }
+            else
             {
                 targetEntryString = entry.PluralValues[index];
                 switch (pluralType)
@@ -222,25 +343,42 @@ namespace EZUtils.Localization
                         targetStringHelper = other;
                         break;
                     case PluralType.One:
+                        //should not happen given condition above
                         throw new InvalidOperationException("Hit one plural form even though we have a separate hanlding for it here.");
                     default:
-                        //should not realistically happen
+                        //should not realistically happen, but silences static code analysis
                         throw new InvalidOperationException("Hit an unknown plural form");
                 }
-            }
-            else
-            {
-                targetEntryString = entry.Id;
-                targetStringHelper = id;
             }
 
             string result = targetStringHelper.GetEntryValue(selectedLocale, targetEntryString);
             return result;
         }
+        private string T(
+            StringHelper id,
+            decimal count,
+            StringHelper zero = default,
+            StringHelper two = default,
+            StringHelper few = default,
+            StringHelper many = default,
+            StringHelper other = default,
+            StringHelper specialZero = default)
+            => T(
+                context: null,
+                id: id,
+                count: count,
+                zero: zero,
+                two: two,
+                few: few,
+                many: many,
+                other: other,
+                specialZero: specialZero);
 
-        private GetTextEntry FindEntry(string id) => selectedDocument
+        //in our implementation, we dont consider the plural id an actual id
+        //mainly because we dont have an explicit plural id because we accept multiple plural forms
+        private GetTextEntry FindEntry(string id, string context = null) => selectedDocument
             ?.Entries
-            ?.SingleOrDefault(e => e.Context == null && e.PluralId == null && e.Id == id);
+            ?.SingleOrDefault(e => e.Context == context && e.Id == id);
 
         private Locale GetSelectedLocale() => selectedDocument?.Header.Locale ?? nativeLocale;
 

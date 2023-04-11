@@ -4,6 +4,12 @@ namespace EZUtils.Localization
     using System.Collections.Generic;
     using System.Linq;
 
+    //TODO: whenever we get to extracting, let's generate entries with mid-entry comments
+    //however, let's additionally have an option to propagate all mid-entry comments up to the top
+    //editors don't support these, and perhaps libraries don't either
+    //but we do, and, if we ever add our own editor, then it becomes viable to support mid-entry comments
+    //so let's write all the generation to have them, and, by default, propagate them to the top
+    //if a certain attribute is present (much like GenerateCatalogLanguageAttribute), then leave them as-is.
     public class GetTextEntryBuilder
     {
         private readonly List<GetTextLine> lines = new List<GetTextLine>();
