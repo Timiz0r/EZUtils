@@ -20,6 +20,8 @@ namespace EZUtils.Localization
             if (string.IsNullOrEmpty(rule)) return null;
 
             string condition = Regex.Match(rule, "^[^@]+").Value.Trim();
+            //particularly for other kind
+            if (string.IsNullOrWhiteSpace(condition)) return _ => true;
             int index = 0;
 
             Func<Operands, bool> parsedCondition = Expression.Lambda<Func<Operands, bool>>(ReadExpression(), operandsParameter).Compile();

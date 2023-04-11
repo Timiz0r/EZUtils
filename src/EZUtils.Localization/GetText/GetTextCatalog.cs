@@ -287,15 +287,18 @@ namespace EZUtils.Localization
         {
             Locale selectedLocale = GetSelectedLocale();
             PluralType pluralType = selectedLocale.PluralRules.Evaluate(count, out int index);
+            bool eligibleForSpecialZero = count == 0m && selectedLocale.UseSpecialZero;
 
             string idValue = id.GetUnformattedValue();
             GetTextEntry entry = FindEntry(id: idValue, context: context);
+
             string targetEntryString;
             StringHelper targetStringHelper;
-            if (count == 0m
-                && selectedLocale.UseSpecialZero
+
+            if (eligibleForSpecialZero
                 //if a po file is marked with special zero, there can be an additional, optional plural value for special zero
-                && entry.PluralValues.Count == selectedLocale.PluralRules.Count + 1
+                //this line also serves as a null check on entry
+                && entry?.PluralValues?.Count == selectedLocale.PluralRules.Count + 1
                 && entry.PluralValues[entry.PluralValues.Count - 1] is string specialZeroValue
                 && !string.IsNullOrEmpty(specialZeroValue))
             {
@@ -304,10 +307,11 @@ namespace EZUtils.Localization
             }
             else if (pluralType == PluralType.One)
             {
-                targetEntryString = entry.Id;
+                targetEntryString = entry?.Id;
                 targetStringHelper = id;
             }
-            else if (index >= entry.PluralValues.Count)
+            else if (entry?.PluralValues?.Count is int totalPluralValues
+                && index >= totalPluralValues)
             {
                 //TODO: need a bit more thought on this, since generally prefer not to throw when translating
                 //because it may be on a hot path that really shouldn't disrupt things
@@ -323,7 +327,7 @@ namespace EZUtils.Localization
             }
             else
             {
-                targetEntryString = entry.PluralValues[index];
+                targetEntryString = entry?.PluralValues?[index];
                 switch (pluralType)
                 {
                     //for this overload, these are normal strings

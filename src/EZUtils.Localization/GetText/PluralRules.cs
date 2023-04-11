@@ -2,6 +2,7 @@ namespace EZUtils.Localization
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.ObjectModel;
     using System.Globalization;
     using System.Linq;
     using System.Xml.Linq;
@@ -113,7 +114,20 @@ namespace EZUtils.Localization
                     string GetRule(string kind)
                         => pr.Elements("pluralRule").SingleOrDefault(e => e.Attribute("count")?.Value == kind)?.Value;
                 })
-                .ToDictionary(e => CultureInfo.GetCultureInfo(e.l), e => e.pluralRules);
+                .Select(e =>
+                {
+                    try
+                    {
+                        CultureInfo cultureInfo = CultureInfo.GetCultureInfo(e.l);
+                        return (cultureInfo, e.pluralRules);
+                    }
+                    catch (CultureNotFoundException)
+                    {
+                        return (cultureInfo: null, e.pluralRules);
+                    }
+                })
+                .Where(e => e.cultureInfo != null)
+                .ToDictionary(e => e.cultureInfo, e => e.pluralRules);
 
             return rules;
         }
@@ -121,8 +135,8 @@ namespace EZUtils.Localization
         //pluralrules code is meant tobe unity-agnostic, and there isn't a good way to discover the file
         //we could expose a method to initialize them that gets called from unity land, but this is a bit easier
         //and not that bad
-        private static readonly string DefaultPluralRuleFile = @"
-<?xml version=""1.0"" encoding=""UTF-8"" ?>
+        private const string DefaultPluralRuleFile =
+@"<?xml version=""1.0"" encoding=""UTF-8"" ?>
 <!DOCTYPE supplementalData SYSTEM ""../../common/dtd/ldmlSupplemental.dtd"">
 <!--
 Copyright © 1991-2022 Unicode, Inc.

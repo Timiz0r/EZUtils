@@ -30,13 +30,13 @@ namespace EZUtils.Localization
         {
         }
 
-        // override object.Equals
         public override bool Equals(object obj)
             => obj is Locale locale && Equals(locale);
-        public bool Equals(Locale other) => other.CultureInfo == CultureInfo;
-        // override object.GetHashCode
+        public bool Equals(Locale other) => other?.CultureInfo == CultureInfo;
         public override int GetHashCode() => CultureInfo.GetHashCode();
-        public static bool operator ==(Locale lhs, Locale rhs) => lhs.Equals(rhs);
+        public static bool operator ==(Locale lhs, Locale rhs)
+            => ReferenceEquals(lhs, rhs)
+            || (!ReferenceEquals(lhs, null) && lhs.Equals(rhs));
         public static bool operator !=(Locale lhs, Locale rhs) => !(lhs == rhs);
     }
 }
