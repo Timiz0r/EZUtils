@@ -121,172 +121,175 @@ namespace EZUtils.Localization
                     catalog.TrackRetranslatable(element, () => labelProperty.SetValue(element, T(lbOriginalValue)));
                 }
             });
-        public void TranslateWindowTitle(EditorWindow window, string titleText)
+        [LocalizationMethod]
+        public void TranslateWindowTitle(
+            EditorWindow window,
+            [LocalizationParameter(LocalizationParameter.Id)] string titleText)
             => catalog.TrackRetranslatable(window, () => window.titleContent.text = T(titleText));
 
+        [LocalizationMethod]
         public string T(RawString id) => catalog.Catalog.T(id);
+        [LocalizationMethod]
         public string T(FormattableString id) => catalog.Catalog.T(id);
+        [LocalizationMethod]
         public string T(string context, RawString id) => catalog.Catalog.T(context, id);
+        [LocalizationMethod]
         public string T(string context, FormattableString id) => catalog.Catalog.T(context, id);
 
-        public string T(
-            RawString id,
-            decimal count,
-            FormattableString zero = default,
-            FormattableString two = default,
-            FormattableString few = default,
-            FormattableString many = default,
-            FormattableString other = default,
-            RawString specialZero = default) => catalog.Catalog.T(
-                id: id,
-                count: count,
-                zero: zero,
-                two: two,
-                few: few,
-                many: many,
-                other: other,
-                specialZero: specialZero);
+        [LocalizationMethod]
         public string T(
             FormattableString id,
             decimal count,
-            FormattableString zero = default,
-            FormattableString two = default,
-            FormattableString few = default,
-            FormattableString many = default,
-            FormattableString other = default,
-            FormattableString specialZero = default) => catalog.Catalog.T(
-                id: id,
-                count: count,
-                zero: zero,
-                two: two,
-                few: few,
-                many: many,
-                other: other,
-                specialZero: specialZero);
-        public string T(
-            string context,
-            RawString id,
-            decimal count,
-            FormattableString zero = default,
-            FormattableString two = default,
-            FormattableString few = default,
-            FormattableString many = default,
-            FormattableString other = default,
-            RawString specialZero = default) => catalog.Catalog.T(
-                context: context,
-                id: id,
-                count: count,
-                zero: zero,
-                two: two,
-                few: few,
-                many: many,
-                other: other,
-                specialZero: specialZero);
-        public string T(
-            string context,
-            FormattableString id,
-            decimal count,
-            FormattableString zero = default,
-            FormattableString two = default,
-            FormattableString few = default,
-            FormattableString many = default,
-            FormattableString other = default,
-            FormattableString specialZero = default) => catalog.Catalog.T(
-                context: context,
-                id: id,
-                count: count,
-                zero: zero,
-                two: two,
-                few: few,
-                many: many,
-                other: other,
-                specialZero: specialZero);
-
-        public string T(
-            FormattableString otherPluralForm,
-            decimal count) => catalog.Catalog.T(
-                otherPluralForm: otherPluralForm,
-                count: count);
-        public string T(
-            string context,
-            FormattableString otherPluralForm,
-            decimal count) => catalog.Catalog.T(
-                context: context,
-                otherPluralForm: otherPluralForm,
-                count: count);
-
-        public string T(
-            RawString id,
-            decimal count,
-            FormattableString otherPluralForm,
+            FormattableString other,
+            FormattableString zero,
+            FormattableString two,
+            FormattableString few,
+            FormattableString many,
             RawString specialZero) => catalog.Catalog.T(
                 id: id,
                 count: count,
-                otherPluralForm: otherPluralForm,
+                other: other,
+                zero: zero,
+                two: two,
+                few: few,
+                many: many,
                 specialZero: specialZero);
+        [LocalizationMethod]
         public string T(
             FormattableString id,
             decimal count,
-            FormattableString otherPluralForm,
+            FormattableString other,
+            FormattableString zero,
+            FormattableString two,
+            FormattableString few,
+            FormattableString many,
             FormattableString specialZero) => catalog.Catalog.T(
                 id: id,
                 count: count,
-                otherPluralForm: otherPluralForm,
+                other: other,
+                zero: zero,
+                two: two,
+                few: few,
+                many: many,
                 specialZero: specialZero);
-        public string T(
-            RawString id,
-            decimal count,
-            FormattableString otherPluralForm) => catalog.Catalog.T(
-                id: id,
-                count: count,
-                otherPluralForm: otherPluralForm);
-        public string T(
-            FormattableString id,
-            decimal count,
-            FormattableString otherPluralForm) => catalog.Catalog.T(
-                id: id,
-                count: count,
-                otherPluralForm: otherPluralForm);
+        [LocalizationMethod]
         public string T(
             string context,
-            RawString id,
+            FormattableString id,
             decimal count,
-            FormattableString otherPluralForm,
+            FormattableString other,
+            FormattableString zero,
+            FormattableString two,
+            FormattableString few,
+            FormattableString many,
             RawString specialZero) => catalog.Catalog.T(
                 context: context,
                 id: id,
                 count: count,
-                otherPluralForm: otherPluralForm,
+                other: other,
+                zero: zero,
+                two: two,
+                few: few,
+                many: many,
                 specialZero: specialZero);
+        [LocalizationMethod]
         public string T(
             string context,
             FormattableString id,
             decimal count,
-            FormattableString otherPluralForm,
+            FormattableString other,
+            FormattableString zero,
+            FormattableString two,
+            FormattableString few,
+            FormattableString many,
             FormattableString specialZero) => catalog.Catalog.T(
                 context: context,
                 id: id,
                 count: count,
-                otherPluralForm: otherPluralForm,
+                other: other,
+                zero: zero,
+                two: two,
+                few: few,
+                many: many,
                 specialZero: specialZero);
+
+        [LocalizationMethod]
+        public string T(
+            FormattableString other,
+            decimal count) => catalog.Catalog.T(
+                other: other,
+                count: count);
+        [LocalizationMethod]
         public string T(
             string context,
-            RawString id,
-            decimal count,
-            FormattableString otherPluralForm) => catalog.Catalog.T(
+            FormattableString other,
+            decimal count) => catalog.Catalog.T(
                 context: context,
+                other: other,
+                count: count);
+
+        [LocalizationMethod]
+        public string T(
+            FormattableString id,
+            decimal count,
+            FormattableString other,
+            RawString specialZero) => catalog.Catalog.T(
                 id: id,
                 count: count,
-                otherPluralForm: otherPluralForm);
+                other: other,
+                specialZero: specialZero);
+        [LocalizationMethod]
+        public string T(
+            FormattableString id,
+            decimal count,
+            FormattableString other,
+            FormattableString specialZero) => catalog.Catalog.T(
+                id: id,
+                count: count,
+                other: other,
+                specialZero: specialZero);
+        [LocalizationMethod]
+        public string T(
+            FormattableString id,
+            decimal count,
+            FormattableString other) => catalog.Catalog.T(
+                id: id,
+                count: count,
+                other: other);
+        [LocalizationMethod]
         public string T(
             string context,
             FormattableString id,
             decimal count,
-            FormattableString otherPluralForm) => catalog.Catalog.T(
+            FormattableString other,
+            RawString specialZero) => catalog.Catalog.T(
                 context: context,
                 id: id,
                 count: count,
-                otherPluralForm: otherPluralForm);
+                other: other,
+                specialZero: specialZero);
+        [LocalizationMethod]
+        public string T(
+            string context,
+            FormattableString id,
+            decimal count,
+            FormattableString other,
+            FormattableString specialZero) => catalog.Catalog.T(
+                context: context,
+                id: id,
+                count: count,
+                other: other,
+                specialZero: specialZero);
+        [LocalizationMethod]
+        public string T(
+            string context,
+            FormattableString id,
+            decimal count,
+            FormattableString other) => catalog.Catalog.T(
+                context: context,
+                id: id,
+                count: count,
+                other: other);
 
         //when the language is changed, we get a domain reload
         //so tracking language changes requires persisting it somewhere and looking it up, all from a cctor

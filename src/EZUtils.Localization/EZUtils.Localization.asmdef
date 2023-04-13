@@ -1,18 +1,19 @@
 {
     "name": "EZUtils.Localization",
     "references": [
-        "Unity.Localization",
-        "Unity.Localization.Editor",
-        "Unity.Addressables",
-        "Unity.ResourceManager"
+        "EZUtils.Common"
     ],
     "includePlatforms": [
         "Editor"
     ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
-    "overrideReferences": false,
-    "precompiledReferences": [],
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Microsoft.CodeAnalysis.CSharp.dll",
+        "Microsoft.CodeAnalysis.dll",
+        "System.Collections.Immutable.dll"
+    ],
     "autoReferenced": true,
     "defineConstraints": [],
     "versionDefines": [],

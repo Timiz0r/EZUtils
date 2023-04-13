@@ -18,6 +18,6 @@ namespace EZUtils.Localization
         public static implicit operator RawString(string s) => new RawString(s);
 
         public static implicit operator RawString(FormattableString formattableString)
-            => throw new InvalidOperationException("Please add a FormattableString overload to the method.");
+            => throw new InvalidOperationException("This never gets hit.");
     }
 }
