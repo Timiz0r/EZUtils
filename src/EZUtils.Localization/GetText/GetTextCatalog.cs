@@ -87,8 +87,6 @@ namespace EZUtils.Localization
             GetSelectedLocale(),
             FindEntry(id.GetUnformattedValue(), context: context)?.Id);
 
-        //TODO: try moving special zero up and reintroducing optional parameters
-
         //for plural methods, aside from these big ones, we dont use optional parameters
         //they make overloading weird and hard to reason about.
         [LocalizationMethod]
@@ -96,112 +94,43 @@ namespace EZUtils.Localization
             FormattableString id,
             decimal count,
             FormattableString other,
-            FormattableString zero,
-            FormattableString two,
-            FormattableString few,
-            FormattableString many,
-            RawString specialZero)
+            RawString specialZero = default,
+            FormattableString zero = default,
+            FormattableString two = default,
+            FormattableString few = default,
+            FormattableString many = default)
             => T(
+                context: default,
                 id: new StringHelper(id),
                 count: count,
                 other: new StringHelper(other),
+                specialZero: new StringHelper(specialZero),
                 zero: new StringHelper(zero),
                 two: new StringHelper(two),
                 few: new StringHelper(few),
-                many: new StringHelper(many),
-                specialZero: new StringHelper(specialZero));
+                many: new StringHelper(many));
         [LocalizationMethod]
         public string T(
             FormattableString id,
             decimal count,
             FormattableString other,
-            FormattableString zero,
-            FormattableString two,
-            FormattableString few,
-            FormattableString many,
-            FormattableString specialZero)
+            FormattableString specialZero = default,
+            FormattableString zero = default,
+            FormattableString two = default,
+            FormattableString few = default,
+            FormattableString many = default)
             => T(
+                context: default,
                 id: new StringHelper(id),
                 count: count,
                 other: new StringHelper(other),
+                specialZero: new StringHelper(specialZero),
                 zero: new StringHelper(zero),
                 two: new StringHelper(two),
                 few: new StringHelper(few),
-                many: new StringHelper(many),
-                specialZero: new StringHelper(specialZero));
-        [LocalizationMethod]
-        public string T(
-            string context,
-            FormattableString id,
-            decimal count,
-            FormattableString other,
-            FormattableString zero,
-            FormattableString two,
-            FormattableString few,
-            FormattableString many,
-            RawString specialZero)
-            => T(
-                context: context,
-                id: new StringHelper(id),
-                count: count,
-                other: new StringHelper(other),
-                zero: new StringHelper(zero),
-                two: new StringHelper(two),
-                few: new StringHelper(few),
-                many: new StringHelper(many),
-                specialZero: new StringHelper(specialZero));
-        [LocalizationMethod]
-        public string T(
-            string context,
-            FormattableString id,
-            decimal count,
-            FormattableString other,
-            FormattableString zero,
-            FormattableString two,
-            FormattableString few,
-            FormattableString many,
-            FormattableString specialZero)
-            => T(
-                context: context,
-                id: new StringHelper(id),
-                count: count,
-                other: new StringHelper(other),
-                zero: new StringHelper(zero),
-                two: new StringHelper(two),
-                few: new StringHelper(few),
-                many: new StringHelper(many),
-                specialZero: new StringHelper(specialZero));
-        //design-wise, one thought was to not allow these, since we expect at least one other plural form
-        //for (native) languages with just one form (other), you'd typically provide the same value in id and plural
-        //but this is convenient, so keeping it, even if it may actually be user error, since english is the usual
-        //native language.
-        //if we could keep this from compiling, we might actually choose to disallow them, but we can't stop overload
-        //resolution from going to the method with many default parameters
-        [LocalizationMethod]
-        public string T(
-            FormattableString other,
-            decimal count)
-            => T(
-                //note that since such languages only have other and not one, id's string will never be returned
-                id: new StringHelper(other),
-                count: count,
-                other: new StringHelper(other));
-        [LocalizationMethod]
-        public string T(
-            string context,
-            FormattableString other,
-            decimal count)
-            => T(
-                context: context,
-                //note that since such languages only have other and not one, id's string will never be returned
-                id: new StringHelper(other),
-                count: count,
-                other: new StringHelper(other));
-        //we dont have special zero overloads for single plural form method(s) because one will conflict with the
-        //two plural form overloads, which will be more commonly used.
-
-        //since english is the most common native language, we provide compatible overloads
-        //which means two plural forms: one and other
+                many: new StringHelper(many));
+        //we need these special specialZero overloads to help with overload resolution issues
+        //resulting from different specialZero types
         [LocalizationMethod]
         public string T(
             FormattableString id,
@@ -209,10 +138,15 @@ namespace EZUtils.Localization
             FormattableString other,
             RawString specialZero)
             => T(
+                context: default,
                 id: new StringHelper(id),
                 count: count,
                 other: new StringHelper(other),
-                specialZero: new StringHelper(specialZero));
+                specialZero: new StringHelper(specialZero),
+                zero: default,
+                two: default,
+                few: default,
+                many: default);
         [LocalizationMethod]
         public string T(
             FormattableString id,
@@ -220,19 +154,59 @@ namespace EZUtils.Localization
             FormattableString other,
             FormattableString specialZero)
             => T(
+                context: default,
                 id: new StringHelper(id),
                 count: count,
                 other: new StringHelper(other),
-                specialZero: new StringHelper(specialZero));
+                specialZero: new StringHelper(specialZero),
+                zero: default,
+                two: default,
+                few: default,
+                many: default);
         [LocalizationMethod]
         public string T(
+            string context,
             FormattableString id,
             decimal count,
-            FormattableString other)
+            FormattableString other,
+            RawString specialZero = default,
+            FormattableString zero = default,
+            FormattableString two = default,
+            FormattableString few = default,
+            FormattableString many = default)
             => T(
+                context: context,
                 id: new StringHelper(id),
                 count: count,
-                other: new StringHelper(other));
+                other: new StringHelper(other),
+                specialZero: new StringHelper(specialZero),
+                zero: new StringHelper(zero),
+                two: new StringHelper(two),
+                few: new StringHelper(few),
+                many: new StringHelper(many));
+        [LocalizationMethod]
+        public string T(
+            string context,
+            FormattableString id,
+            decimal count,
+            FormattableString other,
+            FormattableString specialZero = default,
+            FormattableString zero = default,
+            FormattableString two = default,
+            FormattableString few = default,
+            FormattableString many = default)
+            => T(
+                context: context,
+                id: new StringHelper(id),
+                count: count,
+                other: new StringHelper(other),
+                specialZero: new StringHelper(specialZero),
+                zero: new StringHelper(zero),
+                two: new StringHelper(two),
+                few: new StringHelper(few),
+                many: new StringHelper(many));
+        //we need these special specialZero overloads to help with overload resolution issues
+        //resulting from different specialZero types
         [LocalizationMethod]
         public string T(
             string context,
@@ -245,7 +219,11 @@ namespace EZUtils.Localization
                 id: new StringHelper(id),
                 count: count,
                 other: new StringHelper(other),
-                specialZero: new StringHelper(specialZero));
+                specialZero: new StringHelper(specialZero),
+                zero: default,
+                two: default,
+                few: default,
+                many: default);
         [LocalizationMethod]
         public string T(
             string context,
@@ -258,19 +236,11 @@ namespace EZUtils.Localization
                 id: new StringHelper(id),
                 count: count,
                 other: new StringHelper(other),
-                specialZero: new StringHelper(specialZero));
-        [LocalizationMethod]
-        public string T(
-            string context,
-            FormattableString id,
-            decimal count,
-            FormattableString other)
-            => T(
-                context: context,
-                id: new StringHelper(id),
-                count: count,
-                other: new StringHelper(other));
-
+                specialZero: new StringHelper(specialZero),
+                zero: default,
+                two: default,
+                few: default,
+                many: default);
         //PluralStringHelper and these private methods give us a common and performant common implementation
         //the public methods contain a mix of normal strings and formattable strings to cover the expected
         //cases of formattability performantly
@@ -278,12 +248,12 @@ namespace EZUtils.Localization
             string context,
             StringHelper id,
             decimal count,
-            StringHelper zero = default,
-            StringHelper two = default,
-            StringHelper few = default,
-            StringHelper many = default,
-            StringHelper other = default,
-            StringHelper specialZero = default)
+            StringHelper other,
+            StringHelper specialZero,
+            StringHelper zero,
+            StringHelper two,
+            StringHelper few,
+            StringHelper many)
         {
             Locale selectedLocale = GetSelectedLocale();
             PluralType pluralType = selectedLocale.PluralRules.Evaluate(count, out int index);
@@ -358,25 +328,6 @@ namespace EZUtils.Localization
             string result = targetStringHelper.GetEntryValue(selectedLocale, targetEntryString);
             return result;
         }
-        private string T(
-            StringHelper id,
-            decimal count,
-            StringHelper zero = default,
-            StringHelper two = default,
-            StringHelper few = default,
-            StringHelper many = default,
-            StringHelper other = default,
-            StringHelper specialZero = default)
-            => T(
-                context: null,
-                id: id,
-                count: count,
-                zero: zero,
-                two: two,
-                few: few,
-                many: many,
-                other: other,
-                specialZero: specialZero);
 
         //in our implementation, we dont consider the plural id an actual id
         //mainly because we dont have an explicit plural id because we accept multiple plural forms
@@ -414,6 +365,7 @@ namespace EZUtils.Localization
                         ? rawStringValue
                         : formattableString.ToString(selectedLocale.CultureInfo);
                 }
+
                 return formattableString == null
                     ? entryString
                     : string.Format(selectedLocale.CultureInfo, entryString, formattableString.GetArguments());
