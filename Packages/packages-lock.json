@@ -21,6 +21,12 @@
       "source": "local",
       "dependencies": {}
     },
+    "com.timiz0r.ezutils.localization.tests": {
+      "version": "file:../src/EZUtils.Localization.Tests",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.timiz0r.ezutils.mmdavatartools": {
       "version": "file:../src/EZUtils.MMDAvatarTools",
       "depth": 0,

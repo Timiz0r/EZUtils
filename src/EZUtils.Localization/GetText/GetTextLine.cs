@@ -76,15 +76,19 @@ namespace EZUtils.Localization
             }
 
             result = new GetTextLine(
-                new GetTextKeyword(
-                    match.Groups["keyword"].Success
-                        ? match.Groups["keyword"].Value
-                        : null,
-                    match.Groups["index"].Success
-                        ? int.Parse(match.Groups["index"].Value, NumberStyles.None, CultureInfo.InvariantCulture)
-                        : (int?)null),
-                stringValue: GetTextString.FromRaw(match.Groups["string"].Value),
-                comment: match.Groups["comment"].Value,
+                match.Groups["keyword"].Success
+                    ? new GetTextKeyword(
+                        match.Groups["keyword"].Value,
+                        match.Groups["index"].Success
+                            ? int.Parse(match.Groups["index"].Value, NumberStyles.None, CultureInfo.InvariantCulture)
+                            : (int?)null)
+                    : null,
+                stringValue: match.Groups["string"].Success
+                    ? GetTextString.FromRaw(match.Groups["string"].Value)
+                    : null,
+                comment: match.Groups["comment"].Success
+                    ? match.Groups["comment"].Value
+                    : null,
                 rawLine: line);
             return true;
         }

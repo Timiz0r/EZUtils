@@ -19,11 +19,27 @@ namespace EZUtils.Localization
         public GetTextHeader Header { get; }
         public IReadOnlyList<GetTextEntry> Entries { get; }
 
-        private GetTextDocument(IReadOnlyList<GetTextEntry> entries)
+        public GetTextDocument(IReadOnlyList<GetTextEntry> entries)
         {
             if (entries.Count > 0 && entries[0].Id != string.Empty) throw new InvalidOperationException("The first entry must be a header.");
             Entries = entries;
             Header = GetTextHeader.FromEntry(entries[0]);
+        }
+
+        public static GetTextDocument Parse(string document)
+        {
+            using (StringReader sr = new StringReader(document))
+            {
+                return LoadFrom(sr);
+            }
+        }
+
+        public static GetTextDocument LoadFrom(string path)
+        {
+            using (StreamReader sr = new StreamReader(path))
+            {
+                return LoadFrom(sr);
+            }
         }
 
         public static GetTextDocument LoadFrom(TextReader reader)
@@ -84,17 +100,17 @@ namespace EZUtils.Localization
                 }
                 else if (keyword == "msgid")
                 {
-                    if (!processingContextualEntry)
-                    {
-                        StartProcessingNextEntry();
-                        processingContextualEntry = false;
-                        currentEntryLines.Add(line);
-                    }
-
                     //could use a better name if we can think of one
                     //this local basically indicates that we hit a msgctxt and are also expecting a msgid
                     //once we hit the current entry's msgid, then the next msgid would be for a new entry
+                    if (!processingContextualEntry)
+                    {
+                        StartProcessingNextEntry();
+                    }
+
+                    //the important implication being that if we were contextual, we no longer are
                     processingContextualEntry = false;
+                    currentEntryLines.Add(line);
                 }
                 else
                 {

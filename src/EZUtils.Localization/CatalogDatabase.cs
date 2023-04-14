@@ -50,18 +50,15 @@ namespace EZUtils.Localization
 
             foreach (string path in addedPaths)
             {
-                using (StreamReader sr = new StreamReader(Path.GetFullPath(path)))
+                //note that modifications are also covered by importedAssets, which works fine for us
+                try
                 {
-                    //note that modifications are also covered by importedAssets, which works fine for us
-                    try
-                    {
-                        documents[path] = GetTextDocument.LoadFrom(sr);
-                    }
-                    catch (Exception ex)
-                    {
-                        //dont want to stop all loading just on a single doc
-                        Debug.LogException(ex);
-                    }
+                    documents[path] = GetTextDocument.LoadFrom(Path.GetFullPath(path));
+                }
+                catch (Exception ex)
+                {
+                    //dont want to stop all loading just on a single doc
+                    Debug.LogException(ex);
                 }
             }
 
@@ -102,17 +99,14 @@ namespace EZUtils.Localization
 
             foreach (string path in paths)
             {
-                using (StreamReader sr = new StreamReader(Path.GetFullPath(path)))
+                try
                 {
-                    try
-                    {
-                        documents[path] = GetTextDocument.LoadFrom(sr);
-                    }
-                    catch (Exception e)
-                    {
-                        //don't want to fail loading otherwise fine documents
-                        Debug.LogException(e);
-                    }
+                    documents[path] = GetTextDocument.LoadFrom(Path.GetFullPath(path));
+                }
+                catch (Exception e)
+                {
+                    //don't want to fail loading otherwise fine documents
+                    Debug.LogException(e);
                 }
             }
 
