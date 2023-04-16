@@ -26,6 +26,30 @@ namespace EZUtils.Localization
             Header = GetTextHeader.FromEntry(entries[0]);
         }
 
+        //in our implementation, we dont consider the plural id an actual id
+        //mainly because we dont have an explicit plural id because we accept multiple plural forms
+        public GetTextEntry FindEntry(string id) => FindEntry(context: null, id: id);
+        public GetTextEntry FindEntry(string context, string id)
+            => FindEntry(context: context, id: id, out GetTextEntry entry) >= 0
+                ? entry
+                : null;
+        public int FindEntry(string id, out GetTextEntry entry)
+            => FindEntry(context: null, id: id, out entry);
+        public int FindEntry(string context, string id, out GetTextEntry entry)
+        {
+            for (int i = 0; i < Entries.Count; i++)
+            {
+                if (Entries[i].Context == context && Entries[i].Id == id)
+                {
+                    entry = Entries[i];
+                    return i;
+                }
+            }
+
+            entry = null;
+            return -1;
+        }
+
         public static GetTextDocument Parse(string document)
         {
             using (StringReader sr = new StringReader(document))

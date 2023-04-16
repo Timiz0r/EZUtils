@@ -30,6 +30,9 @@ namespace EZUtils.Localization
         {
             if (this.context != null) throw new InvalidOperationException("Can only set the context once.");
 
+            //since context is optional, we'll allow these calls
+            if (context == null) return this;
+
             this.context = context;
             AddKeywordedLine("msgctxt", context, inlineComment: inlineComment);
             return this;
@@ -38,8 +41,8 @@ namespace EZUtils.Localization
         public GetTextEntryBuilder ConfigureId(string id, string inlineComment = null)
         {
             if (this.id != null) throw new InvalidOperationException("Can only set the id once.");
+            this.id = id ?? throw new ArgumentNullException(nameof(id), "Entry ids cannot be null.");
 
-            this.id = id;
             AddKeywordedLine("msgid", id, inlineComment: inlineComment);
             return this;
         }
@@ -47,10 +50,55 @@ namespace EZUtils.Localization
         public GetTextEntryBuilder ConfigureAsPlural(string pluralId, string inlineComment = null)
         {
             if (this.pluralId != null) throw new InvalidOperationException("Can only set as plural once.");
+            this.pluralId = pluralId ?? throw new ArgumentNullException(nameof(pluralId), "Plural ids cannot be null.");
 
-            this.pluralId = pluralId;
             AddKeywordedLine("msgid_plural", pluralId, inlineComment: inlineComment);
             return this;
+        }
+
+        public GetTextEntryBuilder ConfigureAsPlural(string pluralId, int pluralForms, string inlineComment = null)
+        {
+            if (this.pluralId != null) throw new InvalidOperationException("Can only set as plural once.");
+            this.pluralId = pluralId ?? throw new ArgumentNullException(nameof(pluralId), "Plural ids cannot be null.");
+
+            AddKeywordedLine("msgid_plural", pluralId, inlineComment: inlineComment);
+            for (int i = 0; i < pluralForms; i++)
+            {
+                _ = ConfigureAdditionalPluralValue(string.Empty);
+            }
+            return this;
+        }
+
+        public GetTextEntryBuilder ConfigureAsPlural(string pluralId, Locale locale, string inlineComment = null)
+        {
+            if (this.pluralId != null) throw new InvalidOperationException("Can only set as plural once.");
+            this.pluralId = pluralId ?? throw new ArgumentNullException(nameof(pluralId), "Plural ids cannot be null.");
+
+            AddKeywordedLine("msgid_plural", pluralId, inlineComment: inlineComment);
+
+            AddEmptyPluralForm("Zero", locale.PluralRules.Zero);
+            AddEmptyPluralForm("One", locale.PluralRules.One);
+            AddEmptyPluralForm("Two", locale.PluralRules.Two);
+            AddEmptyPluralForm("Few", locale.PluralRules.Few);
+            AddEmptyPluralForm("Many", locale.PluralRules.Many);
+            AddEmptyPluralForm("Other", locale.PluralRules.Other);
+            AddSpecialZeroPluralForm();
+
+            return this;
+
+            void AddEmptyPluralForm(string pluralRuleName, string pluralRule)
+            {
+                lines.Add(new GetTextLine(comment: $" plural[{pluralValues.Count + 1}]: {pluralRuleName}; {pluralRule}"));
+                _ = ConfigureAdditionalPluralValue(string.Empty);
+            }
+
+            void AddSpecialZeroPluralForm()
+            {
+                if (!locale.UseSpecialZero) return;
+                lines.Add(new GetTextLine(
+                    comment: $" plural[{pluralValues.Count + 1}]: special zero; use in case of a special message for zero elements"));
+                _ = ConfigureAdditionalPluralValue(string.Empty);
+            }
         }
 
         public GetTextEntryBuilder ConfigureValue(string value, string inlineComment = null)
@@ -71,7 +119,7 @@ namespace EZUtils.Localization
 
         public GetTextEntry Create() => new GetTextEntry(
             lines: lines,
-            header: null,
+            header: GetTextEntryHeader.ParseEntryLines(lines),
             isObsolete: false,
             context: context,
             id: id,

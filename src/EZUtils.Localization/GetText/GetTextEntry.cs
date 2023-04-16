@@ -48,8 +48,6 @@ namespace EZUtils.Localization
             PluralValues = pluralValues;
         }
 
-        public string GetFormattedValue(CultureInfo locale, params object[] args) => string.Format(locale, Value, args);
-
         public static GetTextEntry Parse(IReadOnlyList<GetTextLine> lines)
         {
             Dictionary<string, StringBuilder> keywordMap = new Dictionary<string, StringBuilder>();

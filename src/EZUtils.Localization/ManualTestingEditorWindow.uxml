@@ -13,7 +13,7 @@
     <Style src="ManualTestingEditorWindow.uss" />
     <Button text="loc:Start" />
     <VisualElement>
-      <Button text="loc:Pudding" />
+      <Label text="loc:Pudding" />
       <VisualElement>
         <Label text="loc:Have a nice day!" />
       </VisualElement>

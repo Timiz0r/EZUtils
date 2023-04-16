@@ -1,0 +1,38 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: 2023-03-28 02:46-0700\n"
+"PO-Revision-Date: 2023-03-29 23:59-0700\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n == 1 ? 1 : 0;\n"
+"X-Generator: Poedit 3.2.2\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-KeywordsList: ;Foo\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-PluralRules-SpecialZero: \n"
+"X-PluralRules-Other: \n"
+
+# plural[0]: other; language does not have separate forms for plurals
+# plural[1]: special zero; use in case of a special message for zero elements
+msgctxt "wat|foo"
+msgid "One friend online"
+msgid_plural "{friendCount} friends online."
+msgstr[0] "友達{friendCount}人がオンライン"
+msgstr[1] "友達はオンラインしていません"
+
+msgid "Start"
+msgstr "開始"
+
+msgid "Pudding"
+msgstr "プリン"
+
+msgid "Have a nice day!"
+msgstr "良い一日を～"
+
+msgid "EZLocalization manual testing"
+msgstr "何らかの日本語のタイトル"

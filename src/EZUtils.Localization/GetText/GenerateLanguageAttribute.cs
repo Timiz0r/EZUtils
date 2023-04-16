@@ -10,6 +10,7 @@ namespace EZUtils.Localization
     public sealed class GenerateLanguageAttribute : Attribute
     {
         public string CultureInfoCode { get; }
+        public string PoFilePath { get; }
 
         public string Zero { get; set; }
         public string One { get; set; }
@@ -19,9 +20,10 @@ namespace EZUtils.Localization
         public string Other { get; set; }
         public bool UseSpecialZero { get; set; }
 
-        public GenerateLanguageAttribute(string cultureInfoCode)
+        public GenerateLanguageAttribute(string cultureInfoCode, string poFilePath)
         {
             CultureInfoCode = cultureInfoCode;
+            PoFilePath = poFilePath;
         }
     }
 }

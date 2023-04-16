@@ -6,7 +6,6 @@ namespace EZUtils.Localization
     using System.Globalization;
     using System.IO;
     using System.Linq;
-    using System.Text;
     using JetBrains.Annotations;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
@@ -37,302 +36,250 @@ namespace EZUtils.Localization
                 .AddReferences(MetadataReference.CreateFromFile(typeof(EditorWindow).Assembly.Location));
 
 
-            var extractor = new GetTextExtractor(compilation);
+            GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
+            GetTextExtractor extractor = new GetTextExtractor(compilation, catalogBuilder);
             void AddFile(string path) => extractor.AddFile(Path.GetFullPath(path), path);
             AddFile("Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs");
             AddFile("Packages/com.timiz0r.ezutils.localization/Florp.cs");
             AddFile("Packages/com.timiz0r.ezutils.localization/Localization.cs");
-            extractor.Extract();
-            //TODO:
-            //original plan was to accumulate a large list of extracted entries and aggregate them together
-            //screw that. let's add a series of types that allows us to load in existing catalogs as we find  them,
-            //can add and merge entries in as we find them, and whatever else in a pretty declarative way.
-            //TODO: 
+            var catalog = extractor.Extract();
         }
     }
 
     public class GetTextExtractor : CSharpSyntaxWalker
     {
-        private readonly List<(string relativePath, SyntaxTree syntaxTree)> files =
-            new List<(string relativePath, SyntaxTree syntaxTree)>();
+        private readonly List<SyntaxTree> syntaxTrees = new List<SyntaxTree>();
+        private readonly GetTextCatalogBuilder catalogBuilder;
         private CSharpCompilation compilation;
 
-        private readonly List<ExtractionRecord> extractedFiles = new List<ExtractionRecord>();
+        //we cache it like this as we process each file in case it helps with perf
+        //vaguely recall reading somewhere it does, but could be wrong
+        private SemanticModel model;
 
-        private List<GetTextEntry> currentEntries;
-        private string currentFile;
-        private SemanticModel currentModel;
-        private string currentCatalogRoot;
-
-
-        public GetTextExtractor(CSharpCompilation compilation)
+        public GetTextExtractor(CSharpCompilation compilation, GetTextCatalogBuilder catalogBuilder)
         {
             this.compilation = compilation;
+            this.catalogBuilder = catalogBuilder;
         }
 
         public void AddFile(string path, string displayPath)
         {
-            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(path));
+            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(path), path: displayPath);
             compilation = compilation.AddSyntaxTrees(syntaxTree);
-            files.Add((displayPath, syntaxTree));
+            syntaxTrees.Add(syntaxTree);
         }
 
-        public void Extract()
+        public GetTextCatalog Extract()
         {
-            foreach ((string relativePath, SyntaxTree syntaxTree) in files)
+            foreach (SyntaxTree syntaxTree in syntaxTrees)
             {
-                currentEntries = new List<GetTextEntry>();
-                currentModel = compilation.GetSemanticModel(syntaxTree);
-                currentFile = relativePath;
-
+                model = compilation.GetSemanticModel(syntaxTree);
                 VisitCompilationUnit(syntaxTree.GetCompilationUnitRoot());
             }
+
+            return catalogBuilder.GetCatalog(Locale.English);
+        }
+
+        public override void VisitClassDeclaration(ClassDeclarationSyntax node)
+        {
+            INamedTypeSymbol symbol = model.GetDeclaredSymbol(node);
+            //if a class has these attributes, it's a proxy type that calls into other LocalizationMethods
+            //so we dont want to extract from such classes
+            //NOTE: a slight improvement would be to additionally ensure the declared method isn't a LocalizationMethod
+            //but since these types should be doing localization themselves, we'll save the time
+            if (symbol.GetAttributes().Any(
+                a => a.AttributeClass.ToString() == "EZUtils.Localization.GenerateLanguageAttribute")) return;
+
+            base.VisitClassDeclaration(node);
         }
 
         public override void VisitInvocationExpression(InvocationExpressionSyntax node)
         {
             base.VisitInvocationExpression(node);
 
-            if (!(currentModel.GetOperation(node) is IInvocationOperation invocationOperation)) return;
+            if (!(model.GetOperation(node) is IInvocationOperation invocationOperation)) return;
 
             ImmutableArray<AttributeData> attributes = invocationOperation.TargetMethod.GetAttributes();
             if (!invocationOperation.TargetMethod
                 .GetAttributes()
                 .Any(a => a.AttributeClass.ToString() == "EZUtils.Localization.LocalizationMethodAttribute")) return;
 
-            EntryExtractor entryExtractor = EntryExtractor.ForInvocation(invocationOperation, entryExtractor);
+            InvocationParser invocationParser = InvocationParser.ForInvocation(invocationOperation);
             foreach (IArgumentOperation argument in invocationOperation.Arguments)
             {
-                entryExtractor.HandleArgument(argument);
+                try
+                {
+                    invocationParser.HandleArgument(argument);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to parse invocation: {node}", ex);
+                }
             }
 
-            
+            if (string.IsNullOrEmpty(invocationParser.Id)) throw new InvalidOperationException(
+                $"Could not extract id from invocation: {node}");
+            //should also theoretically invalidate an entry that has incomplete plural arguments
+
+            foreach ((string poFilePath, Locale locale) in invocationParser.Targets)
+            {
+                string absolutePath = Path.GetFullPath(
+                    Path.Combine(
+                        Path.GetDirectoryName(node.SyntaxTree.FilePath),
+                        poFilePath));
+                _ = catalogBuilder
+                    .ForPoFile(absolutePath, locale, doc => doc
+                        .AddEntry(e =>
+                        {
+                            FileLinePositionSpan location = node.GetLocation().GetLineSpan();
+                            _ = e.AddComment($": {location.Path}:{location.StartLinePosition.Line}");
+                            _ = e.ConfigureContext(invocationParser.Context).ConfigureId(invocationParser.Id);
+
+                            (bool countFound, string pluralId) = invocationParser.PluralStatus;
+                            _ = countFound && pluralId != null
+                                ? e.ConfigureAsPlural(pluralId, locale)
+                                : e.ConfigureValue(string.Empty);
+                        }));
+            }
         }
     }
 
-    public class EntryExtractor
+    public class GetTextCatalogBuilder
     {
-        private List<Locale> locales = null;
-        private string catalogRoot = null;
+        private readonly Dictionary<string, GetTextDocumentBuilder> documents =
+            new Dictionary<string, GetTextDocumentBuilder>();
 
-        private string context = null;
-        private string id = null;
-        private bool isPlural = false;
-        private string other = null;
-
-        //so it turns out we dont need any plural form other than other
-        //but already went through the effort of extracting this data
-        //will leave it for now, even if unused, but it can be remove later if necessary
-        private string zero = null;
-        private string two = null;
-        private string few = null;
-        private string many = null;
-        private string specialZero = null;
-
-        private EntryExtractor() { }
-
-        public static EntryExtractor ForInvocation(IInvocationOperation invocationOperation)
+        public GetTextCatalogBuilder ForPoFile(
+            string absolutePath, Locale locale, Action<GetTextDocumentBuilder> documentBuilderAction)
         {
-            ImmutableArray<AttributeData> targetAttributes =
-                invocationOperation.Instance is IMemberReferenceOperation memberReferenceOperation
-                    ? memberReferenceOperation.Member.GetAttributes()
-                    : invocationOperation.Instance == null
-                        ? invocationOperation.TargetMethod.ContainingType.GetAttributes()
-                        : throw new InvalidOperationException(
-                            $"Unable to extract any attributes in order to find catalog generation attributes.");
-
-            List<Locale> locales = targetAttributes
-                .Where(a => a.AttributeClass.ToString() == "EZUtils.Localization.GenerateLanguageAttribute")
-                .Select(a =>
-                {
-                    CultureInfo cultureInfo = CultureInfo.GetCultureInfo((string)a.ConstructorArguments[0].Value);
-
-                    string GetRule(string ruleKind)
-                        => (string)a.NamedArguments.SingleOrDefault(kvp => kvp.Key == "Zero").Value.Value;
-                    PluralRules pluralRules = new PluralRules(
-                        zero: GetRule("Zero"),
-                        one: GetRule("One"),
-                        two: GetRule("Two"),
-                        few: GetRule("Few"),
-                        many: GetRule("Many"),
-                        other: GetRule("Other"));
-
-                    bool useSpecialZero =
-                        a.NamedArguments.SingleOrDefault(kvp => kvp.Key == "UseSpecialZero").Value.Value is bool b && b;
-
-                    Locale locale = new Locale(cultureInfo, pluralRules, useSpecialZero);
-                    return locale;
-                }).ToList();
-
-            string catalogRoot = (string)targetAttributes
-                .SingleOrDefault(a => a.AttributeClass.ToString() == "EZUtils.Localization.GenerateCatalogAttribute")
-                .ConstructorArguments[0].Value;
-
-            EntryExtractor entryExtractor = new EntryExtractor
+            if (documents.TryGetValue(absolutePath, out GetTextDocumentBuilder document))
             {
-                locales = locales,
-                catalogRoot = catalogRoot
+                _ = document.VerifyLocaleMatches(locale);
+                documentBuilderAction(document);
+
+                return this;
+            }
+
+            document = documents[absolutePath] = GetTextDocumentBuilder.ForDocumentAt(absolutePath, locale);
+            documentBuilderAction(document);
+
+            return this;
+        }
+
+        public GetTextCatalogBuilder WriteToDisk()
+        {
+            return this;
+        }
+
+        public GetTextCatalog GetCatalog(Locale nativeLocale)
+            => new GetTextCatalog(
+                documents.Values.Select(db => db.GetGetTextDocument()).ToArray(),
+                nativeLocale);
+    }
+
+    public class GetTextDocumentBuilder
+    {
+        private readonly string absolutePath;
+        //hypothetically, we could instead store an IEnumerable of entries instead, avoiding a bunch of array allocations
+        //or consider using immutable collections, even though library dependencies are annoying in unity
+        private GetTextDocument document;
+
+        private GetTextDocumentBuilder(string absolutePath)
+        {
+            this.absolutePath = absolutePath;
+        }
+
+        public static GetTextDocumentBuilder ForDocumentAt(string absolutePath, Locale locale)
+        {
+            GetTextDocumentBuilder builder = new GetTextDocumentBuilder(absolutePath)
+            {
+                document = File.Exists(absolutePath)
+                    ? GetTextDocument.LoadFrom(absolutePath)
+                    : new GetTextDocument(new[] { new GetTextHeader(locale).ToEntry() })
             };
-            return entryExtractor;
+            return builder;
         }
 
-        public void HandleArgument(IArgumentOperation argument)
-        {
-            string parameterType = argument.Parameter.Type.ToString();
-            if (parameterType != "string"
-                && parameterType != "EZUtils.Localization.RawString"
-                && parameterType != "System.FormattableString"
-                && parameterType != "decimal") return;
-
-            if (parameterType == "decimal" && argument.Parameter.Name == "count")
-            {
-                isPlural = true;
-                return;
-            }
-
-            AttributeData localizationParameterAttribute = argument.Parameter.GetAttributes().SingleOrDefault(
-                a => a.AttributeClass.ToString() == "EZUtils.Localization.LocalizationParameterAttribute");
-            string parameterName = localizationParameterAttribute != null
-                && localizationParameterAttribute.ConstructorArguments[0].Value is string p
-                    ? p
-                    : argument.Parameter.Name;
-
-            string value = GetString(argument);
-            switch (parameterName)
-            {
-                case LocalizationParameter.Context:
-                    context = value;
-                    break;
-                case LocalizationParameter.Id:
-                    id = value;
-                    break;
-                case LocalizationParameter.Other:
-                    other = value;
-                    break;
-                case LocalizationParameter.Zero:
-                    zero = value;
-                    break;
-                case LocalizationParameter.Two:
-                    two = value;
-                    break;
-                case LocalizationParameter.Few:
-                    few = value;
-                    break;
-                case LocalizationParameter.Many:
-                    many = value;
-                    break;
-                case LocalizationParameter.SpecialZero:
-                    specialZero = value;
-                    break;
-                default:
-                    //we allow custom localization methods that have different parameters. for instance, EZLocalization's TranslateWindowTitle
-                    //also we dont need to extract count; we just check that it's there as the main factor for determining
-                    //if the method is for plurals or not
-                    break;
-            }
-        }
-
-        //NOTE: will want to rethrow in order to display invocation
-        public ExtractionRecord Extract()
+        public GetTextDocumentBuilder AddEntry(Action<GetTextEntryBuilder> entryBuilderAction)
         {
             GetTextEntryBuilder builder = new GetTextEntryBuilder();
+            entryBuilderAction(builder);
 
-            _ = builder.ConfigureId(id ?? throw new InvalidOperationException("Unable to extract 'id'."));
+            //avoids an array reallocation in the event we add an item
+            List<GetTextEntry> updatedEntries = new List<GetTextEntry>(document.Entries.Count + 1);
+            updatedEntries.AddRange(document.Entries);
 
-            if (context != null) _ = builder.ConfigureContext(context);
+            GetTextEntry builtEntry = builder.Create();
+            int existingEntryIndex = document.FindEntry(builtEntry.Context, builtEntry.Id, out GetTextEntry existingEntry);
 
-            if (isPlural)
+            if (existingEntryIndex == -1)
             {
-                if (other == null) throw new InvalidOperationException("Unable to extract 'other'.");
-
-                _ = builder.ConfigureAsPlural(other);
-
-                if (plur)
+                updatedEntries.Add(builtEntry);
+            }
+            else
+            {
+                updatedEntries[existingEntryIndex] = MergeEntries(existingEntry: existingEntry, builtEntry: builtEntry);
             }
 
-            return null;
+            document = new GetTextDocument(updatedEntries);
+
+            return this;
         }
 
-        private static string GetString(IOperation operation)
+        public GetTextDocument GetGetTextDocument() => document;
+
+        public GetTextDocumentBuilder WriteToDisk()
         {
-            if (operation is IArgumentOperation argumentOperation)
+            return this;
+        }
+
+        public GetTextDocumentBuilder VerifyLocaleMatches(Locale locale)
+        {
+            //two locales are equal if just their cultures are the same
+            //but we want to verify that the author has consistent plural rules across potentially multiple declarations
+            //of the same catalog
+            Locale existingLocale = document.Header.Locale;
+            return existingLocale != locale
+                || !existingLocale.PluralRules.Equals(locale.PluralRules)
+                ? throw new InvalidOperationException($"Inconsistent locales for '{absolutePath}'.")
+                : this;
+        }
+        private static GetTextEntry MergeEntries(GetTextEntry existingEntry, GetTextEntry builtEntry)
+        {
+            string builtEntryReference = builtEntry.Header.References[0];
+            bool existingReferenceFound = existingEntry.Header.References.Contains(builtEntryReference);
+            if (!existingEntry.IsObsolete && existingReferenceFound)
             {
-                return GetString(argumentOperation.Value);
+                return existingEntry;
             }
 
-            if (operation is IConversionOperation conversionOperation)
+            GetTextEntryHeader header = existingEntry.Header;
+            //avoid reallocation if adding a reference line
+            List<GetTextLine> mergedLines = new List<GetTextLine>(existingEntry.Lines.Count + 1);
+            mergedLines.AddRange(
+                existingEntry.Lines.Select(l => l.IsMarkedObsolete
+                    ? GetTextLine.Parse(l.Comment.Substring(1).TrimStart())
+                    : l));
+
+            if (!existingReferenceFound)
             {
-                return GetString(conversionOperation.Operand);
+                int lastReferenceLine = mergedLines.FindLastIndex(l => l.IsComment && l.Comment.StartsWith(":"));
+                mergedLines.Insert(lastReferenceLine + 1, new GetTextLine(comment: $": {builtEntryReference}"));
+
+                header = new GetTextEntryHeader(
+                    existingEntry.Header.References.Append(builtEntryReference).ToArray());
             }
 
-            if (operation is ILiteralOperation literalOperation && literalOperation.Type.ToString() == "string")
-            {
-                return (string)literalOperation.ConstantValue.Value;
-            }
-
-            if (operation is IInterpolatedStringOperation interpolatedStringOperation)
-            {
-                StringBuilder interpolationStringBuilder = new StringBuilder();
-                int formatIndex = 0;
-                foreach (IInterpolatedStringContentOperation part in interpolatedStringOperation.Parts)
-                {
-                    if (part is IInterpolatedStringTextOperation textOperation)
-                    {
-                        string text = GetString(textOperation.Text);
-                        _ = interpolationStringBuilder.Append(text);
-                    }
-                    else if (part is IInterpolationOperation interpolationOperation)
-                    {
-                        _ = interpolationStringBuilder.Append('{').Append(formatIndex++);
-                        if (interpolationOperation.Alignment is ILiteralOperation alignment)
-                        {
-                            _ = interpolationStringBuilder.Append(',').Append(alignment.ConstantValue.ToString());
-                        }
-                        if (interpolationOperation.FormatString is ILiteralOperation format)
-                        {
-                            _ = interpolationStringBuilder.Append(':').Append(format.ConstantValue.ToString());
-                        }
-                        _ = interpolationStringBuilder.Append('}');
-                    }
-                    //we dont support IInterpolatedStringAppendOperation
-                    //because we dont use InterpolatedStringHandlerAttribute in our apis
-                    else throw new InvalidOperationException($"Extracting from '{part.Kind}' is not supported.");
-                }
-                return interpolationStringBuilder.ToString();
-            }
-
-            if (operation is IBinaryOperation binaryOperation && binaryOperation.OperatorKind == BinaryOperatorKind.Add)
-            {
-                return string.Concat(
-                    GetString(binaryOperation.LeftOperand),
-                    GetString(binaryOperation.RightOperand));
-            }
-
-            if (operation is IDefaultValueOperation)
-            {
-                return default;
-            }
-
-            if (operation is IFieldReferenceOperation fieldReferenceOperation)
-            {
-                if (!fieldReferenceOperation.ConstantValue.HasValue) throw new ArgumentOutOfRangeException(
-                    nameof(operation),
-                    $"{fieldReferenceOperation.Type} is not a constant. Reference: {fieldReferenceOperation.Syntax}");
-
-                return (string)fieldReferenceOperation.ConstantValue.Value;
-            }
-
-            throw new ArgumentOutOfRangeException(nameof(operation), $"Do not know how to handle extracting string from '{operation.Kind}'. Current operation: {operation.Syntax}");
+            GetTextEntry result = new GetTextEntry(
+                mergedLines,
+                header,
+                isObsolete: false,
+                context: existingEntry.Context,
+                id: existingEntry.Id,
+                pluralId: existingEntry.PluralId,
+                value: existingEntry.Value,
+                pluralValues: existingEntry.PluralValues);
+            return result;
         }
     }
-
-
-    public class ExtractionRecord
-    {
-        public string FilePath { get; }
-        public string CatalogRoot { get; }
-        public IReadOnlyList<(Locale locale, GetTextEntry entry)> ExtractedEntries { get; }
-    }
-
-
 }

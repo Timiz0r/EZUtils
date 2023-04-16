@@ -2,9 +2,8 @@ namespace EZUtils.Localization.Proxy
 {
     using System;
 
-    [GenerateCatalog("Packages/com.timiz0r.ezutils.editorenhancements")]
-    [GenerateLanguage("jp", Other = "")]
-    [GenerateLanguage("ko", Other = "")]
+    [GenerateLanguage("ja", "ja.po", Other = "")]
+    [GenerateLanguage("ko", "ko.po", Other = "")]
     public static class Localization
     {
         private static readonly EZLocalization loc = EZLocalization.ForCatalogUnder("Packages/com.timiz0r.ezutils.editorenhancements");

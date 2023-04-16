@@ -7,10 +7,9 @@ namespace EZUtils.Localization
 
     public class ManualTestingEditorWindow : EditorWindow
     {
-        [GenerateCatalog("Packages/com.timiz0r.ezutils.editorenhancements")]
-        [GenerateLanguage("jp", Other = "")]
-        [GenerateLanguage("ko", Other = "")]
-        private static readonly EZLocalization loc = EZLocalization.ForCatalogUnder("Packages/com.timiz0r.ezutils.editorenhancements");
+        [GenerateLanguage("ja", "ja.po", Other = "")]
+        [GenerateLanguage("ko", "ko.po", Other = "")]
+        private static readonly EZLocalization loc = EZLocalization.ForCatalogUnder("Packages/com.timiz0r.ezutils.localization");
         private static int temp;
 
         [MenuItem("EZUtils/Localization Manual Testing", isValidateFunction: false, priority: 0)]
@@ -45,7 +44,8 @@ namespace EZUtils.Localization
             _ = Proxy.Localization.T("wat");
             Debug.Log(loc.T(LocalizationParameter.Count));
             Debug.Log(loc.T("the rain in spain falls mainly on the plain"));
-            Debug.Log(loc.T($"the rain in spain falls mainly on the plain", 2m, other: $"ffff{1,3:ff}", zero: default, two: default, few: default, many: default, specialZero: default));
+            decimal value = new System.Random().Next();
+            Debug.Log(loc.T($"There is {value} cupcake.", value, $"There are {value} cupcakes."));
 
             rootVisualElement.Q<Button>().clicked += () =>
             {

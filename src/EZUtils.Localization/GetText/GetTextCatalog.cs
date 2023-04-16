@@ -85,7 +85,7 @@ namespace EZUtils.Localization
         public string T(string context, FormattableString id) => T(context, new StringHelper(id));
         private string T(string context, StringHelper id) => id.GetEntryValue(
             GetSelectedLocale(),
-            FindEntry(id.GetUnformattedValue(), context: context)?.Id);
+            selectedDocument?.FindEntry(context: context, id: id.GetUnformattedValue())?.Id);
 
         //for plural methods, aside from these big ones, we dont use optional parameters
         //they make overloading weird and hard to reason about.
@@ -260,7 +260,7 @@ namespace EZUtils.Localization
             bool eligibleForSpecialZero = count == 0m && selectedLocale.UseSpecialZero;
 
             string idValue = id.GetUnformattedValue();
-            GetTextEntry entry = FindEntry(id: idValue, context: context);
+            GetTextEntry entry = selectedDocument?.FindEntry(context: context, id: idValue);
 
             string targetEntryString;
             StringHelper targetStringHelper;
@@ -328,12 +328,6 @@ namespace EZUtils.Localization
             string result = targetStringHelper.GetEntryValue(selectedLocale, targetEntryString);
             return result;
         }
-
-        //in our implementation, we dont consider the plural id an actual id
-        //mainly because we dont have an explicit plural id because we accept multiple plural forms
-        private GetTextEntry FindEntry(string id, string context = null) => selectedDocument
-            ?.Entries
-            ?.SingleOrDefault(e => e.Context == context && e.Id == id);
 
         private Locale GetSelectedLocale() => selectedDocument?.Header.Locale ?? nativeLocale;
 

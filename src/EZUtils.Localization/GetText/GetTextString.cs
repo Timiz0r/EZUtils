@@ -2,6 +2,7 @@ namespace EZUtils.Localization
 {
     using System;
     using System.Text.RegularExpressions;
+    using UnityEngine;
 
     //TODO: dont know how mutating will be done yet
     //am thinking either (or both)
@@ -72,6 +73,47 @@ namespace EZUtils.Localization
                 });
             return new GetTextString(raw, value);
         }
-        public static GetTextString FromValue(string value) => throw new NotImplementedException();
+        public static GetTextString FromValue(string value)
+        {
+            string raw = Regex.Replace(
+                value,
+                @"(?x)(
+                \a
+                | \x08 #backspace \b
+                | \x1b #\e
+                | \f
+                | \n
+                | \r
+                | \t
+                | \v
+                | \\
+                #| '  doesnt really matter for us
+                | ""
+                #| \?  probably doesnt matter for us
+                | [\x00-\x1f^\a\x08\f\n\r\t\v]
+                | \x7f #DEL char
+                )
+                ",
+                m =>
+                {
+                    string characterOfInterest =
+                        m.Value == "\a" ? @"\a" :
+                        m.Value == "\b" ? @"\b" :
+                        m.Value == "\x1b" ? @"\e" :
+                        m.Value == "\f" ? @"\f" :
+                        m.Value == "\n" ? @"\n" :
+                        m.Value == "\r" ? @"\r" :
+                        m.Value == "\t" ? @"\t" :
+                        m.Value == "\v" ? @"\v" :
+                        m.Value == @"\" ? @"\\" :
+                        m.Value == @"""" ? @"\""" :
+                        char.IsControl(m.Value[0]) && Convert.ToByte(m.Value[0]).ToString("x2") is string hexValue
+                            ? $@"\x{hexValue}"
+                            : throw new InvalidOperationException($"Cannot handle character '{Convert.ToByte(m.Value[0]):x2}'.");
+
+                    return characterOfInterest;
+                });
+            return new GetTextString(raw, value);
+        }
     }
 }
