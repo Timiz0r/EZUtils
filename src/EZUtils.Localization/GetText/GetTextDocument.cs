@@ -62,6 +62,7 @@ namespace EZUtils.Localization
             //serves the dual purpose of making sure we start with the header and some special handling around first entry
             bool haveHeader = false;
             bool processingContextualEntry = false;
+            HashSet<(string context, string id)> parsedIds = new HashSet<(string context, string id)>();
             List<GetTextEntry> entries = new List<GetTextEntry>();
             List<GetTextLine> currentEntryLines = new List<GetTextLine>();
             List<GetTextLine> currentCommentBlock = new List<GetTextLine>();
@@ -150,6 +151,10 @@ namespace EZUtils.Localization
             void FinishCurrentEntry()
             {
                 GetTextEntry entry = GetTextEntry.Parse(currentEntryLines.ToArray());
+
+                if (!parsedIds.Add((context: entry.Context, id: entry.Id))) throw new InvalidOperationException(
+                    $"Duplicate entry found. Context: '{entry.Context}', Id: '{entry.Id}'");
+
                 currentEntryLines.Clear();
                 entries.Add(entry);
             }
