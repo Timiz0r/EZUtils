@@ -17,7 +17,7 @@ namespace EZUtils.Localization
         {
             //could hypothetically also accept generated comments anywhere in the entry, but meh
             string[] headerComments = entryLines
-                .TakeWhile(l => l.IsCommentOrWhiteSpace)
+                .TakeWhile(l => l.IsCommentOrWhiteSpace && !l.IsMarkedObsolete)
                 .Where(l => l.IsComment)
                 .Select(l => l.Comment)
                 .ToArray();

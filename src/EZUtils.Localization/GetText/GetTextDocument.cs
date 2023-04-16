@@ -62,18 +62,35 @@ namespace EZUtils.Localization
             //serves the dual purpose of making sure we start with the header and some special handling around first entry
             bool haveHeader = false;
             bool processingContextualEntry = false;
+            bool processingObsoleteEntry = false;
             HashSet<(string context, string id)> parsedIds = new HashSet<(string context, string id)>();
             List<GetTextEntry> entries = new List<GetTextEntry>();
             List<GetTextLine> currentEntryLines = new List<GetTextLine>();
             List<GetTextLine> currentCommentBlock = new List<GetTextLine>();
             foreach (GetTextLine line in lines)
             {
+                if (line.IsMarkedObsolete)
+                {
+                    if (!processingObsoleteEntry)
+                    {
+                        //since entries as a whole are marked obsolete at a time, not parts
+                        //we dont expect to see, for instance, msgstr obsolete without its msgid also being obsolete.
+                        //as such, the first time we hit an obsolete comment indicates we've started a new entry.
+                        StartProcessingNextEntry(nextEntryContextual: false, nextEntryObsolete: true);
+                    }
+
+                    MoveCurrentCommentBlockToCurrentEntry();
+                    processingObsoleteEntry = true;
+                    currentEntryLines.Add(line);
+                    continue;
+                }
+
                 if (line.IsCommentOrWhiteSpace)
                 {
                     currentCommentBlock.Add(line);
                     continue;
                 }
-                //so is a string or a keyworded line after this point
+                //is a string or a keyworded line after this point
 
                 string keyword = line.Keyword?.Keyword;
 
@@ -86,17 +103,17 @@ namespace EZUtils.Localization
                     haveHeader = true;
 
                     MoveCurrentCommentBlockToCurrentEntry();
-                    processingContextualEntry = false;
                     currentEntryLines.Add(line);
-
                     continue;
                 }
-                //ofc cannot be the header after this point
+                //cannot be the header after this point; is string or keyworded line
 
                 if (keyword == "msgctxt")
                 {
-                    StartProcessingNextEntry();
-                    processingContextualEntry = true;
+                    if (processingContextualEntry) throw new InvalidOperationException(
+                        "Found two consecutive 'msgctxt' keyworded entries in a row without a 'msgid' between them.");
+
+                    StartProcessingNextEntry(nextEntryContextual: true, nextEntryObsolete: false);
                     currentEntryLines.Add(line);
                 }
                 else if (keyword == "msgid")
@@ -106,7 +123,7 @@ namespace EZUtils.Localization
                     //once we hit the current entry's msgid, then the next msgid would be for a new entry
                     if (!processingContextualEntry)
                     {
-                        StartProcessingNextEntry();
+                        StartProcessingNextEntry(nextEntryContextual: false, nextEntryObsolete: false);
                     }
 
                     //the important implication being that if we were contextual, we no longer are
@@ -127,7 +144,7 @@ namespace EZUtils.Localization
             GetTextDocument document = new GetTextDocument(entries);
             return document;
 
-            void StartProcessingNextEntry()
+            void StartProcessingNextEntry(bool nextEntryContextual, bool nextEntryObsolete)
             {
                 bool foundWhiteSpace = false;
                 foreach (GetTextLine comment in currentCommentBlock)
@@ -147,6 +164,9 @@ namespace EZUtils.Localization
                 {
                     FinishCurrentEntry();
                 }
+
+                processingContextualEntry = nextEntryContextual;
+                processingObsoleteEntry = nextEntryObsolete;
             }
             void FinishCurrentEntry()
             {

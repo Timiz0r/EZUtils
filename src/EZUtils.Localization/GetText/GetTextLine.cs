@@ -1,9 +1,9 @@
-using System;
-using System.Globalization;
-using System.Text.RegularExpressions;
-
 namespace EZUtils.Localization
 {
+    using System;
+    using System.Globalization;
+    using System.Text.RegularExpressions;
+
     public class GetTextLine
     {
         public GetTextKeyword Keyword { get; }
@@ -16,6 +16,7 @@ namespace EZUtils.Localization
         public bool IsCommentOrWhiteSpace { get; }
         public bool IsWhiteSpace { get; }
         public bool IsComment { get; }
+        public bool IsMarkedObsolete { get; }
 
         private GetTextLine(GetTextKeyword keyword, GetTextString stringValue, string comment, string rawLine)
         {
@@ -27,6 +28,7 @@ namespace EZUtils.Localization
             IsCommentOrWhiteSpace = keyword == null && stringValue == null;
             IsWhiteSpace = IsCommentOrWhiteSpace && comment == null;
             IsComment = IsCommentOrWhiteSpace && comment != null;
+            IsMarkedObsolete = IsComment && Comment.StartsWith("~");
         }
         public GetTextLine(GetTextKeyword keyword, GetTextString stringValue, string comment)
             : this(keyword, stringValue, comment, string.Concat(

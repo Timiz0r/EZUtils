@@ -17,6 +17,7 @@ namespace EZUtils.Localization
         };
 
         public GetTextEntryHeader Header { get; }
+        public bool IsObsolete { get; }
         public string Context { get; }
         public string Id { get; }
         public string PluralId { get; }
@@ -30,6 +31,7 @@ namespace EZUtils.Localization
         public GetTextEntry(
             IReadOnlyList<GetTextLine> lines,
             GetTextEntryHeader header,
+            bool isObsolete,
             string context,
             string id,
             string pluralId,
@@ -38,6 +40,7 @@ namespace EZUtils.Localization
         {
             Lines = lines;
             Header = header;
+            IsObsolete = isObsolete;
             Context = context;
             Id = id;
             PluralId = pluralId;
@@ -52,8 +55,16 @@ namespace EZUtils.Localization
             Dictionary<string, StringBuilder> keywordMap = new Dictionary<string, StringBuilder>();
             Dictionary<int, StringBuilder> pluralMap = new Dictionary<int, StringBuilder>();
             StringBuilder currentKeyword = null;
-            foreach (GetTextLine line in lines)
+            bool hasObsoleteLines = false;
+            foreach (GetTextLine currentLine in lines)
             {
+                GetTextLine line = currentLine;
+                if (currentLine.IsMarkedObsolete)
+                {
+                    line = GetTextLine.Parse(currentLine.Comment.Substring(2));
+                    hasObsoleteLines = true;
+                }
+
                 if (line.Keyword?.Keyword is string keyword)
                 {
                     if (line.Keyword?.Index == null)
@@ -79,6 +90,10 @@ namespace EZUtils.Localization
                 }
             }
 
+            //we check this after the loop in case the entry starts with non-obsolete lines but has obsolete ones in the middle
+            if (hasObsoleteLines && lines.Any(l => !l.IsCommentOrWhiteSpace)) throw new InvalidOperationException(
+                "Entry has lines marked obsolete but has non-obsolete lines as well.");
+
             int expectedPluralCount = pluralMap.Count == 0 ? 0 : pluralMap.Keys.Max() + 1;
             if (pluralMap.Count != expectedPluralCount) throw new InvalidOperationException(
                 $"Expected a plural count of '{expectedPluralCount}' based on the highest found index, but only found '{pluralMap.Count}' plural entries.");
@@ -94,6 +109,7 @@ namespace EZUtils.Localization
             GetTextEntry entry = new GetTextEntry(
                 lines: lines,
                 header: GetTextEntryHeader.ParseEntryLines(lines),
+                isObsolete: hasObsoleteLines,
                 context: GetValue("msgctxt"),
                 id: GetValue("msgid"),
                 pluralId: GetValue("msgid_plural"),

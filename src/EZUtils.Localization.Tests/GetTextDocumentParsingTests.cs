@@ -111,6 +111,19 @@ msgstr ""baz""";
         }
 
         [Test]
+        public void Throws_IfContextFollowedByContext()
+        {
+            string document = genericHeader + @"
+msgctxt ""apple""
+
+msgctxt ""orange""
+msgid ""foo""
+msgstr ""bar""";
+
+            Assert.That(() => GetTextDocument.Parse(document), Throws.InvalidOperationException);
+        }
+
+        [Test]
         public void ParsesTwoEntries_WhenSameIdButDifferentContext()
         {
             string document = genericHeader + @"
@@ -304,6 +317,117 @@ msgstr ""bar""
             Assert.That(getTextDocument.Entries[1].Lines.Count, Is.EqualTo(9));
             //due to textreader behavior, the extra line isn't returned
             //if we really cared, we could handle reading line some other way, but it's arguably not particularly important
+        }
+
+        [Test]
+        public void ParsesMiddleObsoleteEntry()
+        {
+            string document = genericHeader + @"
+msgid ""foo""
+msgstr ""bar""
+
+#comment
+#~ msgid ""bar""
+#comment
+#~ msgstr ""baz""
+#~ ""something"" #inline comment
+#comment
+
+msgid ""baz""
+msgstr ""wat""";
+
+            GetTextDocument getTextDocument = GetTextDocument.Parse(document);
+
+            AssertNonHeaderEntries(getTextDocument, 3);
+            Assert.That(getTextDocument.Entries[2].Id, Is.EqualTo("bar"));
+            Assert.That(getTextDocument.Entries[2].IsObsolete, Is.True);
+            Assert.That(getTextDocument.Entries[2].Value, Is.EqualTo("bazsomething"));
+            Assert.That(getTextDocument.Entries[2].Lines.Skip(0).First().IsWhiteSpace, Is.True);
+            Assert.That(getTextDocument.Entries[2].Lines.Skip(1).First().Comment, Is.EqualTo("comment"));
+            Assert.That(getTextDocument.Entries[2].Lines.Skip(3).First().Comment, Is.EqualTo("comment"));
+            Assert.That(getTextDocument.Entries[2].Lines.Skip(5).First().Comment, Is.EqualTo("~ \"something\" #inline comment"));
+            Assert.That(getTextDocument.Entries[2].Lines.Skip(6).First().Comment, Is.EqualTo("comment"));
+        }
+
+        [Test]
+        public void ParsesConsecutiveObsoleteEntries()
+        {
+            string document = genericHeader + @"
+#comment
+#~ msgid ""a""
+#comment
+#~ msgstr ""baz""
+#~ ""something"" #inline comment
+#comment
+
+#comment
+#~ msgid ""b""
+#comment
+#~ msgstr ""baz""
+#~ ""something"" #inline comment
+#comment
+
+#comment
+#~ msgid ""c""
+#comment
+#~ msgstr ""baz""
+#~ ""something"" #inline comment
+#comment";
+
+            GetTextDocument getTextDocument = GetTextDocument.Parse(document);
+
+            AssertNonHeaderEntries(getTextDocument, 3);
+            Assert.That(getTextDocument.Entries[1].Id, Is.EqualTo("a"));
+            Assert.That(getTextDocument.Entries[2].Id, Is.EqualTo("b"));
+            Assert.That(getTextDocument.Entries[3].Id, Is.EqualTo("c"));
+            for (int i = 1; i < 4; i++)
+            {
+                Assert.That(getTextDocument.Entries[i].IsObsolete, Is.True);
+                Assert.That(getTextDocument.Entries[i].Value, Is.EqualTo("bazsomething"));
+                Assert.That(getTextDocument.Entries[i].Lines.Skip(0).First().IsWhiteSpace, Is.True);
+                Assert.That(getTextDocument.Entries[i].Lines.Skip(1).First().Comment, Is.EqualTo("comment"));
+                Assert.That(getTextDocument.Entries[i].Lines.Skip(3).First().Comment, Is.EqualTo("comment"));
+                Assert.That(getTextDocument.Entries[i].Lines.Skip(5).First().Comment, Is.EqualTo("~ \"something\" #inline comment"));
+                Assert.That(getTextDocument.Entries[i].Lines.Skip(6).First().Comment, Is.EqualTo("comment"));
+            }
+        }
+
+        [Test]
+        public void ParsesObsoleteEntry_WithMidEntryWhitespace()
+        {
+            string document = genericHeader + @"
+msgid ""foo""
+msgstr ""bar""
+
+#comment
+
+#~ msgid ""bar""
+
+#comment
+
+#~ msgstr ""baz""
+
+#~ ""something"" #inline comment
+#comment
+
+msgid ""baz""
+msgstr ""wat""";
+
+            GetTextDocument getTextDocument = GetTextDocument.Parse(document);
+
+            AssertNonHeaderEntries(getTextDocument, 3);
+            Assert.That(getTextDocument.Entries[2].Id, Is.EqualTo("bar"));
+            Assert.That(getTextDocument.Entries[2].IsObsolete, Is.True);
+            Assert.That(getTextDocument.Entries[2].Value, Is.EqualTo("bazsomething"));
+            Assert.That(getTextDocument.Entries[2].Lines.Skip(0).First().IsWhiteSpace, Is.True);
+            Assert.That(getTextDocument.Entries[2].Lines.Skip(1).First().Comment, Is.EqualTo("comment"));
+            Assert.That(getTextDocument.Entries[2].Lines.Skip(2).First().IsWhiteSpace, Is.True);
+            Assert.That(getTextDocument.Entries[2].Lines.Skip(4).First().IsWhiteSpace, Is.True);
+            Assert.That(getTextDocument.Entries[2].Lines.Skip(5).First().Comment, Is.EqualTo("comment"));
+            Assert.That(getTextDocument.Entries[2].Lines.Skip(6).First().IsWhiteSpace, Is.True);
+            Assert.That(getTextDocument.Entries[2].Lines.Skip(8).First().IsWhiteSpace, Is.True);
+            Assert.That(getTextDocument.Entries[2].Lines.Skip(9).First().Comment, Is.EqualTo("~ \"something\" #inline comment"));
+            Assert.That(getTextDocument.Entries[2].Lines.Skip(10).First().Comment, Is.EqualTo("comment"));
         }
 
         private static GetTextEntry AssertHasEntry(GetTextDocument getTextDocument, string id)

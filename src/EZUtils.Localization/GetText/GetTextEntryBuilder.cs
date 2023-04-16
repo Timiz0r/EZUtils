@@ -72,6 +72,7 @@ namespace EZUtils.Localization
         public GetTextEntry Create() => new GetTextEntry(
             lines: lines,
             header: null,
+            isObsolete: false,
             context: context,
             id: id,
             pluralId: pluralId,
