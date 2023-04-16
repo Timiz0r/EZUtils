@@ -52,69 +52,56 @@ namespace EZUtils.Localization
                 lines.Add(GetTextLine.Parse(rawLine));
             }
 
-            //TODO: keep in mind the case of obsolete entries which are commented out
-            //it would be handy to support for two reasons:
-            //  deprecating entries ourselves. without it, we'd have to convert an entry to all comments and slap it on another entry
-            //  keeping entries sorted by file and line-ish (not fleshed out at time of writing)
-            //but it's hard to implement because it complicates new entry detection
-            //in reality, perhaps the best way to implement it is in the step where we split comment blocks between entries
-
             //serves the dual purpose of making sure we start with the header and some special handling around first entry
             bool haveHeader = false;
             bool processingContextualEntry = false;
-            bool processingObsoleteEntry = false;
             HashSet<(string context, string id)> parsedIds = new HashSet<(string context, string id)>();
             List<GetTextEntry> entries = new List<GetTextEntry>();
             List<GetTextLine> currentEntryLines = new List<GetTextLine>();
             List<GetTextLine> currentCommentBlock = new List<GetTextLine>();
-            foreach (GetTextLine line in lines)
+            foreach (GetTextLine actualLine in lines)
             {
-                if (line.IsMarkedObsolete)
-                {
-                    if (!processingObsoleteEntry)
-                    {
-                        //since entries as a whole are marked obsolete at a time, not parts
-                        //we dont expect to see, for instance, msgstr obsolete without its msgid also being obsolete.
-                        //as such, the first time we hit an obsolete comment indicates we've started a new entry.
-                        StartProcessingNextEntry(nextEntryContextual: false, nextEntryObsolete: true);
-                    }
+                //NOTE: our implementation around obsolete entries is somewhat inefficient
+                //is requires an extra couple parses for a deprecated line: one here and one in GetTextEntry.Parse
+                //we could change how we parse GetTextLine to have special handling if line raw line starts with #~,
+                //but we picked the most clean design under the assumption that perf will not be an issue.
+                //
+                //lineToInspect should be used when reading a line's properties.
+                //actualLine, being the actual line, is what should be passed over to entries
+                GetTextLine lineToInspect = actualLine.IsMarkedObsolete
+                    ? GetTextLine.Parse(actualLine.Comment.Substring(1))
+                    : actualLine;
 
-                    MoveCurrentCommentBlockToCurrentEntry();
-                    processingObsoleteEntry = true;
-                    currentEntryLines.Add(line);
-                    continue;
-                }
-
-                if (line.IsCommentOrWhiteSpace)
+                if (lineToInspect.IsCommentOrWhiteSpace)
                 {
-                    currentCommentBlock.Add(line);
+                    currentCommentBlock.Add(actualLine);
                     continue;
                 }
                 //is a string or a keyworded line after this point
 
-                string keyword = line.Keyword?.Keyword;
-
-                if (!haveHeader && keyword == "msgctxt") throw new InvalidOperationException(
+                //since the header cannot be deprecated, we inspect the actual line here
+                if (!haveHeader && actualLine.Keyword?.Keyword == "msgctxt") throw new InvalidOperationException(
                     "The first entry should be the header, and the header should not have a msgctxt.");
-                if (!haveHeader && keyword == "msgid")
+                if (!haveHeader && actualLine.Keyword?.Keyword == "msgid")
                 {
-                    if (line.StringValue.Raw != string.Empty) throw new InvalidOperationException(
-                        $"First entry must be header. Found: {line.RawLine}");
+                    if (actualLine.StringValue.Raw != string.Empty) throw new InvalidOperationException(
+                        $"First entry must be header. Found: {actualLine.RawLine}");
                     haveHeader = true;
 
                     MoveCurrentCommentBlockToCurrentEntry();
-                    currentEntryLines.Add(line);
+                    AddCurrentLineToCurrentEntry();
                     continue;
                 }
                 //cannot be the header after this point; is string or keyworded line
 
+                string keyword = lineToInspect.Keyword?.Keyword;
                 if (keyword == "msgctxt")
                 {
                     if (processingContextualEntry) throw new InvalidOperationException(
                         "Found two consecutive 'msgctxt' keyworded entries in a row without a 'msgid' between them.");
 
-                    StartProcessingNextEntry(nextEntryContextual: true, nextEntryObsolete: false);
-                    currentEntryLines.Add(line);
+                    StartProcessingNextEntry(nextEntryContextual: true);
+                    AddCurrentLineToCurrentEntry();
                 }
                 else if (keyword == "msgid")
                 {
@@ -123,19 +110,20 @@ namespace EZUtils.Localization
                     //once we hit the current entry's msgid, then the next msgid would be for a new entry
                     if (!processingContextualEntry)
                     {
-                        StartProcessingNextEntry(nextEntryContextual: false, nextEntryObsolete: false);
+                        StartProcessingNextEntry(nextEntryContextual: false);
                     }
 
                     //the important implication being that if we were contextual, we no longer are
                     processingContextualEntry = false;
-                    currentEntryLines.Add(line);
+                    AddCurrentLineToCurrentEntry();
                 }
                 else
                 {
                     //at this point, string lines and other keyworded lines, like strs and plural stuff
                     MoveCurrentCommentBlockToCurrentEntry();
-                    currentEntryLines.Add(line);
+                    AddCurrentLineToCurrentEntry();
                 }
+                void AddCurrentLineToCurrentEntry() => currentEntryLines.Add(actualLine);
             }
 
             MoveCurrentCommentBlockToCurrentEntry();
@@ -144,7 +132,7 @@ namespace EZUtils.Localization
             GetTextDocument document = new GetTextDocument(entries);
             return document;
 
-            void StartProcessingNextEntry(bool nextEntryContextual, bool nextEntryObsolete)
+            void StartProcessingNextEntry(bool nextEntryContextual)
             {
                 bool foundWhiteSpace = false;
                 foreach (GetTextLine comment in currentCommentBlock)
@@ -166,7 +154,6 @@ namespace EZUtils.Localization
                 }
 
                 processingContextualEntry = nextEntryContextual;
-                processingObsoleteEntry = nextEntryObsolete;
             }
             void FinishCurrentEntry()
             {
