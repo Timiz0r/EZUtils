@@ -28,8 +28,7 @@ namespace EZUtils.Localization
         {
             string value = Regex.Replace(
                 raw,
-                @"
-                (?x)\\(
+                @"(?x)\\(
                 a
                 | b
                 | e

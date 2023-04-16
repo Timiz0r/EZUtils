@@ -12,7 +12,7 @@ namespace EZUtils.Localization
     //also note that empty rules (with or without samples) probably dont parse right. giganto xml parsing should work there
     //but dont get lazy and just parse xml, since it's harder to reason about there
     //or do idk
-    public class PluralRules
+    public class PluralRules : IEquatable<PluralRules>
     {
         private static readonly IReadOnlyDictionary<CultureInfo, PluralRules> defaultPluralRules = LoadDefaultPluralRules();
         private readonly Func<Operands, bool> zeroExpression;
@@ -22,6 +22,8 @@ namespace EZUtils.Localization
         private readonly Func<Operands, bool> manyExpression;
         //this is realistically always true, but the rule has examples we'll want to test on
         private readonly Func<Operands, bool> otherExpression;
+        private readonly int hashcode;
+
         public string Zero { get; }
         public string One { get; }
         public string Two { get; }
@@ -62,6 +64,8 @@ namespace EZUtils.Localization
             if (two != null) Count++;
             if (few != null) Count++;
             if (many != null) Count++;
+
+            hashcode = (zero + one + two + few + many + other).GetHashCode();
         }
 
 
@@ -131,6 +135,17 @@ namespace EZUtils.Localization
 
             return rules;
         }
+
+        public bool Equals(PluralRules other)
+            => other != null
+                && Zero == other.Zero
+                && One == other.One
+                && Two == other.Two
+                && Few == other.Few
+                && Many == other.Many
+                && other.Other == other.Other;
+        public override bool Equals(object obj) => obj is PluralRules pluralRules && Equals(pluralRules);
+        public override int GetHashCode() => hashcode;
 
         //pluralrules code is meant tobe unity-agnostic, and there isn't a good way to discover the file
         //we could expose a method to initialize them that gets called from unity land, but this is a bit easier

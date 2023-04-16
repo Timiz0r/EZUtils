@@ -77,12 +77,12 @@ namespace EZUtils.Localization
 
         public static GetTextHeader FromEntry(GetTextEntry entry)
         {
-            Match match = Regex.Match(entry.Value, "(?i)Language: (?'lang'[a-z]+)(?:_(?'country'[a-z]+))?(?:@(?'variant'[a-z]+))?");
-            CultureInfo cultureInfo = match.Success
+            Match languageMatch = Regex.Match(entry.Value, "(?i)Language: (?'lang'[a-z]+)(?:_(?'country'[a-z]+))?(?:@(?'variant'[a-z]+))?");
+            CultureInfo cultureInfo = languageMatch.Success
                 ? GetCultureInfoFromGetTextLanguage(
-                    language: match.Groups["lang"].Value,
-                    country: match.Groups["country"].Value,
-                    variant: match.Groups["variant"].Value)
+                    language: languageMatch.Groups["lang"].Value,
+                    country: languageMatch.Groups["country"].Value,
+                    variant: languageMatch.Groups["variant"].Value)
                 //is basically the most important field
                 : throw new InvalidOperationException($"Language field not found.");
 
@@ -99,9 +99,10 @@ namespace EZUtils.Localization
             GetTextHeader result = new GetTextHeader(locale);
             return result;
 
-            string GetPluralRule(string kind)
-                => Regex.Match(entry.Value, $"(?i)X-PluralRules-{kind}: ([^\n]+)") is Match m && m.Success
-                    ? match.Groups[1].Value
+            string GetPluralRule(string kind) => Regex.Match(
+                entry.Value,
+                $@"(?i)X-PluralRules-{kind}:\s+([^\n]*)") is Match pluralRuleMatch && pluralRuleMatch.Success
+                    ? pluralRuleMatch.Groups[1].Value
                     : null;
         }
 
