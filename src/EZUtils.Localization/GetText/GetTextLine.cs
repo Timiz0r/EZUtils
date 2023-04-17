@@ -2,10 +2,14 @@ namespace EZUtils.Localization
 {
     using System;
     using System.Globalization;
+    using System.Text;
     using System.Text.RegularExpressions;
 
     public class GetTextLine
     {
+        public static readonly GetTextLine Empty =
+            new GetTextLine(keyword: null, stringValue: null, comment: null, rawLine: string.Empty);
+
         public GetTextKeyword Keyword { get; }
         public GetTextString StringValue { get; }
         //note that while we support inline comments, poedit doesn't. as such, wouldn't recommend writing them in practice.
@@ -30,21 +34,46 @@ namespace EZUtils.Localization
             IsComment = IsCommentOrWhiteSpace && comment != null;
             IsMarkedObsolete = IsComment && Comment.StartsWith("~");
         }
+
         public GetTextLine(GetTextKeyword keyword, GetTextString stringValue, string comment)
-            : this(keyword, stringValue, comment, string.Concat(
-                keyword == null
-                    ? string.Empty
-                    : keyword.Index is int i
-                        ? $"{keyword}[{i}]"
-                        : keyword.Keyword,
-                stringValue == null
-                    ? string.Empty
-                    : '"' + stringValue.Raw + '"',
-                comment == null
-                    ? string.Empty
-                    : '#' + comment
-            ))
-        {}
+            : this(keyword, stringValue, comment, rawLine: null)
+        {
+            StringBuilder sb = new StringBuilder();
+            if (keyword?.Keyword is string keywordValue)
+            {
+                if (keyword?.Index is int i)
+                {
+                    _ = sb.Append(keywordValue).Append('[').Append(i).Append(']');
+                }
+                else
+                {
+                    _ = sb.Append(keywordValue);
+                }
+
+                //will be a space between this and a string or comment
+                if (stringValue != null || comment != null)
+                {
+                    _ = sb.Append(' ');
+                }
+            }
+
+            if (stringValue != null)
+            {
+                _ = sb.Append('"').Append(stringValue.Raw).Append('"');
+
+                if (comment != null)
+                {
+                    _ = sb.Append(' ');
+                }
+            }
+
+            if (comment != null)
+            {
+                _ = sb.Append('#').Append(comment);
+            }
+
+            RawLine = sb.ToString();
+        }
         public GetTextLine(string comment) : this(keyword: null, stringValue: null, comment)
         {}
         public GetTextLine(GetTextString stringValue) : this(keyword: null, stringValue: stringValue, comment: null)

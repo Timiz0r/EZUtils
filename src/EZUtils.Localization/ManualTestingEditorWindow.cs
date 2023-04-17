@@ -7,8 +7,8 @@ namespace EZUtils.Localization
 
     public class ManualTestingEditorWindow : EditorWindow
     {
-        [GenerateLanguage("ja", "ja.po", Other = "")]
-        [GenerateLanguage("ko", "ko.po", Other = "")]
+        [GenerateLanguage("ja", "ja.po", UseSpecialZero = true, Other = " @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")]
+        [GenerateLanguage("ko", "ko.po", UseSpecialZero = true, Other = " @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")]
         private static readonly EZLocalization loc = EZLocalization.ForCatalogUnder("Packages/com.timiz0r.ezutils.localization");
         private static int temp;
 

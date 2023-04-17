@@ -28,38 +28,33 @@ namespace EZUtils.Localization
         //* the attribute can be added to fields, properties (so declarations), and classes (for static proxy types)
         public void ExtractFrom()
         {
-            CSharpCompilation compilation = CSharpCompilation.Create("EZLocalizationExtractor")
-                //we need a reference for each thing that we inspect from EZLocalization
-                .AddReferences(MetadataReference.CreateFromFile(typeof(EZLocalization).Assembly.Location))
-                .AddReferences(MetadataReference.CreateFromFile(typeof(CultureInfo).Assembly.Location))
-                .AddReferences(MetadataReference.CreateFromFile(typeof(VisualElement).Assembly.Location))
-                .AddReferences(MetadataReference.CreateFromFile(typeof(EditorWindow).Assembly.Location));
-
-
-            GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
-            GetTextExtractor extractor = new GetTextExtractor(compilation, catalogBuilder);
+            GetTextExtractor extractor = new GetTextExtractor(compilation => compilation
+                .AddReferences(MetadataReference.CreateFromFile(typeof(EditorWindow).Assembly.Location)));
+            //    .AddReferences(MetadataReference.CreateFromFile(typeof(VisualElement).Assembly.Location))
             void AddFile(string path) => extractor.AddFile(Path.GetFullPath(path), path);
             AddFile("Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs");
             AddFile("Packages/com.timiz0r.ezutils.localization/Florp.cs");
             AddFile("Packages/com.timiz0r.ezutils.localization/Localization.cs");
-            var catalog = extractor.Extract();
+
+            GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
+            extractor.Extract(catalogBuilder);
+            _ = catalogBuilder.WriteToDisk("Packages/com.timiz0r.ezutils.localization");
         }
     }
 
-    public class GetTextExtractor : CSharpSyntaxWalker
+    public class GetTextExtractor
     {
         private readonly List<SyntaxTree> syntaxTrees = new List<SyntaxTree>();
-        private readonly GetTextCatalogBuilder catalogBuilder;
         private CSharpCompilation compilation;
 
-        //we cache it like this as we process each file in case it helps with perf
-        //vaguely recall reading somewhere it does, but could be wrong
-        private SemanticModel model;
-
-        public GetTextExtractor(CSharpCompilation compilation, GetTextCatalogBuilder catalogBuilder)
+        public GetTextExtractor(Func<CSharpCompilation, CSharpCompilation> compilationBuilder)
         {
-            this.compilation = compilation;
-            this.catalogBuilder = catalogBuilder;
+            CSharpCompilation compilation = CSharpCompilation.Create("EZLocalizationExtractor")
+                //we need a reference for each thing that we inspect from EZLocalization
+                .AddReferences(MetadataReference.CreateFromFile(typeof(GetTextExtractor).Assembly.Location))
+                .AddReferences(MetadataReference.CreateFromFile(typeof(CultureInfo).Assembly.Location));
+
+            this.compilation = compilationBuilder(compilation);
         }
 
         public void AddFile(string path, string displayPath)
@@ -69,90 +64,106 @@ namespace EZUtils.Localization
             syntaxTrees.Add(syntaxTree);
         }
 
-        public GetTextCatalog Extract()
+        public void Extract(GetTextCatalogBuilder catalogBuilder)
         {
             foreach (SyntaxTree syntaxTree in syntaxTrees)
             {
-                model = compilation.GetSemanticModel(syntaxTree);
-                VisitCompilationUnit(syntaxTree.GetCompilationUnitRoot());
+                SemanticModel model = compilation.GetSemanticModel(syntaxTree);
+                SyntaxWalker syntaxWalker = new SyntaxWalker(model, catalogBuilder);
+                syntaxWalker.VisitCompilationUnit(syntaxTree.GetCompilationUnitRoot());
             }
-
-            return catalogBuilder.GetCatalog(Locale.English);
         }
 
-        public override void VisitClassDeclaration(ClassDeclarationSyntax node)
+        private class SyntaxWalker : CSharpSyntaxWalker
         {
-            INamedTypeSymbol symbol = model.GetDeclaredSymbol(node);
-            //if a class has these attributes, it's a proxy type that calls into other LocalizationMethods
-            //so we dont want to extract from such classes
-            //NOTE: a slight improvement would be to additionally ensure the declared method isn't a LocalizationMethod
-            //but since these types should be doing localization themselves, we'll save the time
-            if (symbol.GetAttributes().Any(
-                a => a.AttributeClass.ToString() == "EZUtils.Localization.GenerateLanguageAttribute")) return;
+            private readonly SemanticModel model;
+            private readonly GetTextCatalogBuilder catalogBuilder;
 
-            base.VisitClassDeclaration(node);
-        }
-
-        public override void VisitInvocationExpression(InvocationExpressionSyntax node)
-        {
-            base.VisitInvocationExpression(node);
-
-            if (!(model.GetOperation(node) is IInvocationOperation invocationOperation)) return;
-
-            ImmutableArray<AttributeData> attributes = invocationOperation.TargetMethod.GetAttributes();
-            if (!invocationOperation.TargetMethod
-                .GetAttributes()
-                .Any(a => a.AttributeClass.ToString() == "EZUtils.Localization.LocalizationMethodAttribute")) return;
-
-            InvocationParser invocationParser = InvocationParser.ForInvocation(invocationOperation);
-            foreach (IArgumentOperation argument in invocationOperation.Arguments)
+            public SyntaxWalker(SemanticModel model, GetTextCatalogBuilder catalogBuilder)
             {
-                try
-                {
-                    invocationParser.HandleArgument(argument);
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidOperationException($"Failed to parse invocation: {node}", ex);
-                }
+                this.model = model;
+                this.catalogBuilder = catalogBuilder;
             }
 
-            if (string.IsNullOrEmpty(invocationParser.Id)) throw new InvalidOperationException(
-                $"Could not extract id from invocation: {node}");
-            //should also theoretically invalidate an entry that has incomplete plural arguments
-
-            foreach ((string poFilePath, Locale locale) in invocationParser.Targets)
+            public override void VisitClassDeclaration(ClassDeclarationSyntax node)
             {
-                string absolutePath = Path.GetFullPath(
-                    Path.Combine(
-                        Path.GetDirectoryName(node.SyntaxTree.FilePath),
-                        poFilePath));
-                _ = catalogBuilder
-                    .ForPoFile(absolutePath, locale, doc => doc
-                        .AddEntry(e =>
-                        {
-                            FileLinePositionSpan location = node.GetLocation().GetLineSpan();
-                            _ = e.AddComment($": {location.Path}:{location.StartLinePosition.Line}");
-                            _ = e.ConfigureContext(invocationParser.Context).ConfigureId(invocationParser.Id);
+                INamedTypeSymbol symbol = model.GetDeclaredSymbol(node);
+                //if a class has these attributes, it's a proxy type that calls into other LocalizationMethods
+                //so we dont want to extract from such classes
+                //NOTE: a slight improvement would be to additionally ensure the declared method isn't a LocalizationMethod
+                //but since these types should be doing localization themselves, we'll save the time
+                if (symbol.GetAttributes().Any(
+                    a => a.AttributeClass.ToString() == "EZUtils.Localization.GenerateLanguageAttribute")) return;
 
-                            (bool countFound, string pluralId) = invocationParser.PluralStatus;
-                            _ = countFound && pluralId != null
-                                ? e.ConfigureAsPlural(pluralId, locale)
-                                : e.ConfigureValue(string.Empty);
-                        }));
+                base.VisitClassDeclaration(node);
+            }
+
+            public override void VisitInvocationExpression(InvocationExpressionSyntax node)
+            {
+                base.VisitInvocationExpression(node);
+
+                if (!(model.GetOperation(node) is IInvocationOperation invocationOperation)) return;
+
+                ImmutableArray<AttributeData> attributes = invocationOperation.TargetMethod.GetAttributes();
+                if (!invocationOperation.TargetMethod
+                    .GetAttributes()
+                    .Any(a => a.AttributeClass.ToString() == "EZUtils.Localization.LocalizationMethodAttribute")) return;
+
+                InvocationParser invocationParser = InvocationParser.ForInvocation(invocationOperation);
+                foreach (IArgumentOperation argument in invocationOperation.Arguments)
+                {
+                    try
+                    {
+                        invocationParser.HandleArgument(argument);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw new InvalidOperationException($"Failed to parse invocation: {node}", ex);
+                    }
+                }
+
+                if (string.IsNullOrEmpty(invocationParser.Id)) throw new InvalidOperationException(
+                    $"Could not extract id from invocation: {node}");
+                //should also theoretically invalidate an entry that has incomplete plural arguments
+
+                foreach ((string poFilePath, Locale locale) in invocationParser.Targets)
+                {
+                    string absolutePath = Path.GetFullPath(
+                        Path.Combine(
+                            Path.GetDirectoryName(node.SyntaxTree.FilePath),
+                            poFilePath));
+                    _ = catalogBuilder
+                        .ForPoFile(absolutePath, locale, doc => doc
+                            .AddEntry(e =>
+                            {
+                                FileLinePositionSpan location = node.GetLocation().GetLineSpan();
+                                _ = e
+                                    .AddEmptyLine() //entries tend to have whitespace on top to visually separate them
+                                    //TODO: add a header instead
+                                    .AddComment($": {location.Path}:{location.StartLinePosition.Line}")
+                                    .ConfigureContext(invocationParser.Context)
+                                    .ConfigureId(invocationParser.Id);
+
+                                (bool countFound, string pluralId) = invocationParser.PluralStatus;
+                                _ = countFound && pluralId != null
+                                    ? e.ConfigureAsPlural(pluralId, locale)
+                                    : e.ConfigureValue(string.Empty);
+                            }));
+                }
             }
         }
     }
 
     public class GetTextCatalogBuilder
     {
+        //keys are paths, rooted or unrooted
         private readonly Dictionary<string, GetTextDocumentBuilder> documents =
             new Dictionary<string, GetTextDocumentBuilder>();
 
         public GetTextCatalogBuilder ForPoFile(
-            string absolutePath, Locale locale, Action<GetTextDocumentBuilder> documentBuilderAction)
+            string path, Locale locale, Action<GetTextDocumentBuilder> documentBuilderAction)
         {
-            if (documents.TryGetValue(absolutePath, out GetTextDocumentBuilder document))
+            if (documents.TryGetValue(path, out GetTextDocumentBuilder document))
             {
                 _ = document.VerifyLocaleMatches(locale);
                 documentBuilderAction(document);
@@ -160,14 +171,19 @@ namespace EZUtils.Localization
                 return this;
             }
 
-            document = documents[absolutePath] = GetTextDocumentBuilder.ForDocumentAt(absolutePath, locale);
+            document = documents[path] = GetTextDocumentBuilder.ForDocumentAt(path, locale);
             documentBuilderAction(document);
 
             return this;
         }
 
-        public GetTextCatalogBuilder WriteToDisk()
+        public GetTextCatalogBuilder WriteToDisk(string root)
         {
+            foreach (GetTextDocumentBuilder doc in documents.Values)
+            {
+                _ = doc.WriteToDisk(root);
+            }
+
             return this;
         }
 
@@ -179,14 +195,14 @@ namespace EZUtils.Localization
 
     public class GetTextDocumentBuilder
     {
-        private readonly string absolutePath;
+        private readonly string path;
         //hypothetically, we could instead store an IEnumerable of entries instead, avoiding a bunch of array allocations
         //or consider using immutable collections, even though library dependencies are annoying in unity
         private GetTextDocument document;
 
-        private GetTextDocumentBuilder(string absolutePath)
+        private GetTextDocumentBuilder(string path)
         {
-            this.absolutePath = absolutePath;
+            this.path = path;
         }
 
         public static GetTextDocumentBuilder ForDocumentAt(string absolutePath, Locale locale)
@@ -228,8 +244,16 @@ namespace EZUtils.Localization
 
         public GetTextDocument GetGetTextDocument() => document;
 
-        public GetTextDocumentBuilder WriteToDisk()
+        public GetTextDocumentBuilder WriteToDisk(string root)
         {
+            string savePath = path;
+            if (!Path.IsPathRooted(savePath))
+            {
+                savePath = Path.Combine(root, savePath);
+            }
+
+            document.Save(savePath);
+
             return this;
         }
 
@@ -241,7 +265,7 @@ namespace EZUtils.Localization
             Locale existingLocale = document.Header.Locale;
             return existingLocale != locale
                 || !existingLocale.PluralRules.Equals(locale.PluralRules)
-                ? throw new InvalidOperationException($"Inconsistent locales for '{absolutePath}'.")
+                ? throw new InvalidOperationException($"Inconsistent locales for '{path}'.")
                 : this;
         }
         private static GetTextEntry MergeEntries(GetTextEntry existingEntry, GetTextEntry builtEntry)
@@ -264,7 +288,10 @@ namespace EZUtils.Localization
             if (!existingReferenceFound)
             {
                 int lastReferenceLine = mergedLines.FindLastIndex(l => l.IsComment && l.Comment.StartsWith(":"));
-                mergedLines.Insert(lastReferenceLine + 1, new GetTextLine(comment: $": {builtEntryReference}"));
+                int referenceInsertionPoint = lastReferenceLine != -1
+                    ? lastReferenceLine + 1
+                    : mergedLines.FindIndex(l => l.Keyword != null);
+                mergedLines.Insert(referenceInsertionPoint, new GetTextLine(comment: $": {builtEntryReference}"));
 
                 header = new GetTextEntryHeader(
                     existingEntry.Header.References.Append(builtEntryReference).ToArray());

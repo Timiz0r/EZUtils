@@ -3,6 +3,7 @@ namespace EZUtils.Localization
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Text.RegularExpressions;
 
     //TODO: whenever we get to extracting, let's generate entries with mid-entry comments
     //however, let's additionally have an option to propagate all mid-entry comments up to the top
@@ -88,6 +89,8 @@ namespace EZUtils.Localization
 
             void AddEmptyPluralForm(string pluralRuleName, string pluralRule)
             {
+                if (pluralRule == null) return;
+
                 lines.Add(new GetTextLine(comment: $" plural[{pluralValues.Count + 1}]: {pluralRuleName}; {pluralRule}"));
                 _ = ConfigureAdditionalPluralValue(string.Empty);
             }
@@ -117,6 +120,13 @@ namespace EZUtils.Localization
             return this;
         }
 
+        public GetTextEntryBuilder AddEmptyLine()
+        {
+            lines.Add(GetTextLine.Empty);
+
+            return this;
+        }
+
         public GetTextEntry Create() => new GetTextEntry(
             lines: lines,
             header: GetTextEntryHeader.ParseEntryLines(lines),
@@ -143,8 +153,9 @@ namespace EZUtils.Localization
                 return;
             }
 
-            //dont worry about comments inline to string-only lines. could support it if desired though.
-            string[] values = value.Split(new[] { "\r", "\n", "\r\n" }, StringSplitOptions.None);
+            //in multiline mode, $ eats up \n, so we dont use it
+            //we want to maintain newline chars
+            string[] values = Regex.Matches(value, @"(?m)^[^\r\n]+\r?\n?").Cast<Match>().Select(m => m.Value).ToArray();
             lines.Add(
                 new GetTextLine(
                     new GetTextKeyword(keyword, index),
@@ -152,9 +163,7 @@ namespace EZUtils.Localization
                     comment: inlineComment));
             foreach (string additionalLine in values.Skip(1))
             {
-                lines.Add(
-                    new GetTextLine(
-                        GetTextString.FromValue(additionalLine + "\n")));
+                lines.Add(new GetTextLine(GetTextString.FromValue(additionalLine)));
             }
         }
     }

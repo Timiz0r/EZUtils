@@ -195,5 +195,19 @@ namespace EZUtils.Localization
                 currentCommentBlock.Clear();
             }
         }
+
+        public void Save(string path)
+        {
+            using (StreamWriter sw = new StreamWriter(path))
+            {
+                foreach (GetTextEntry entry in Entries)
+                {
+                    foreach (GetTextLine line in entry.Lines)
+                    {
+                        sw.WriteLine(line.RawLine);
+                    }
+                }
+            }
+        }
     }
 }
