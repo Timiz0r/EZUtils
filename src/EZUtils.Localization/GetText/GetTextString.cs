@@ -2,18 +2,7 @@ namespace EZUtils.Localization
 {
     using System;
     using System.Text.RegularExpressions;
-    using UnityEngine;
 
-    //TODO: dont know how mutating will be done yet
-    //am thinking either (or both)
-    //* deletion and insertion
-    //* adding mutation instructions that get comitted in the end
-    //kind of mutations?
-    //  for headers, it's more like we'll initialize them once. except maybe revision date. but really we got git. so let's not.
-    //  inserting new entries (to document)
-    //  commenting out removed entries (replacing entry in document)
-    //  updating reference comments (could also replace)
-    //so yeh simple seems better; won't really be modifying existing entries much if at all
     public class GetTextString
     {
         public string Raw { get; }

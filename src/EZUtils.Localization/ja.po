@@ -42,9 +42,9 @@ msgid "the rain in spain falls mainly on the plain"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:47
+# plural[1]: Other;  @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …
+# plural[2]: special zero; use in case of a special message for zero elements
 msgid "There is {0} cupcake."
 msgid_plural "There are {0} cupcakes."
-# plural[1]: Other;  @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …
 msgstr[0] ""
-# plural[2]: special zero; use in case of a special message for zero elements
 msgstr[1] ""
