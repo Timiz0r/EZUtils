@@ -1,6 +1,5 @@
 namespace EZUtils.Localization
 {
-    using System.Collections.Generic;
     using UnityEditor;
     using UnityEngine.UIElements;
 

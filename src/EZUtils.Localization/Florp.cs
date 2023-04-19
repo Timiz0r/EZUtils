@@ -2,7 +2,7 @@ namespace EZUtils.Localization
 {
     public class Florp
     {
-        private static readonly EZLocalization loc = EZLocalization.ForCatalogUnder("Packages/com.timiz0r.ezutils.editorenhancements");
+        private static readonly EZLocalization loc = EZLocalization.ForCatalogUnder("Packages/com.timiz0r.ezutils.localization", "EZUtils");
 
 
         public void Foo() => _ = loc.T("bar");

@@ -10,18 +10,22 @@ msgstr ""
 
 # plural[0]: other; language does not have separate forms for plurals
 # plural[1]: special zero; use in case of a special message for zero elements
+#, keep
 msgctxt "wat|foo"
 msgid "One friend online"
 msgid_plural "{friendCount} friends online."
 msgstr[0] "友達{friendCount}人がオンライン"
 msgstr[1] "友達はオンラインしていません"
 
+#, keep
 msgid "Start"
 msgstr "開始"
 
+#, keep
 msgid "Pudding"
 msgstr "プリン"
 
+#, keep
 msgid "Have a nice day!"
 msgstr "良い一日を～"
 
@@ -31,20 +35,20 @@ msgstr "何らかの日本語のタイトル"
 
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:43
 msgid "wat"
-msgstr ""
+msgstr "ワット"
 
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:44
 msgid "count"
-msgstr ""
+msgstr "数"
 
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:45
 msgid "the rain in spain falls mainly on the plain"
-msgstr ""
+msgstr "わかんない！"
 
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:47
 # plural[1]: Other;  @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …
 # plural[2]: special zero; use in case of a special message for zero elements
 msgid "There is {0} cupcake."
 msgid_plural "There are {0} cupcakes."
-msgstr[0] ""
+msgstr[0] "カップケーキが{0}個あります。"
 msgstr[1] ""

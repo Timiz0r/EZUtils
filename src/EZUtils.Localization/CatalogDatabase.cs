@@ -2,7 +2,6 @@ namespace EZUtils.Localization
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.IO;
     using System.Linq;
     using UnityEditor;
@@ -13,21 +12,19 @@ namespace EZUtils.Localization
     {
         private static readonly Dictionary<string, GetTextDocument> documents = new Dictionary<string, GetTextDocument>();
 
-        private static readonly Dictionary<string, CatalogReference> catalogs = new Dictionary<string, CatalogReference>();
+        private static readonly MultiValueDictionary<string, CatalogReference> catalogs =
+            new MultiValueDictionary<string, CatalogReference>();
 
-        //
-        public static CatalogReference GetCatalogReference(string root, Locale nativeLocale)
+        public static CatalogReference GetCatalogReference(string root, Locale nativeLocale, string localeDomainSetting)
         {
             root = root.Replace('\\', '/');
-            if (catalogs.TryGetValue(root, out CatalogReference catalogReference))
-            {
-                //we could check to see that native locales match, but it's not that important
-                return catalogReference;
-            }
 
-            catalogReference = catalogs[root] = new CatalogReference(nativeLocale);
+            CatalogReference catalogReference = new CatalogReference(nativeLocale, localeDomainSetting);
+            catalogs.Add(root, catalogReference);
+
             GetTextCatalog catalog = GetFreshCatalog(root, nativeLocale);
             catalogReference.UseUpdatedCatalog(catalog);
+
             return catalogReference;
         }
 
@@ -67,7 +64,7 @@ namespace EZUtils.Localization
 
         private static void RefreshRequiredCatalogs(string[] modifiedPaths)
         {
-            foreach ((string root, CatalogReference catalogReference) in catalogs.Select(kvp => (kvp.Key, kvp.Value)))
+            foreach ((string root, CatalogReference catalogReference) in catalogs.GetValues())
             {
                 if (!modifiedPaths.Any(p => IsRootedUnder(root, p))) continue;
 
