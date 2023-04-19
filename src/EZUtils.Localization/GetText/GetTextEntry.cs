@@ -2,10 +2,8 @@ namespace EZUtils.Localization
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using System.Linq;
     using System.Text;
-    using Microsoft.CodeAnalysis.CSharp.Syntax;
 
     public class GetTextEntry
     {
@@ -124,64 +122,6 @@ namespace EZUtils.Localization
                 => keywordMap.TryGetValue(keyword, out StringBuilder value)
                     ? value.ToString()
                     : null;
-        }
-
-        //TODO: eventually, if we have an editor that can support our more forgiving handling, we want the extraction
-        //merge to refill in automated mid-entry comments. at time of writing, this is just plural rule comments
-        public GetTextEntry GetCompatibilityVersion()
-        {
-            //capacity would double if there's an inline comment, and expand no more in that case
-            List<GetTextLine> newLines = new List<GetTextLine>(Lines.Count);
-            bool doneWithInitialWhitespace = false;
-            foreach (GetTextLine line in Lines)
-            {
-                if (line.IsWhiteSpace && !doneWithInitialWhitespace)
-                {
-                    newLines.Add(line);
-                    continue;
-                }
-                //we make sure all lines in an entry are not separated by whitespace
-                //we could turn them into comments, but it would conflict weirdly with wiping out mid-entry comments
-                doneWithInitialWhitespace = true;
-
-                if (line.IsComment && !line.IsMarkedObsolete)
-                {
-                    newLines.Add(line);
-                }
-            }
-            foreach (GetTextLine line in Lines)
-            {
-                if (line.IsCommentOrWhiteSpace) continue;
-
-                //aka inline comment
-                if (line.Comment is string comment)
-                {
-                    newLines.Add(new GetTextLine(comment: comment));
-                }
-            }
-            foreach (GetTextLine line in Lines)
-            {
-                if (line.IsMarkedObsolete)
-                {
-                    newLines.Add(line);
-                }
-                else if (!line.IsCommentOrWhiteSpace)
-                {
-                    newLines.Add(line.Comment == null ? line : new GetTextLine(line.Keyword, line.StringValue));
-                }
-            }
-
-            //could parse, but our transformation should be the same as `this`, except for lines
-            GetTextEntry newEntry = new GetTextEntry(
-                lines: newLines,
-                header: Header,
-                isObsolete: IsObsolete,
-                context: Context,
-                id: Id,
-                pluralId: PluralId,
-                value: Value,
-                pluralValues: PluralValues);
-            return newEntry;
         }
     }
 }

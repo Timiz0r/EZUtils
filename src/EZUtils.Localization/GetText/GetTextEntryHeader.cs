@@ -6,10 +6,12 @@ namespace EZUtils.Localization
     public class GetTextEntryHeader
     {
         public IReadOnlyList<string> References { get; }
+        public IReadOnlyList<string> Flags { get; }
 
-        public GetTextEntryHeader(IReadOnlyList<string> references)
+        public GetTextEntryHeader(IReadOnlyList<string> references, IReadOnlyList<string> flags)
         {
             References = references;
+            Flags = flags;
         }
 
         //could hypothetically accept header-only lines, but this is certainly more flexible
@@ -27,7 +29,15 @@ namespace EZUtils.Localization
                 .Select(c => c.Substring(1).Trim())
                 .ToArray();
 
-            GetTextEntryHeader header = new GetTextEntryHeader(references);
+            string unsplitFlags = headerComments.SingleOrDefault(c => c.StartsWith(",")) ?? string.Empty;
+            //not 100% sure if split and trim is what we should do
+            //but the documented flags dont have spaces, so might as well
+            string[] flags = unsplitFlags
+                .Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries)
+                .Select(f => f.Trim())
+                .ToArray();
+
+            GetTextEntryHeader header = new GetTextEntryHeader(references, flags);
             return header;
         }
     }

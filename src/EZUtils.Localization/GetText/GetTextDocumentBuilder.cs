@@ -13,6 +13,7 @@ namespace EZUtils.Localization
         //hypothetically, we could instead store an IEnumerable of entries instead, avoiding a bunch of array allocations
         //or consider using immutable collections, even though library dependencies are annoying in unity
         private GetTextDocument document;
+        private readonly HashSet<(string context, string id)> foundEntries = new HashSet<(string context, string id)>();
 
         private GetTextDocumentBuilder(string path)
         {
@@ -40,6 +41,7 @@ namespace EZUtils.Localization
             updatedEntries.AddRange(document.Entries);
 
             GetTextEntry builtEntry = builder.Create();
+            bool foundFirstInstanceOfEntry = foundEntries.Add((context: builtEntry.Context, id: builtEntry.Id));
             int existingEntryIndex = document.FindEntry(builtEntry.Context, builtEntry.Id, out GetTextEntry existingEntry);
 
             if (existingEntryIndex == -1)
@@ -48,7 +50,10 @@ namespace EZUtils.Localization
             }
             else
             {
-                updatedEntries[existingEntryIndex] = MergeEntries(existingEntry: existingEntry, builtEntry: builtEntry);
+                updatedEntries[existingEntryIndex] = MergeEntries(
+                    existingEntry: existingEntry,
+                    builtEntry: builtEntry,
+                    foundFirstInstanceOfEntry: foundFirstInstanceOfEntry);
             }
 
             document = new GetTextDocument(updatedEntries);
@@ -70,6 +75,35 @@ namespace EZUtils.Localization
             document = new GetTextDocument(newEntries);
 
             return this;
+        }
+
+        public GetTextDocumentBuilder Prune()
+        {
+            return ForEachEntry(e =>
+                (e.Context == null && e.Id.Length == 0) //header entry that wont have references
+                    || e.Header.Flags.Contains("keep")
+                    || e.Header.References.Count > 0
+                    ? e
+                    : MarkObsolete(e));
+
+            GetTextEntry MarkObsolete(GetTextEntry entry)
+            {
+                GetTextLine[] newLines = entry.Lines
+                    .Select(l => l.StringValue != null || l.Keyword != null
+                        ? new GetTextLine(comment: string.Concat("~ ", l.RawLine))
+                        : l)
+                    .ToArray();
+                GetTextEntry newEntry = new GetTextEntry(
+                    lines: newLines,
+                    header: entry.Header,
+                    isObsolete: true,
+                    context: entry.Context,
+                    id: entry.Id,
+                    pluralId: entry.PluralId,
+                    value: entry.Value,
+                    pluralValues: entry.PluralValues);
+                return newEntry;
+            }
         }
 
         public GetTextDocument GetGetTextDocument() => document;
@@ -98,33 +132,50 @@ namespace EZUtils.Localization
                 ? throw new InvalidOperationException($"Inconsistent locales for '{path}'.")
                 : this;
         }
-        private static GetTextEntry MergeEntries(GetTextEntry existingEntry, GetTextEntry builtEntry)
+        private static GetTextEntry MergeEntries(GetTextEntry existingEntry, GetTextEntry builtEntry, bool foundFirstInstanceOfEntry)
         {
             string builtEntryReference = builtEntry.Header.References[0];
-            bool existingReferenceFound = existingEntry.Header.References.Contains(builtEntryReference);
+
+            GetTextEntryHeader header = existingEntry.Header;
+            //we go about pruning old references by wiping out the original set the first time we try
+            //to merge with the original entry
+            List<string> references = new List<string>(foundFirstInstanceOfEntry ? 1 : header.References.Count + 1);
+            if (!foundFirstInstanceOfEntry)
+            {
+                references.AddRange(header.References);
+            }
+
+            bool existingReferenceFound = references.Contains(builtEntryReference);
             if (!existingEntry.IsObsolete && existingReferenceFound)
             {
                 return existingEntry;
             }
 
-            GetTextEntryHeader header = existingEntry.Header;
             //avoid reallocation if adding a reference line
             List<GetTextLine> mergedLines = new List<GetTextLine>(existingEntry.Lines.Count + 1);
-            mergedLines.AddRange(
-                existingEntry.Lines.Select(l => l.IsMarkedObsolete
-                    ? GetTextLine.Parse(l.Comment.Substring(1).TrimStart())
+            mergedLines.AddRange(existingEntry.Lines
+                .Select(l => l.IsMarkedObsolete
+                    ? GetTextLine.Parse(l.Comment.Substring(1).TrimStart()) //1 being the ~ char
                     : l));
+            //we calculate the insertion point here because, after clearing the references (for pruning), we want to put
+            //them back in the same spot they once were. granted, here, we no longer support non-contiguous reference comments,
+            //but that's probably fine.
+            int lastReferenceLine = mergedLines.FindLastIndex(
+                l => l.IsComment && l.Comment.StartsWith(":", StringComparison.Ordinal));
+            int referenceInsertionPoint = lastReferenceLine != -1
+                ? lastReferenceLine + 1
+                : mergedLines.FindIndex(l => l.Keyword != null);
+            int removedLines = mergedLines.RemoveAll(
+                l => foundFirstInstanceOfEntry && l.IsComment && l.Comment.StartsWith(":", StringComparison.Ordinal));
+            referenceInsertionPoint -= removedLines;
 
             if (!existingReferenceFound)
             {
-                int lastReferenceLine = mergedLines.FindLastIndex(l => l.IsComment && l.Comment.StartsWith(":"));
-                int referenceInsertionPoint = lastReferenceLine != -1
-                    ? lastReferenceLine + 1
-                    : mergedLines.FindIndex(l => l.Keyword != null);
                 mergedLines.Insert(referenceInsertionPoint, new GetTextLine(comment: $": {builtEntryReference}"));
 
                 header = new GetTextEntryHeader(
-                    existingEntry.Header.References.Append(builtEntryReference).ToArray());
+                    references.Append(builtEntryReference).ToArray(),
+                    existingEntry.Header.Flags);
             }
 
             GetTextEntry result = new GetTextEntry(
