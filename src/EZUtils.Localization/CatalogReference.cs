@@ -74,21 +74,25 @@ namespace EZUtils.Localization
 
         public void SelectLocale(Locale locale)
         {
-            EditorPrefs.SetString(selectedLocaleEditorPrefKey, locale.CultureInfo.Name);
             selectedLocale = locale;
+            EditorPrefs.SetString(selectedLocaleEditorPrefKey, locale.CultureInfo.Name);
             Catalog.SelectLocale(locale);
+            Retranslate();
         }
 
         public Locale SelectLocale(CultureInfo cultureInfo)
         {
+            selectedLocale = Catalog.SelectLocale(cultureInfo);
             EditorPrefs.SetString(selectedLocaleEditorPrefKey, cultureInfo.Name);
-            return selectedLocale = Catalog.SelectLocale(cultureInfo);
+            Retranslate();
+            return selectedLocale;
         }
 
         public Locale SelectLocaleOrNative(params Locale[] locales)
         {
             selectedLocale = Catalog.SelectLocaleOrNative(locales);
             EditorPrefs.SetString(selectedLocaleEditorPrefKey, selectedLocale.CultureInfo.Name);
+            Retranslate();
             return selectedLocale;
         }
 
@@ -96,6 +100,7 @@ namespace EZUtils.Localization
         {
             selectedLocale = Catalog.SelectLocaleOrNative(cultureInfos);
             EditorPrefs.SetString(selectedLocaleEditorPrefKey, selectedLocale.CultureInfo.Name);
+            Retranslate();
             return selectedLocale;
         }
 
