@@ -2,7 +2,6 @@ namespace EZUtils.Localization
 {
     using System;
     using System.Collections.Generic;
-    using System.Collections.ObjectModel;
     using System.Globalization;
     using System.Linq;
     using System.Xml.Linq;
@@ -74,14 +73,14 @@ namespace EZUtils.Localization
         public PluralType Evaluate(decimal value, out int index)
         {
             //note: if for some reason we care about perf later, precompute zeroIndex, etc., and return those
-            index = 0;
+            index = -1;
             Operands operands = new Operands(value);
-            if (zeroExpression != null && ++index > 0 && zeroExpression(operands)) return PluralType.Zero;
-            if (oneExpression != null && ++index > 0 && oneExpression(operands)) return PluralType.One;
-            if (twoExpression != null && ++index > 0 && twoExpression(operands)) return PluralType.Two;
-            if (fewExpression != null && ++index > 0 && fewExpression(operands)) return PluralType.Few;
-            if (manyExpression != null && ++index > 0 && manyExpression(operands)) return PluralType.Many;
-            if (otherExpression != null && ++index > 0 && otherExpression(operands)) return PluralType.Other;
+            if (zeroExpression != null && ++index > -1 && zeroExpression(operands)) return PluralType.Zero;
+            if (oneExpression != null && ++index > -1 && oneExpression(operands)) return PluralType.One;
+            if (twoExpression != null && ++index > -1 && twoExpression(operands)) return PluralType.Two;
+            if (fewExpression != null && ++index > -1 && fewExpression(operands)) return PluralType.Few;
+            if (manyExpression != null && ++index > -1 && manyExpression(operands)) return PluralType.Many;
+            if (otherExpression != null && ++index > -1 && otherExpression(operands)) return PluralType.Other;
             throw new InvalidOperationException("No rules evaluated to true.");
         }
 

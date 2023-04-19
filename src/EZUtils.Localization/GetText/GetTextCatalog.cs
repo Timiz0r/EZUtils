@@ -85,7 +85,7 @@ namespace EZUtils.Localization
         public string T(string context, FormattableString id) => T(context, new StringHelper(id));
         private string T(string context, StringHelper id) => id.GetEntryValue(
             GetSelectedLocale(),
-            selectedDocument?.FindEntry(context: context, id: id.GetUnformattedValue())?.Id);
+            selectedDocument?.FindEntry(context: context, id: id.GetUnformattedValue())?.Value);
 
         //for plural methods, aside from these big ones, we dont use optional parameters
         //they make overloading weird and hard to reason about.
@@ -277,7 +277,7 @@ namespace EZUtils.Localization
             }
             else if (pluralType == PluralType.One)
             {
-                targetEntryString = entry?.Id;
+                targetEntryString = entry?.Value;
                 targetStringHelper = id;
             }
             else if (entry?.PluralValues?.Count is int totalPluralValues
