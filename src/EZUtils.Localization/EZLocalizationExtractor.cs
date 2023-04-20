@@ -11,10 +11,17 @@ namespace EZUtils.Localization
     //  first, entries with more references are probably more important and should go further up
     //  for entries with same number of references, could try to nominate the candidate reference based on commonality of directory, so to speak
     //  next, we'll want to split line number from path, then sort candidate reference by them
+    //TODO: uxml extraction
+    //TODO: automated testing
+    //  will just be at GetTextExtrator-level
+    //TODO: the current stuff is almost complete. except after the refactoring we no longer sync together two CatalogReference instances
+    //that have the same setting. sure they load the same, but arent maintained the same.
 
+    //from a ports-and-adapters-perspective, EZLocalization is an adapter; GetTextExtractor is a port
     //TODO: since we ended up going with roslyn, this gives us the opportunity to generate a proxy based on what EZLocalization looks like
     //we can generate it on domain reload and should be pretty deterministic. or we could play it safe and only write to the proxy if we see something isn't right.
     //it'll ideally be a two-pass thing. we'll generate the proxy, let domain reload happen, and extract (so that we can load up all the required syntax trees, including proxy)
+    //  or maybe we can block domain reload (vaguely recall there's a way), generate, extract, and let it happen
     //actually, since we'll move extraction into a separate package, there too go the roslyn libs
     //instead, we'll just go template-style
     public class EZLocalizationExtractor
@@ -22,6 +29,8 @@ namespace EZUtils.Localization
         //TODO: ultimately want to do it per-assemblydefinition, so who knows what param we'll take
         public void ExtractFrom()
         {
+            GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
+
             GetTextExtractor extractor = new GetTextExtractor(compilation => compilation
                 .AddReferences(MetadataReference.CreateFromFile(typeof(EditorWindow).Assembly.Location)));
             //    .AddReferences(MetadataReference.CreateFromFile(typeof(VisualElement).Assembly.Location))
@@ -29,9 +38,10 @@ namespace EZUtils.Localization
             AddFile("Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs");
             AddFile("Packages/com.timiz0r.ezutils.localization/Florp.cs");
             AddFile("Packages/com.timiz0r.ezutils.localization/Localization.cs");
-
-            GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
             extractor.Extract(catalogBuilder);
+
+
+
             _ = catalogBuilder
                 .ForEachDocument(d => d
                     .Prune()

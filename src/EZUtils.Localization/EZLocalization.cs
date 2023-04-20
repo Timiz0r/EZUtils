@@ -21,7 +21,7 @@ namespace EZUtils.Localization
         {
             root = root.Trim(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
 
-            CatalogReference catalog = CatalogDatabase.GetCatalogReference(
+            CatalogReference catalog = new CatalogReference(
                 root: root,
                 nativeLocale: nativeLocale,
                 localeDomainSetting: localeDomainSetting);
