@@ -79,17 +79,7 @@ namespace EZUtils.Localization
                     .Any(a => a.AttributeClass.ToString() == "EZUtils.Localization.LocalizationMethodAttribute")) return;
 
                 InvocationParser invocationParser = InvocationParser.ForInvocation(invocationOperation);
-                foreach (IArgumentOperation argument in invocationOperation.Arguments)
-                {
-                    try
-                    {
-                        invocationParser.HandleArgument(argument);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidOperationException($"Failed to parse invocation: {node}", ex);
-                    }
-                }
+                if (!invocationParser.Success) return;
 
                 if (string.IsNullOrEmpty(invocationParser.Id)) throw new InvalidOperationException(
                     $"Could not extract id from invocation: {node}");

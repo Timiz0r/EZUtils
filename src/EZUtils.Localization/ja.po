@@ -17,18 +17,6 @@ msgid_plural "{friendCount} friends online."
 msgstr[0] "友達{friendCount}人がオンライン"
 msgstr[1] "友達はオンラインしていません"
 
-#, keep
-msgid "Start"
-msgstr "開始"
-
-#, keep
-msgid "Pudding"
-msgstr "プリン"
-
-#, keep
-msgid "Have a nice day!"
-msgstr "良い一日を～"
-
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:41
 msgid "EZLocalization manual testing"
 msgstr "何らかの日本語のタイトル"
@@ -52,3 +40,15 @@ msgid "There is {0} cupcake."
 msgid_plural "There are {0} cupcakes."
 msgstr[0] "カップケーキが{0}個あります。"
 msgstr[1] "カップケーキがありません。"
+
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:14
+msgid "Start"
+msgstr "開始"
+
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:16
+msgid "Pudding"
+msgstr "プリン"
+
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:18
+msgid "Have a nice day!"
+msgstr "良い一日を～"

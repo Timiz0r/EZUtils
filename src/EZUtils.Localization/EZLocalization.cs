@@ -32,7 +32,6 @@ namespace EZUtils.Localization
         public static EZLocalization ForCatalogUnder(string root, string localeSynchronizationKey)
             => ForCatalogUnder(root, localeSynchronizationKey, Locale.English);
 
-        //TODO: dont think we still have quite the right behavior, where we want the pref to be editor wide?
         public void SelectLocale(Locale locale) => catalogReference.SelectLocale(locale);
         public Locale SelectLocale(CultureInfo cultureInfo) => catalogReference.SelectLocale(cultureInfo);
         public Locale SelectLocaleOrNative(params Locale[] locales)

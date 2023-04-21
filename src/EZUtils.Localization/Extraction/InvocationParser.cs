@@ -11,30 +11,44 @@ namespace EZUtils.Localization
 
     public class InvocationParser
     {
-        private readonly List<(string poFilePath, Locale locale)> targets;
-        public IReadOnlyList<(string poFilePath, Locale locale)> Targets => targets;
+        private static readonly InvocationParser NonLocalized = new InvocationParser(Array.Empty<(string poFilePath, Locale locale)>())
+        {
+            Success = false
+        };
 
+        public IReadOnlyList<(string poFilePath, Locale locale)> Targets { get; }
         public string Context { get; private set; }
         public string Id { get; private set; }
-
+        //it's overall relatively hard to not have a successful extraction, so we default to true
+        public bool Success { get; private set; } = true;
         public (bool countFound, string pluralId) PluralStatus { get; private set; }
 
-        private InvocationParser(List<(string poFilePath, Locale locale)> targets)
+        private InvocationParser(IReadOnlyList<(string poFilePath, Locale locale)> targets)
         {
-            this.targets = targets;
+            Targets = targets;
         }
 
         public static InvocationParser ForInvocation(IInvocationOperation invocationOperation)
         {
-            ImmutableArray<AttributeData> targetAttributes =
-                invocationOperation.Instance is IMemberReferenceOperation memberReferenceOperation
-                    ? memberReferenceOperation.Member.GetAttributes()
-                    : invocationOperation.Instance == null
-                        ? invocationOperation.TargetMethod.ContainingType.GetAttributes()
-                        : throw new InvalidOperationException(
-                            $"Unable to extract any attributes in order to find catalog generation attributes.");
+            ImmutableArray<AttributeData> targetAttributes;
+            if (invocationOperation.Instance is IMemberReferenceOperation memberReferenceOperation)
+            {
+                targetAttributes = memberReferenceOperation.Member.GetAttributes();
+            }
+            else if (invocationOperation.Instance == null)
+            {
+                targetAttributes = invocationOperation.TargetMethod.ContainingType.GetAttributes();
+            }
+            else if (invocationOperation.Instance is IInstanceReferenceOperation)
+            {
+                //unless I'm mistaken, is calling a member
+                //we don't allow localization methods to be localized themselves, so these arent candidates for localization
+                return NonLocalized;
+            }
+            else throw new InvalidOperationException(
+                $"Unable to extract any attributes in order to find catalog generation attributes.");
 
-            List<(string poFilePath, Locale locale)> targets = targetAttributes
+            (string poFilePath, Locale locale)[] targets = targetAttributes
                 .Where(a => a.AttributeClass.ToString() == "EZUtils.Localization.GenerateLanguageAttribute")
                 .Select(a =>
                 {
@@ -59,12 +73,26 @@ namespace EZUtils.Localization
                     string poFilePath = (string)a.ConstructorArguments[1].Value;
 
                     return (poFilePath, locale);
-                }).ToList();
+                }).ToArray();
+            if (targets.Length == 0) return NonLocalized;
 
-            return new InvocationParser(targets);
+            InvocationParser invocationParser = new InvocationParser(targets);
+            foreach (IArgumentOperation argument in invocationOperation.Arguments)
+            {
+                try
+                {
+                    invocationParser.HandleArgument(argument);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to parse invocation: {invocationOperation.Syntax}", ex);
+                }
+            }
+
+            return invocationParser;
         }
 
-        public void HandleArgument(IArgumentOperation argument)
+        private void HandleArgument(IArgumentOperation argument)
         {
             string parameterType = argument.Parameter.Type.ToString();
             if (parameterType != "string"
@@ -85,7 +113,10 @@ namespace EZUtils.Localization
                     ? p
                     : argument.Parameter.Name;
 
-            string value = GetString(argument);
+            if (!TryGetString(argument, out string value))
+            {
+                Success = false;
+            }
             switch (parameterName)
             {
                 case LocalizationParameter.Context:
@@ -104,21 +135,22 @@ namespace EZUtils.Localization
             }
         }
 
-        private static string GetString(IOperation operation)
+        private static bool TryGetString(IOperation operation, out string result)
         {
             if (operation is IArgumentOperation argumentOperation)
             {
-                return GetString(argumentOperation.Value);
+                return TryGetString(argumentOperation.Value, out result);
             }
 
             if (operation is IConversionOperation conversionOperation)
             {
-                return GetString(conversionOperation.Operand);
+                return TryGetString(conversionOperation.Operand, out result);
             }
 
             if (operation is ILiteralOperation literalOperation && literalOperation.Type.ToString() == "string")
             {
-                return (string)literalOperation.ConstantValue.Value;
+                result = (string)literalOperation.ConstantValue.Value;
+                return true;
             }
 
             if (operation is IInterpolatedStringOperation interpolatedStringOperation)
@@ -127,10 +159,10 @@ namespace EZUtils.Localization
                 int formatIndex = 0;
                 foreach (IInterpolatedStringContentOperation part in interpolatedStringOperation.Parts)
                 {
-                    if (part is IInterpolatedStringTextOperation textOperation)
+                    if (part is IInterpolatedStringTextOperation textOperation
+                        && TryGetString(textOperation.Text, out string textOperationString))
                     {
-                        string text = GetString(textOperation.Text);
-                        _ = interpolationStringBuilder.Append(text);
+                        _ = interpolationStringBuilder.Append(textOperationString);
                     }
                     else if (part is IInterpolationOperation interpolationOperation)
                     {
@@ -149,31 +181,40 @@ namespace EZUtils.Localization
                     //because we dont use InterpolatedStringHandlerAttribute in our apis
                     else throw new InvalidOperationException($"Extracting from '{part.Kind}' is not supported.");
                 }
-                return interpolationStringBuilder.ToString();
+
+                result = interpolationStringBuilder.ToString();
+                return true;
             }
 
-            if (operation is IBinaryOperation binaryOperation && binaryOperation.OperatorKind == BinaryOperatorKind.Add)
+            if (operation is IBinaryOperation binaryOperation
+                && binaryOperation.OperatorKind == BinaryOperatorKind.Add
+                && TryGetString(binaryOperation.LeftOperand, out string leftOperandString)
+                && TryGetString(binaryOperation.RightOperand, out string rightOperandString))
             {
-                return string.Concat(
-                    GetString(binaryOperation.LeftOperand),
-                    GetString(binaryOperation.RightOperand));
+                result = string.Concat(leftOperandString, rightOperandString);
+                return true;
             }
 
             if (operation is IDefaultValueOperation)
             {
-                return default;
+                result = default;
+                return true;
             }
 
-            if (operation is IFieldReferenceOperation fieldReferenceOperation)
+            if (operation is IFieldReferenceOperation fieldReferenceOperation
+                && fieldReferenceOperation.ConstantValue.HasValue)
             {
-                if (!fieldReferenceOperation.ConstantValue.HasValue) throw new ArgumentOutOfRangeException(
-                    nameof(operation),
-                    $"{fieldReferenceOperation.Type} is not a constant. Reference: {fieldReferenceOperation.Syntax}");
+                //if (!fieldReferenceOperation.ConstantValue.HasValue) throw new ArgumentOutOfRangeException(
+                //    nameof(operation),
+                //    $"{fieldReferenceOperation.Type} is not a constant. Reference: {fieldReferenceOperation.Syntax}");
 
-                return (string)fieldReferenceOperation.ConstantValue.Value;
+                result = (string)fieldReferenceOperation.ConstantValue.Value;
+                return true;
             }
 
-            throw new ArgumentOutOfRangeException(nameof(operation), $"Do not know how to handle extracting string from '{operation.Kind}'. Current operation: {operation.Syntax}");
+            result = null;
+            return false;
+            //throw new ArgumentOutOfRangeException(nameof(operation), $"Do not know how to handle extracting string from '{operation.Kind}'. Current operation: {operation.Syntax}");
         }
     }
 }

@@ -4,6 +4,7 @@ namespace EZUtils.Localization
     using System.IO;
     using System.Text.RegularExpressions;
     using System.Xml;
+    using UnityEngine.Windows;
 
     public class UxmlExtractor
     {
@@ -41,15 +42,21 @@ namespace EZUtils.Localization
                                 string context = match.Groups["context"].Success ? match.Groups["context"].Value : null;
                                 string id = match.Groups["id"].Value;
 
+                                string referencePath = Path
+                                    .Combine(
+                                        root,
+                                        file.FullName.Substring(rootDir.FullName.Length + 1))
+                                    .Replace("\\", "/");
                                 _ = catalogBuilder
                                     //we 
                                     .ForEachDocument(doc => doc
                                         .AddEntry(e => _ = e
                                             .AddEmptyLine() //entries tend to have whitespace on top to visually separate them
                                                             //TODO: add a header instead
-                                            .AddComment($": {file.Name}:{lineInfo.LineNumber}")
+                                            .AddComment($": {referencePath}:{lineInfo.LineNumber}")
                                             .ConfigureContext(context)
-                                            .ConfigureId(id)));
+                                            .ConfigureId(id)
+                                            .ConfigureValue(string.Empty)));
                             }
                         }
                     }

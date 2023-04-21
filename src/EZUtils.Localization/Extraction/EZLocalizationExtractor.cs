@@ -7,17 +7,17 @@ namespace EZUtils.Localization
     using System.Reflection;
     using Microsoft.CodeAnalysis;
     using UnityEditor;
+    using UnityEngine;
 
     //TODO: shove extraction into a different assembly, so we dont have extraction running on users' projects
     //TODO: improve sorting of entries
     //  first, entries with more references are probably more important and should go further up
     //  for entries with same number of references, could try to nominate the candidate reference based on commonality of directory, so to speak
     //  next, we'll want to split line number from path, then sort candidate reference by them
-    //TODO: uxml extraction
     //TODO: automated testing
     //  will just be at GetTextExtrator-level
-    //TODO: the current stuff is almost complete. except after the refactoring we no longer sync together two CatalogReference instances
-    //that have the same setting. sure they load the same, but arent maintained the same.
+    //TODO: do a bit more profiling, tho it seems most time is in the gettextextractor. see if we can use tpl dataflow to speed it up.
+    //TODO: detect uxml changes, which dont result in domain reload
 
     //from a ports-and-adapters-perspective, EZLocalization is an adapter; GetTextExtractor is a port
     //TODO: since we ended up going with roslyn, this gives us the opportunity to generate a proxy based on what EZLocalization looks like
@@ -33,6 +33,8 @@ namespace EZUtils.Localization
 
         private static void Initialize()
         {
+            System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
             Dictionary<string, Assembly> assemblies =
                 AppDomain.CurrentDomain.GetAssemblies().ToDictionary(a => a.GetName().Name, a => a);
             IEnumerable<AssemblyDefinition> assemblyDefinitions = AssetDatabase
@@ -45,7 +47,7 @@ namespace EZUtils.Localization
                     };
 
                     //reads in name
-                    EditorJsonUtility.FromJsonOverwrite(
+                    EditorJsonUtility.FromJsonOverwrite (
                         File.ReadAllText(def.pathToFile),
                         def);
 
@@ -61,6 +63,9 @@ namespace EZUtils.Localization
                 string assemblyRoot = Path.GetDirectoryName(def.pathToFile);
                 ExtractFrom(assemblyRoot);
             }
+
+            stopwatch.Stop();
+            Debug.Log($"Performed EZLocalization extraction in {stopwatch.ElapsedMilliseconds}ms.");
         }
 
         private class AssemblyDefinition
@@ -76,9 +81,13 @@ namespace EZUtils.Localization
 
             GetTextExtractor getTextExtractor = new GetTextExtractor(compilation => compilation
                 .AddReferences(MetadataReference.CreateFromFile(typeof(EditorWindow).Assembly.Location)));
-            foreach (FileInfo file in new DirectoryInfo(assemblyRoot).EnumerateFiles("*.cs", SearchOption.AllDirectories))
+            DirectoryInfo directory = new DirectoryInfo(assemblyRoot);
+            foreach (FileInfo file in directory.EnumerateFiles("*.cs", SearchOption.AllDirectories))
             {
-                getTextExtractor.AddFile(file.FullName, Path.Combine(assemblyRoot, file.Name).Replace("\\", "/"));
+                string displayPath = Path
+                    .Combine(assemblyRoot, file.FullName.Substring(directory.FullName.Length + 1))
+                    .Replace("\\", "/");
+                getTextExtractor.AddFile(file.FullName, displayPath);
             }
             getTextExtractor.Extract(catalogBuilder);
 
@@ -90,7 +99,7 @@ namespace EZUtils.Localization
                     .Prune()
                     .ForEachEntry(e => GetCompatibilityVersion(e))
                     .SortEntries(EntryComparer.Instance))
-                .WriteToDisk("Packages/com.timiz0r.ezutils.localization");
+                .WriteToDisk(assemblyRoot);
         }
 
         //TODO: eventually, if we have an editor that can support our more forgiving handling, we want the extraction

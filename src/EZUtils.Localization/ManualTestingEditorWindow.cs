@@ -49,8 +49,6 @@ namespace EZUtils.Localization
 
             rootVisualElement.Q<Button>().clicked += () =>
             {
-                EZLocalizationExtractor extractor = new EZLocalizationExtractor();
-                extractor.ExtractFrom();
             };
 
 
