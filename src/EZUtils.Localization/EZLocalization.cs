@@ -17,24 +17,24 @@ namespace EZUtils.Localization
             this.catalogReference = catalogReference;
         }
 
-        public static EZLocalization ForCatalogUnder(string root, string localeDomainSetting, Locale nativeLocale)
+        public static EZLocalization ForCatalogUnder(string root, string localeSynchronizationKey, Locale nativeLocale)
         {
             root = root.Trim(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
 
             CatalogReference catalog = new CatalogReference(
                 root: root,
                 nativeLocale: nativeLocale,
-                localeDomainSetting: localeDomainSetting);
+                localeSynchronizationKey: localeSynchronizationKey);
             EZLocalization result = new EZLocalization(catalog);
 
             return result;
         }
-        public static EZLocalization ForCatalogUnder(string root, string localeDomainSetting)
-            => ForCatalogUnder(root, localeDomainSetting, Locale.English);
+        public static EZLocalization ForCatalogUnder(string root, string localeSynchronizationKey)
+            => ForCatalogUnder(root, localeSynchronizationKey, Locale.English);
 
         //TODO: dont think we still have quite the right behavior, where we want the pref to be editor wide?
         public void SelectLocale(Locale locale) => catalogReference.SelectLocale(locale);
-        public void SelectLocale(CultureInfo cultureInfo) => _ = catalogReference.SelectLocale(cultureInfo);
+        public Locale SelectLocale(CultureInfo cultureInfo) => catalogReference.SelectLocale(cultureInfo);
         public Locale SelectLocaleOrNative(params Locale[] locales)
             => _ = catalogReference.SelectLocaleOrNative(locales);
         public Locale SelectLocaleOrNative(params CultureInfo[] cultureInfos)

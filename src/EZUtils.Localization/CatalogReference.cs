@@ -5,37 +5,38 @@ namespace EZUtils.Localization
     using System.Globalization;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
-    using System.Threading;
     using UnityEditor;
-    using UnityEngine;
     using UnityEngine.UIElements;
 
-
+    //TODO: as currently designed, this can potentially be merged into ezlocalization
     public class CatalogReference : IDisposable
     {
-        private static CultureInfo newlySelectedUnityEditorLanguage;
-
         private readonly List<(UnityEngine.Object obj, Action action)> retranslatableObjects =
             new List<(UnityEngine.Object obj, Action action)>();
         private readonly List<(VisualElement element, Action action)> retranslatableElements =
             new List<(VisualElement element, Action action)>();
+
         //not sure if it's better to watch all subdirs from the project root, or to have one watcher per provided root
         //am guessing this will be better, since all of the temp folders and whatnot are pretty large
         private readonly FileSystemWatcher fsw;
         //key is full path to make the initial load and fsw paths the same, in the easiest way possible
         private readonly Dictionary<string, GetTextDocument> documents = new Dictionary<string, GetTextDocument>();
+
         private readonly string root;
-        private readonly string selectedLocaleEditorPrefKey;
-        private Locale selectedLocale;
+        private readonly string localeSynchronizationKey;
         private GetTextCatalog catalog;
+        //catalogLocaleSynchronizer does a getstring which needs to be called as late as possible to avoid throws,
+        //particularly when opening an editorwindow
+        private CatalogLocaleSynchronizer catalogLocaleSynchronizer;
+        private bool lateInitializationPerformed = false;
+
         private bool disposedValue;
 
-        public CatalogReference(string root, Locale nativeLocale, string localeDomainSetting)
+        public CatalogReference(string root, Locale nativeLocale, string localeSynchronizationKey)
         {
             this.root = root;
-            NativeLocale = selectedLocale = nativeLocale;
-            selectedLocaleEditorPrefKey = $"EZUtils.Localization.SelectedLocale.{localeDomainSetting}";
+            NativeLocale = nativeLocale;
+            this.localeSynchronizationKey = localeSynchronizationKey;
 
             fsw = new FileSystemWatcher()
             {
@@ -49,43 +50,36 @@ namespace EZUtils.Localization
             fsw.Renamed += PoFileRenamed;
         }
 
-        public GetTextCatalog Catalog => LazyInitializer.EnsureInitialized(ref catalog, () => InitializeCatalog());
+        public GetTextCatalog Catalog
+        {
+            get
+            {
+                if (!lateInitializationPerformed)
+                {
+                    DirectoryInfo directory = new DirectoryInfo(root);
+                    if (directory.Exists)
+                    {
+                        foreach (FileInfo file in directory.EnumerateFiles("*.po", SearchOption.TopDirectoryOnly))
+                        {
+                            documents.Add(file.FullName, GetTextDocument.LoadFrom(file.FullName));
+                        }
+                    }
+
+                    catalog = new GetTextCatalog(documents.Values.ToArray(), NativeLocale);
+                    fsw.EnableRaisingEvents = true;
+                    lateInitializationPerformed = true;
+
+                    //NOTE: this would cause infinite recursion if not for lateInitializationPerformed
+                    //due to a call to SetLocaleOrNative
+                    //it's certainly not the most ideal design, but it gets the job done
+                    catalogLocaleSynchronizer = CatalogLocaleSynchronizer.Register(localeSynchronizationKey, this);
+                }
+
+                return catalog;
+            }
+        }
 
         public Locale NativeLocale { get; }
-
-        //NOTE: selectlocale must not use the Catalog property because the lazy initializer inside calls back into
-        //SelectLocale
-        public void SelectLocale(Locale locale)
-        {
-            selectedLocale = locale;
-            EditorPrefs.SetString(selectedLocaleEditorPrefKey, locale.CultureInfo.Name);
-            catalog?.SelectLocale(locale);
-            Retranslate();
-        }
-
-        public Locale SelectLocale(CultureInfo cultureInfo)
-        {
-            selectedLocale = catalog?.SelectLocale(cultureInfo);
-            EditorPrefs.SetString(selectedLocaleEditorPrefKey, cultureInfo.Name);
-            Retranslate();
-            return selectedLocale;
-        }
-
-        public Locale SelectLocaleOrNative(params Locale[] locales)
-        {
-            selectedLocale = catalog?.SelectLocaleOrNative(locales);
-            EditorPrefs.SetString(selectedLocaleEditorPrefKey, selectedLocale.CultureInfo.Name);
-            Retranslate();
-            return selectedLocale;
-        }
-
-        public Locale SelectLocaleOrNative(params CultureInfo[] cultureInfos)
-        {
-            selectedLocale = catalog?.SelectLocaleOrNative(cultureInfos);
-            EditorPrefs.SetString(selectedLocaleEditorPrefKey, selectedLocale.CultureInfo.Name);
-            Retranslate();
-            return selectedLocale;
-        }
 
         public void Retranslate()
         {
@@ -112,47 +106,37 @@ namespace EZUtils.Localization
             action();
         }
 
-        private GetTextCatalog InitializeCatalog()
+        public void SelectLocale(Locale locale)
         {
-            DirectoryInfo directory = new DirectoryInfo(root);
-            if (directory.Exists)
-            {
-                foreach (FileInfo file in directory.EnumerateFiles("*.po", SearchOption.TopDirectoryOnly))
-                {
-                    documents.Add(file.FullName, GetTextDocument.LoadFrom(file.FullName));
-                }
-            }
+            catalogLocaleSynchronizer.SelectLocale(locale);
+            Retranslate();
+        }
 
-            //technically this sets the catalog before LazyInitializer can, but that's okay
-            //we reload whether the directory exists or not because empty catalogs are fine
-            ReloadCatalog();
-            fsw.EnableRaisingEvents = true;
+        public Locale SelectLocale(CultureInfo cultureInfo)
+        {
+            Locale locale = catalogLocaleSynchronizer.SelectLocale(cultureInfo);
+            Retranslate();
+            return locale;
+        }
 
-            //we do this as late as possible because EZLocalization is often part of cctor of a window, and, when opening
-            //the window for the first time (versus reloading unity), GetString will throw.
-            string prefValue = EditorPrefs.GetString(selectedLocaleEditorPrefKey);
-            if (!string.IsNullOrEmpty(prefValue))
-            {
-                CultureInfo locale = CultureInfo.GetCultureInfo(prefValue);
-                //if newlySelectedUnityEditorLanguage is null then we'll prefer one from setting
-                _ = SelectLocaleOrNative(newlySelectedUnityEditorLanguage, locale);
-            }
-            else if (newlySelectedUnityEditorLanguage != null)
-            {
-                _ = SelectLocaleOrNative(newlySelectedUnityEditorLanguage);
-            }
-            else
-            {
-                SelectLocale(NativeLocale);
-            }
+        public Locale SelectLocaleOrNative(Locale[] locales)
+        {
+            Locale locale = catalogLocaleSynchronizer.SelectLocaleOrNative(locales);
+            Retranslate();
+            return locale;
+        }
 
-            return catalog;
+        public Locale SelectLocaleOrNative(CultureInfo[] cultureInfos)
+        {
+            Locale locale = catalogLocaleSynchronizer.SelectLocaleOrNative(cultureInfos);
+            Retranslate();
+            return locale;
         }
 
         private void ReloadCatalog()
         {
             catalog = new GetTextCatalog(documents.Values.ToArray(), NativeLocale);
-            catalog.SelectLocale(selectedLocale);
+            catalog.SelectLocale(catalogLocaleSynchronizer.SelectedLocale);
             Retranslate();
         }
 
@@ -187,31 +171,6 @@ namespace EZUtils.Localization
                 ReloadCatalog();
             }
         };
-
-        //when the language is changed, we get a domain reload
-        //so tracking language changes requires persisting it somewhere and looking it up, all from a cctor
-        [InitializeOnLoadMethod]
-        private static void UnityInitialize()
-        {
-            Type localizationDatabaseType = Type.GetType("UnityEditor.LocalizationDatabase, UnityEditor");
-
-            const string editorLanguageKey = "EZUtils.Localization.TrackedUnityEditorLanguage";
-            string previouslySetEditorLanguage = EditorPrefs.GetString(editorLanguageKey);
-
-            PropertyInfo editorlanguageProperty = localizationDatabaseType.GetProperty(
-                "currentEditorLanguage", BindingFlags.Public | BindingFlags.Static);
-            SystemLanguage currentEditorLanguage = (SystemLanguage)editorlanguageProperty.GetValue(null);
-
-            if (previouslySetEditorLanguage != currentEditorLanguage.ToString())
-            {
-                EditorPrefs.SetString(editorLanguageKey, currentEditorLanguage.ToString());
-                MethodInfo getCultureMethod = localizationDatabaseType.GetMethod(
-                    "GetCulture", BindingFlags.Public | BindingFlags.Static);
-                newlySelectedUnityEditorLanguage = CultureInfo.GetCultureInfo(
-                    (string)getCultureMethod.Invoke(null, new object[] { currentEditorLanguage }));
-            }
-            else newlySelectedUnityEditorLanguage = null;
-        }
 
         protected virtual void Dispose(bool disposing)
         {
