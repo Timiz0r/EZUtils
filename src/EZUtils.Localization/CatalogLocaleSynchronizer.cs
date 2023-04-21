@@ -6,6 +6,7 @@ namespace EZUtils.Localization
     using System.Reflection;
     using UnityEditor;
     using UnityEngine;
+    using UnityEngine.SocialPlatforms;
 
     //NOTE:
     //this is tightly coupled to catalogreference, kept separate for organization
@@ -27,14 +28,15 @@ namespace EZUtils.Localization
             new Dictionary<string, CatalogLocaleSynchronizer>();
 
         private readonly string selectedLocaleEditorPrefKey;
-        private readonly CatalogReference catalogReference;
+        private readonly CatalogReference representativeCatalogReference;
+        private readonly List<CatalogReference> subscribers = new List<CatalogReference>();
 
         public Locale SelectedLocale { get; private set; }
 
-        private CatalogLocaleSynchronizer(string localeSynchronizationKey, CatalogReference catalogReference)
+        private CatalogLocaleSynchronizer(string localeSynchronizationKey, CatalogReference representativeCatalogReference)
         {
             selectedLocaleEditorPrefKey = $"EZUtils.Localization.SelectedLocale.{localeSynchronizationKey}";
-            this.catalogReference = catalogReference;
+            this.representativeCatalogReference = representativeCatalogReference;
 
             string prefValue = EditorPrefs.GetString(selectedLocaleEditorPrefKey);
             if (!string.IsNullOrEmpty(prefValue))
@@ -55,40 +57,64 @@ namespace EZUtils.Localization
 
         public static CatalogLocaleSynchronizer Register(string localeSynchronizationKey, CatalogReference catalogReference)
         {
-            if (synchronizers.TryGetValue(localeSynchronizationKey, out CatalogLocaleSynchronizer value))
+            if (!synchronizers.TryGetValue(localeSynchronizationKey, out CatalogLocaleSynchronizer value))
             {
-                return value;
+                synchronizers[localeSynchronizationKey] = value = new CatalogLocaleSynchronizer(
+                    localeSynchronizationKey, catalogReference);
             }
-
-            return synchronizers[localeSynchronizationKey] = new CatalogLocaleSynchronizer(
-                localeSynchronizationKey, catalogReference);
+            else
+            {
+                //we use representativeCatalogReference to be the one that gets SetLocale calls in order to get the
+                //resulting selected locale. it's effectively the first EZLocalization instance to
+                //get a CatalogLocaleSynchronizer.
+                //the rest of the subscribers are then synchronized using the same call, so we want to avoid calling
+                //SetLocale twice for that first EZLocalization instance.
+                value.subscribers.Add(catalogReference);
+            }
+            return value;
         }
 
         public void SelectLocale(Locale locale)
         {
             SelectedLocale = locale;
             EditorPrefs.SetString(selectedLocaleEditorPrefKey, locale.CultureInfo.Name);
-            catalogReference.Catalog.SelectLocale(locale);
+            representativeCatalogReference.Catalog.SelectLocale(locale);
+            foreach (CatalogReference reference in subscribers)
+            {
+                reference.Catalog.SelectLocale(locale);
+            }
         }
 
         public Locale SelectLocale(CultureInfo cultureInfo)
         {
-            SelectedLocale = catalogReference.Catalog.SelectLocale(cultureInfo);
+            SelectedLocale = representativeCatalogReference.Catalog.SelectLocale(cultureInfo);
             EditorPrefs.SetString(selectedLocaleEditorPrefKey, cultureInfo.Name);
+            foreach (CatalogReference reference in subscribers)
+            {
+                reference.Catalog.SelectLocale(SelectedLocale);
+            }
             return SelectedLocale;
         }
 
         public Locale SelectLocaleOrNative(params Locale[] locales)
         {
-            SelectedLocale = catalogReference.Catalog.SelectLocaleOrNative(locales);
+            SelectedLocale = representativeCatalogReference.Catalog.SelectLocaleOrNative(locales);
             EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
+            foreach (CatalogReference reference in subscribers)
+            {
+                reference.Catalog.SelectLocale(SelectedLocale);
+            }
             return SelectedLocale;
         }
 
         public Locale SelectLocaleOrNative(params CultureInfo[] cultureInfos)
         {
-            SelectedLocale = catalogReference.Catalog.SelectLocaleOrNative(cultureInfos);
+            SelectedLocale = representativeCatalogReference.Catalog.SelectLocaleOrNative(cultureInfos);
             EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
+            foreach (CatalogReference reference in subscribers)
+            {
+                reference.Catalog.SelectLocale(SelectedLocale);
+            }
             return SelectedLocale;
         }
 
