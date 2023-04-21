@@ -6,7 +6,6 @@ namespace EZUtils.Localization
     using System.Reflection;
     using UnityEditor;
     using UnityEngine;
-    using UnityEngine.SocialPlatforms;
 
     //NOTE:
     //this is tightly coupled to catalogreference, kept separate for organization

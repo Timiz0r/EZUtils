@@ -8,10 +8,13 @@ namespace EZUtils.Localization
     using UnityEditor;
     using UnityEngine.UIElements;
 
-    //TODO: as currently designed, this can potentially be merged into ezlocalization
     //previously, we had a dictionary of these so that instances' locales could be synced
     //with the introduction of localeSynchronizationKey and the synchronizer, that dictionary has effectively moved to
     //the synchronizer.
+    //
+    //hypothetically, this could be merged with the, at time of writing, bare EZLocaliaztion class.
+    //this is not done because CatalogLocaleSynchronizer's SetLocale's touching of CatalogReference.Catalog is convenient.
+    //we can keep hiding the underlying catalog in EZLocalization this way.
     public class CatalogReference : IDisposable
     {
         private readonly List<(UnityEngine.Object obj, Action action)> retranslatableObjects =

@@ -3,6 +3,8 @@ namespace EZUtils.Localization
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
+    using System.Reflection;
     using Microsoft.CodeAnalysis;
     using UnityEditor;
 
@@ -24,23 +26,64 @@ namespace EZUtils.Localization
     //  or maybe we can block domain reload (vaguely recall there's a way), generate, extract, and let it happen
     //actually, since we'll move extraction into a separate package, there too go the roslyn libs
     //instead, we'll just go template-style
-    public class EZLocalizationExtractor
+    public static class EZLocalizationExtractor
     {
-        //TODO: ultimately want to do it per-assemblydefinition, so who knows what param we'll take
-        public void ExtractFrom()
+        [InitializeOnLoadMethod]
+        private static void UnityInitialize() => EditorApplication.delayCall += Initialize;
+
+        private static void Initialize()
+        {
+            Dictionary<string, Assembly> assemblies =
+                AppDomain.CurrentDomain.GetAssemblies().ToDictionary(a => a.GetName().Name, a => a);
+            IEnumerable<AssemblyDefinition> assemblyDefinitions = AssetDatabase
+                .FindAssets("t:AssemblyDefinitionAsset")
+                .Select(id =>
+                {
+                    AssemblyDefinition def = new AssemblyDefinition()
+                    {
+                        pathToFile = AssetDatabase.GUIDToAssetPath(id)
+                    };
+
+                    //reads in name
+                    EditorJsonUtility.FromJsonOverwrite(
+                        File.ReadAllText(def.pathToFile),
+                        def);
+
+                    def.assembly = assemblies.TryGetValue(def.name, out Assembly assembly) ? assembly : null;
+
+                    return def;
+                });
+
+
+            foreach (AssemblyDefinition def in assemblyDefinitions
+                .Where(ad => ad.assembly?.GetCustomAttribute<LocalizedAssemblyAttribute>() != null))
+            {
+                string assemblyRoot = Path.GetDirectoryName(def.pathToFile);
+                ExtractFrom(assemblyRoot);
+            }
+        }
+
+        private class AssemblyDefinition
+        {
+            public string name;
+            public string pathToFile;
+            public Assembly assembly;
+        }
+
+        public static void ExtractFrom(string assemblyRoot)
         {
             GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
 
-            GetTextExtractor extractor = new GetTextExtractor(compilation => compilation
+            GetTextExtractor getTextExtractor = new GetTextExtractor(compilation => compilation
                 .AddReferences(MetadataReference.CreateFromFile(typeof(EditorWindow).Assembly.Location)));
-            //    .AddReferences(MetadataReference.CreateFromFile(typeof(VisualElement).Assembly.Location))
-            void AddFile(string path) => extractor.AddFile(Path.GetFullPath(path), path);
-            AddFile("Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs");
-            AddFile("Packages/com.timiz0r.ezutils.localization/Florp.cs");
-            AddFile("Packages/com.timiz0r.ezutils.localization/Localization.cs");
-            extractor.Extract(catalogBuilder);
+            foreach (FileInfo file in new DirectoryInfo(assemblyRoot).EnumerateFiles("*.cs", SearchOption.AllDirectories))
+            {
+                getTextExtractor.AddFile(file.FullName, Path.Combine(assemblyRoot, file.Name).Replace("\\", "/"));
+            }
+            getTextExtractor.Extract(catalogBuilder);
 
-
+            UxmlExtractor uxmlExtractor = new UxmlExtractor(catalogBuilder);
+            uxmlExtractor.ExtractAll(assemblyRoot);
 
             _ = catalogBuilder
                 .ForEachDocument(d => d
@@ -52,7 +95,7 @@ namespace EZUtils.Localization
 
         //TODO: eventually, if we have an editor that can support our more forgiving handling, we want the extraction
         //merge to refill in automated mid-entry comments. at time of writing, this is just plural rule comments
-        public GetTextEntry GetCompatibilityVersion(GetTextEntry entry)
+        public static GetTextEntry GetCompatibilityVersion(GetTextEntry entry)
         {
             //is likely better than one or two extra array allocations, plus whatever allocations are involved
             if (IsAlreadyCompatible()) return entry;
