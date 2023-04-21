@@ -6,6 +6,7 @@ namespace EZUtils.Localization
     using System.Globalization;
     using System.IO;
     using System.Linq;
+    using System.Threading.Tasks.Dataflow;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -13,10 +14,13 @@ namespace EZUtils.Localization
 
     public class GetTextExtractor
     {
-        private readonly List<SyntaxTree> syntaxTrees = new List<SyntaxTree>();
+        private readonly List<(SyntaxTree syntaxTree, string catalogRoot)> syntaxTrees = new List<(SyntaxTree, string)>();
+        private readonly ActionBlock<Action> processorQueue;
         private CSharpCompilation compilation;
 
-        public GetTextExtractor(Func<CSharpCompilation, CSharpCompilation> compilationBuilder)
+        public GetTextExtractor(
+            Func<CSharpCompilation, CSharpCompilation> compilationBuilder,
+            ActionBlock<Action> processorQueue)
         {
             CSharpCompilation compilation = CSharpCompilation.Create("EZLocalizationExtractor")
                 //we need a reference for each thing that we inspect from EZLocalization
@@ -24,22 +28,26 @@ namespace EZUtils.Localization
                 .AddReferences(MetadataReference.CreateFromFile(typeof(CultureInfo).Assembly.Location));
 
             this.compilation = compilationBuilder(compilation);
+            this.processorQueue = processorQueue;
         }
 
-        public void AddFile(string path, string displayPath)
+        public void AddFile(string sourceFilePath, string displayPath, string catalogRoot)
         {
-            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(path), path: displayPath);
+            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFilePath), path: displayPath);
             compilation = compilation.AddSyntaxTrees(syntaxTree);
-            syntaxTrees.Add(syntaxTree);
+            syntaxTrees.Add((syntaxTree, catalogRoot));
         }
 
         public void Extract(GetTextCatalogBuilder catalogBuilder)
         {
-            foreach (SyntaxTree syntaxTree in syntaxTrees)
+            foreach ((SyntaxTree syntaxTree, string catalogRoot) in syntaxTrees)
             {
-                SemanticModel model = compilation.GetSemanticModel(syntaxTree);
-                SyntaxWalker syntaxWalker = new SyntaxWalker(model, catalogBuilder);
-                syntaxWalker.VisitCompilationUnit(syntaxTree.GetCompilationUnitRoot());
+                _ = processorQueue.Post(() =>
+                {
+                    SemanticModel model = compilation.GetSemanticModel(syntaxTree);
+                    SyntaxWalker syntaxWalker = new SyntaxWalker(model, catalogBuilder, catalogRoot);
+                    syntaxWalker.VisitCompilationUnit(syntaxTree.GetCompilationUnitRoot());
+                });
             }
         }
 
@@ -47,11 +55,13 @@ namespace EZUtils.Localization
         {
             private readonly SemanticModel model;
             private readonly GetTextCatalogBuilder catalogBuilder;
+            private readonly string catalogRoot;
 
-            public SyntaxWalker(SemanticModel model, GetTextCatalogBuilder catalogBuilder)
+            public SyntaxWalker(SemanticModel model, GetTextCatalogBuilder catalogBuilder, string catalogRoot)
             {
                 this.model = model;
                 this.catalogBuilder = catalogBuilder;
+                this.catalogRoot = catalogRoot;
             }
 
             public override void VisitClassDeclaration(ClassDeclarationSyntax node)
@@ -87,12 +97,9 @@ namespace EZUtils.Localization
 
                 foreach ((string poFilePath, Locale locale) in invocationParser.Targets)
                 {
-                    string absolutePath = Path.GetFullPath(
-                        Path.Combine(
-                            Path.GetDirectoryName(node.SyntaxTree.FilePath),
-                            poFilePath));
+                    string path = Path.Combine(catalogRoot, poFilePath);
                     _ = catalogBuilder
-                        .ForPoFile(absolutePath, locale, doc => doc
+                        .ForPoFile(path, locale, doc => doc
                             .AddEntry(e =>
                             {
                                 FileLinePositionSpan location = node.GetLocation().GetLineSpan();

@@ -124,6 +124,8 @@ namespace EZUtils.Localization
             {
                 savePath = Path.Combine(root, savePath);
             }
+            //granted, even after adding the root, the path may still not be rooted
+            //the check is just because adding a root to a rooted path makes no sense
 
             GetTextDocument document = GetGetTextDocument();
             document.Save(savePath);

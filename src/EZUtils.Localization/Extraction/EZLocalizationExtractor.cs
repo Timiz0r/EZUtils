@@ -5,6 +5,7 @@ namespace EZUtils.Localization
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Threading.Tasks.Dataflow;
     using Microsoft.CodeAnalysis;
     using UnityEditor;
     using UnityEngine;
@@ -16,7 +17,6 @@ namespace EZUtils.Localization
     //  next, we'll want to split line number from path, then sort candidate reference by them
     //TODO: automated testing
     //  will just be at GetTextExtrator-level
-    //TODO: do a bit more profiling, tho it seems most time is in the gettextextractor. see if we can use tpl dataflow to speed it up.
     //TODO: detect uxml changes, which dont result in domain reload
 
     //from a ports-and-adapters-perspective, EZLocalization is an adapter; GetTextExtractor is a port
@@ -26,8 +26,15 @@ namespace EZUtils.Localization
     //  or maybe we can block domain reload (vaguely recall there's a way), generate, extract, and let it happen
     //actually, since we'll move extraction into a separate package, there too go the roslyn libs
     //instead, we'll just go template-style
-    public static class EZLocalizationExtractor
+    public class EZLocalizationExtractor
     {
+        private readonly GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
+        private readonly ActionBlock<Action> processorQueue = new ActionBlock<Action>(a => a(), new ExecutionDataflowBlockOptions()
+        {
+            MaxDegreeOfParallelism = Environment.ProcessorCount
+        });
+        private readonly List<string> uxmlPathsToExtract = new List<string>();
+
         [InitializeOnLoadMethod]
         private static void UnityInitialize() => EditorApplication.delayCall += Initialize;
 
@@ -57,12 +64,14 @@ namespace EZUtils.Localization
                 });
 
 
+            EZLocalizationExtractor extractor = new EZLocalizationExtractor();
             foreach (AssemblyDefinition def in assemblyDefinitions
                 .Where(ad => ad.assembly?.GetCustomAttribute<LocalizedAssemblyAttribute>() != null))
             {
                 string assemblyRoot = Path.GetDirectoryName(def.pathToFile);
-                ExtractFrom(assemblyRoot);
+                extractor.ExtractFrom(assemblyRoot);
             }
+            extractor.Finish();
 
             stopwatch.Stop();
             Debug.Log($"Performed EZLocalization extraction in {stopwatch.ElapsedMilliseconds}ms.");
@@ -75,31 +84,45 @@ namespace EZUtils.Localization
             public Assembly assembly;
         }
 
-        public static void ExtractFrom(string assemblyRoot)
+        public void ExtractFrom(string assemblyRoot)
         {
-            GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
-
-            GetTextExtractor getTextExtractor = new GetTextExtractor(compilation => compilation
-                .AddReferences(MetadataReference.CreateFromFile(typeof(EditorWindow).Assembly.Location)));
+            GetTextExtractor getTextExtractor = new GetTextExtractor(
+                compilation => compilation
+                    .AddReferences(MetadataReference.CreateFromFile(typeof(EditorWindow).Assembly.Location)),
+                processorQueue);
             DirectoryInfo directory = new DirectoryInfo(assemblyRoot);
             foreach (FileInfo file in directory.EnumerateFiles("*.cs", SearchOption.AllDirectories))
             {
                 string displayPath = Path
                     .Combine(assemblyRoot, file.FullName.Substring(directory.FullName.Length + 1))
                     .Replace("\\", "/");
-                getTextExtractor.AddFile(file.FullName, displayPath);
+                getTextExtractor.AddFile(
+                    sourceFilePath: file.FullName,
+                    displayPath: displayPath,
+                    catalogRoot: assemblyRoot);
             }
             getTextExtractor.Extract(catalogBuilder);
 
+            uxmlPathsToExtract.Add(assemblyRoot);
+        }
+
+        public void Finish()
+        {
+            processorQueue.Complete();
+            processorQueue.Completion.Wait();
+
             UxmlExtractor uxmlExtractor = new UxmlExtractor(catalogBuilder);
-            uxmlExtractor.ExtractAll(assemblyRoot);
+            foreach (string path in uxmlPathsToExtract)
+            {
+                uxmlExtractor.ExtractAll(path);
+            }
 
             _ = catalogBuilder
                 .ForEachDocument(d => d
                     .Prune()
                     .ForEachEntry(e => GetCompatibilityVersion(e))
                     .SortEntries(EntryComparer.Instance))
-                .WriteToDisk(assemblyRoot);
+                .WriteToDisk(root: string.Empty); //GetTextExtractor ends up using rooted paths
         }
 
         //TODO: eventually, if we have an editor that can support our more forgiving handling, we want the extraction

@@ -12,7 +12,8 @@
     "precompiledReferences": [
         "Microsoft.CodeAnalysis.CSharp.dll",
         "Microsoft.CodeAnalysis.dll",
-        "System.Collections.Immutable.dll"
+        "System.Collections.Immutable.dll",
+        "System.Threading.Tasks.Dataflow.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],
