@@ -10,10 +10,11 @@ namespace EZUtils.Localization
     public class GetTextDocumentBuilder
     {
         private readonly string path;
-        //hypothetically, we could instead store an IEnumerable of entries instead, avoiding a bunch of array allocations
-        //or consider using immutable collections, even though library dependencies are annoying in unity
-        private GetTextDocument document;
-        private readonly HashSet<(string context, string id)> foundEntries = new HashSet<(string context, string id)>();
+        //we dont store the doc, since we can be more efficient by storing underlying entries
+        //but if things get too complicated, we can go back to storing the doc
+        private ImmutableList<GetTextEntry> underlyingEntries = ImmutableList<GetTextEntry>.Empty;
+        private ImmutableHashSet<(string context, string id)> foundEntries =
+            ImmutableHashSet<(string context, string id)>.Empty;
 
         private GetTextDocumentBuilder(string path)
         {
@@ -24,9 +25,9 @@ namespace EZUtils.Localization
         {
             GetTextDocumentBuilder builder = new GetTextDocumentBuilder(absolutePath)
             {
-                document = File.Exists(absolutePath)
-                    ? GetTextDocument.LoadFrom(absolutePath)
-                    : new GetTextDocument(new[] { new GetTextHeader(locale).ToEntry() })
+                underlyingEntries = File.Exists(absolutePath)
+                    ? GetTextDocument.LoadFrom(absolutePath).Entries.ToImmutableList()
+                    : ImmutableList<GetTextEntry>.Empty.Add(new GetTextHeader(locale).ToEntry())
             };
             return builder;
         }
@@ -36,43 +37,51 @@ namespace EZUtils.Localization
             GetTextEntryBuilder builder = new GetTextEntryBuilder();
             entryBuilderAction(builder);
 
-            //avoids an array reallocation in the event we add an item
-            List<GetTextEntry> updatedEntries = new List<GetTextEntry>(document.Entries.Count + 1);
-            updatedEntries.AddRange(document.Entries);
-
             GetTextEntry builtEntry = builder.Create();
-            bool foundFirstInstanceOfEntry = foundEntries.Add((context: builtEntry.Context, id: builtEntry.Id));
-            int existingEntryIndex = document.FindEntry(builtEntry.Context, builtEntry.Id, out GetTextEntry existingEntry);
+            bool foundFirstInstanceOfEntry = ImmutableInterlocked.Update(
+                ref foundEntries,
+                (hs, e) => hs.Add(e), (context: builtEntry.Context, id: builtEntry.Id));
+            ImmutableList<GetTextEntry> entriesBeingProcessed = underlyingEntries;
+            int existingEntryIndex = entriesBeingProcessed.FindIndex(
+                e => e.Context == builtEntry.Context && e.Id == builtEntry.Id);
 
             if (existingEntryIndex == -1)
             {
-                updatedEntries.Add(builtEntry);
+                entriesBeingProcessed = entriesBeingProcessed.Add(builtEntry);
             }
             else
             {
-                updatedEntries[existingEntryIndex] = MergeEntries(
-                    existingEntry: existingEntry,
+                entriesBeingProcessed = entriesBeingProcessed.SetItem(existingEntryIndex, MergeEntries(
+                    existingEntry: entriesBeingProcessed[existingEntryIndex],
                     builtEntry: builtEntry,
-                    foundFirstInstanceOfEntry: foundFirstInstanceOfEntry);
+                    foundFirstInstanceOfEntry: foundFirstInstanceOfEntry));
             }
 
-            document = new GetTextDocument(updatedEntries);
+            _ = ImmutableInterlocked.Update(ref underlyingEntries, _ => entriesBeingProcessed);
 
             return this;
         }
 
         public GetTextDocumentBuilder SortEntries(IComparer<GetTextEntry> comparer)
         {
-            GetTextEntry[] sortedEntries = document.Entries.OrderBy(e => e, comparer).ToArray();
-            document = new GetTextDocument(sortedEntries);
+            _ = ImmutableInterlocked.Update(ref underlyingEntries, entries => entries.Sort(comparer));
 
             return this;
         }
 
         public GetTextDocumentBuilder ForEachEntry(Func<GetTextEntry, GetTextEntry> entryFunc)
         {
-            GetTextEntry[] newEntries = document.Entries.Select(e => entryFunc(e)).ToArray();
-            document = new GetTextDocument(newEntries);
+            ImmutableList<GetTextEntry>.Builder builder = underlyingEntries.ToBuilder();
+            for (int i = 0; i < builder.Count; i++)
+            {
+                GetTextEntry oldEntry = builder[i];
+                GetTextEntry newEntry = entryFunc(oldEntry);
+                if (oldEntry == newEntry) continue;
+                builder[i] = newEntry;
+            }
+
+            ImmutableList<GetTextEntry> newEntries = builder.ToImmutable();
+            _ = ImmutableInterlocked.Update(ref underlyingEntries, _ => newEntries);
 
             return this;
         }
@@ -106,7 +115,7 @@ namespace EZUtils.Localization
             }
         }
 
-        public GetTextDocument GetGetTextDocument() => document;
+        public GetTextDocument GetGetTextDocument() => new GetTextDocument(underlyingEntries);
 
         public GetTextDocumentBuilder WriteToDisk(string root)
         {
@@ -116,6 +125,7 @@ namespace EZUtils.Localization
                 savePath = Path.Combine(root, savePath);
             }
 
+            GetTextDocument document = GetGetTextDocument();
             document.Save(savePath);
 
             return this;
@@ -126,12 +136,13 @@ namespace EZUtils.Localization
             //two locales are equal if just their cultures are the same
             //but we want to verify that the author has consistent plural rules across potentially multiple declarations
             //of the same catalog
-            Locale existingLocale = document.Header.Locale;
+            Locale existingLocale = GetTextHeader.FromEntry(underlyingEntries[0]).Locale;
             return existingLocale != locale
                 || !existingLocale.PluralRules.Equals(locale.PluralRules)
                 ? throw new InvalidOperationException($"Inconsistent locales for '{path}'.")
                 : this;
         }
+
         private static GetTextEntry MergeEntries(GetTextEntry existingEntry, GetTextEntry builtEntry, bool foundFirstInstanceOfEntry)
         {
             string builtEntryReference = builtEntry.Header.References[0];

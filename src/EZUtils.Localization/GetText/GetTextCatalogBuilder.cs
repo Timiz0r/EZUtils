@@ -1,28 +1,22 @@
 namespace EZUtils.Localization
 {
     using System;
-    using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.Linq;
     using Microsoft.CodeAnalysis;
 
     public class GetTextCatalogBuilder
     {
         //keys are paths, rooted or unrooted
-        private readonly Dictionary<string, GetTextDocumentBuilder> documents =
-            new Dictionary<string, GetTextDocumentBuilder>();
+        private ImmutableDictionary<string, GetTextDocumentBuilder> documents =
+            ImmutableDictionary<string, GetTextDocumentBuilder>.Empty;
 
         public GetTextCatalogBuilder ForPoFile(
             string path, Locale locale, Action<GetTextDocumentBuilder> documentBuilderAction)
         {
-            if (documents.TryGetValue(path, out GetTextDocumentBuilder document))
-            {
-                _ = document.VerifyLocaleMatches(locale);
-                documentBuilderAction(document);
+            GetTextDocumentBuilder document = ImmutableInterlocked.GetOrAdd(ref documents, path, p => GetTextDocumentBuilder.ForDocumentAt(p, locale));
+            _ = document.VerifyLocaleMatches(locale);
 
-                return this;
-            }
-
-            document = documents[path] = GetTextDocumentBuilder.ForDocumentAt(path, locale);
             documentBuilderAction(document);
 
             return this;

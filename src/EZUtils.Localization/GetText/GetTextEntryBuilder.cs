@@ -2,12 +2,13 @@ namespace EZUtils.Localization
 {
     using System;
     using System.Collections.Generic;
+    using System.Collections.Immutable;
     using System.Linq;
     using System.Text.RegularExpressions;
 
     public class GetTextEntryBuilder
     {
-        private readonly List<GetTextLine> lines = new List<GetTextLine>();
+        private ImmutableList<GetTextLine> lines = ImmutableList<GetTextLine>.Empty;
         //gave extra long names because doing a lot of copy-pasting with similarly-named parameters
         private string context;
         private string id;
@@ -17,7 +18,7 @@ namespace EZUtils.Localization
 
         public GetTextEntryBuilder AddComment(string comment)
         {
-            lines.Add(new GetTextLine(comment: comment));
+            AddLine(new GetTextLine(comment: comment));
             return this;
         }
 
@@ -85,14 +86,14 @@ namespace EZUtils.Localization
             {
                 if (pluralRule == null) return;
 
-                lines.Add(new GetTextLine(comment: $" plural[{pluralValues.Count + 1}]: {pluralRuleName}; {pluralRule}"));
+                AddLine(new GetTextLine(comment: $" plural[{pluralValues.Count + 1}]: {pluralRuleName}; {pluralRule}"));
                 _ = ConfigureAdditionalPluralValue(string.Empty);
             }
 
             void AddSpecialZeroPluralForm()
             {
                 if (!locale.UseSpecialZero) return;
-                lines.Add(new GetTextLine(
+                AddLine(new GetTextLine(
                     comment: $" plural[{pluralValues.Count + 1}]: special zero; use in case of a special message for zero elements"));
                 _ = ConfigureAdditionalPluralValue(string.Empty);
             }
@@ -116,7 +117,7 @@ namespace EZUtils.Localization
 
         public GetTextEntryBuilder AddEmptyLine()
         {
-            lines.Add(GetTextLine.Empty);
+            AddLine(GetTextLine.Empty);
 
             return this;
         }
@@ -139,26 +140,26 @@ namespace EZUtils.Localization
         {
             if (!value.Contains('\r') && !value.Contains('\n'))
             {
-                lines.Add(
-                    new GetTextLine(
-                        new GetTextKeyword(keyword, index),
-                        GetTextString.FromValue(value),
-                        comment: inlineComment));
+                AddLine(new GetTextLine(
+                    new GetTextKeyword(keyword, index),
+                    GetTextString.FromValue(value),
+                    comment: inlineComment));
                 return;
             }
 
             //in multiline mode, $ eats up \n, so we dont use it
             //we want to maintain newline chars
             string[] values = Regex.Matches(value, @"(?m)^[^\r\n]+\r?\n?").Cast<Match>().Select(m => m.Value).ToArray();
-            lines.Add(
-                new GetTextLine(
-                    new GetTextKeyword(keyword, index),
-                    GetTextString.FromValue(values[0]),
-                    comment: inlineComment));
+            AddLine(new GetTextLine(
+                new GetTextKeyword(keyword, index),
+                GetTextString.FromValue(values[0]),
+                comment: inlineComment));
             foreach (string additionalLine in values.Skip(1))
             {
-                lines.Add(new GetTextLine(GetTextString.FromValue(additionalLine)));
+                AddLine(new GetTextLine(GetTextString.FromValue(additionalLine)));
             }
         }
+
+        private void AddLine(GetTextLine line) => _ = ImmutableInterlocked.Update(ref lines, (ls, l) => ls.Add(l), line);
     }
 }
