@@ -25,14 +25,11 @@ namespace EZUtils.Localization
     //it'll ideally be a two-pass thing. we'll generate the proxy, let domain reload happen, and extract (so that we can load up all the required syntax trees, including proxy)
     //  or maybe we can block domain reload (vaguely recall there's a way), generate, extract, and let it happen
     //actually, since we'll move extraction into a separate package, there too go the roslyn libs
-    //instead, we'll just go template-style
+    //instead, we'll just go template-style, or nvm, since the proxy doesnt depend on the generation code
     public class EZLocalizationExtractor
     {
         private readonly GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
-        private readonly ActionBlock<Action> processorQueue = new ActionBlock<Action>(a => a(), new ExecutionDataflowBlockOptions()
-        {
-            MaxDegreeOfParallelism = Environment.ProcessorCount
-        });
+        private readonly IGetTextExtractionWorkRunner extractionWorkRunner = GetTextExtractionWorkRunner.Create();
         private readonly List<string> uxmlPathsToExtract = new List<string>();
 
         [InitializeOnLoadMethod]
@@ -89,7 +86,7 @@ namespace EZUtils.Localization
             GetTextExtractor getTextExtractor = new GetTextExtractor(
                 compilation => compilation
                     .AddReferences(MetadataReference.CreateFromFile(typeof(EditorWindow).Assembly.Location)),
-                processorQueue);
+                extractionWorkRunner);
             DirectoryInfo directory = new DirectoryInfo(assemblyRoot);
             foreach (FileInfo file in directory.EnumerateFiles("*.cs", SearchOption.AllDirectories))
             {
@@ -108,8 +105,7 @@ namespace EZUtils.Localization
 
         public void Finish()
         {
-            processorQueue.Complete();
-            processorQueue.Completion.Wait();
+            extractionWorkRunner.FinishWork();
 
             UxmlExtractor uxmlExtractor = new UxmlExtractor(catalogBuilder);
             foreach (string path in uxmlPathsToExtract)

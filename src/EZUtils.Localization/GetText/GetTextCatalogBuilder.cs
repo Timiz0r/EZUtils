@@ -1,6 +1,7 @@
 namespace EZUtils.Localization
 {
     using System;
+    using System.Collections.Generic;
     using System.Collections.Immutable;
     using System.Linq;
     using Microsoft.CodeAnalysis;
@@ -43,8 +44,9 @@ namespace EZUtils.Localization
         }
 
         public GetTextCatalog GetCatalog(Locale nativeLocale)
-            => new GetTextCatalog(
-                documents.Values.Select(db => db.GetGetTextDocument()).ToArray(),
-                nativeLocale);
+            => new GetTextCatalog(GetDocuments(), nativeLocale);
+
+        public IReadOnlyList<GetTextDocument> GetDocuments()
+            => documents.Values.Select(db => db.GetGetTextDocument()).ToArray();
     }
 }

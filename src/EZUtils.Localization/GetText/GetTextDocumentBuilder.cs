@@ -21,12 +21,12 @@ namespace EZUtils.Localization
             this.path = path;
         }
 
-        public static GetTextDocumentBuilder ForDocumentAt(string absolutePath, Locale locale)
+        public static GetTextDocumentBuilder ForDocumentAt(string path, Locale locale)
         {
-            GetTextDocumentBuilder builder = new GetTextDocumentBuilder(absolutePath)
+            GetTextDocumentBuilder builder = new GetTextDocumentBuilder(path)
             {
-                underlyingEntries = File.Exists(absolutePath)
-                    ? GetTextDocument.LoadFrom(absolutePath).Entries.ToImmutableList()
+                underlyingEntries = File.Exists(path)
+                    ? GetTextDocument.LoadFrom(path).Entries.ToImmutableList()
                     : ImmutableList<GetTextEntry>.Empty.Add(new GetTextHeader(locale).ToEntry())
             };
             return builder;

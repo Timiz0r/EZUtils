@@ -6,7 +6,6 @@ namespace EZUtils.Localization
     using System.Globalization;
     using System.IO;
     using System.Linq;
-    using System.Threading.Tasks.Dataflow;
     using Microsoft.CodeAnalysis;
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -15,12 +14,12 @@ namespace EZUtils.Localization
     public class GetTextExtractor
     {
         private readonly List<(SyntaxTree syntaxTree, string catalogRoot)> syntaxTrees = new List<(SyntaxTree, string)>();
-        private readonly ActionBlock<Action> processorQueue;
+        private readonly IGetTextExtractionWorkRunner extractionQueue;
         private CSharpCompilation compilation;
 
         public GetTextExtractor(
             Func<CSharpCompilation, CSharpCompilation> compilationBuilder,
-            ActionBlock<Action> processorQueue)
+            IGetTextExtractionWorkRunner extractionQueue)
         {
             CSharpCompilation compilation = CSharpCompilation.Create("EZLocalizationExtractor")
                 //we need a reference for each thing that we inspect from EZLocalization
@@ -28,12 +27,15 @@ namespace EZUtils.Localization
                 .AddReferences(MetadataReference.CreateFromFile(typeof(CultureInfo).Assembly.Location));
 
             this.compilation = compilationBuilder(compilation);
-            this.processorQueue = processorQueue;
+            this.extractionQueue = extractionQueue;
         }
 
         public void AddFile(string sourceFilePath, string displayPath, string catalogRoot)
+            => AddSource(source: File.ReadAllText(sourceFilePath), displayPath: displayPath, catalogRoot: catalogRoot);
+
+        public void AddSource(string source, string displayPath, string catalogRoot)
         {
-            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFilePath), path: displayPath);
+            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(source, path: displayPath);
             compilation = compilation.AddSyntaxTrees(syntaxTree);
             syntaxTrees.Add((syntaxTree, catalogRoot));
         }
@@ -42,7 +44,7 @@ namespace EZUtils.Localization
         {
             foreach ((SyntaxTree syntaxTree, string catalogRoot) in syntaxTrees)
             {
-                _ = processorQueue.Post(() =>
+                extractionQueue.StartWork(() =>
                 {
                     SemanticModel model = compilation.GetSemanticModel(syntaxTree);
                     SyntaxWalker syntaxWalker = new SyntaxWalker(model, catalogBuilder, catalogRoot);
@@ -66,15 +68,29 @@ namespace EZUtils.Localization
 
             public override void VisitClassDeclaration(ClassDeclarationSyntax node)
             {
-                INamedTypeSymbol symbol = model.GetDeclaredSymbol(node);
-                //if a class has these attributes, it's a proxy type that calls into other LocalizationMethods
-                //so we dont want to extract from such classes
-                //NOTE: a slight improvement would be to additionally ensure the declared method isn't a LocalizationMethod
-                //but since these types should be doing localization themselves, we'll save the time
-                if (symbol.GetAttributes().Any(
-                    a => a.AttributeClass.ToString() == "EZUtils.Localization.GenerateLanguageAttribute")) return;
+                ProcessDeclarationSymbol(model.GetDeclaredSymbol(node), out bool continueVisiting);
+                if (continueVisiting)
+                {
+                    base.VisitClassDeclaration(node);
+                }
+            }
 
-                base.VisitClassDeclaration(node);
+            public override void VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+            {
+                ProcessDeclarationSymbol(model.GetDeclaredSymbol(node), out bool continueVisiting);
+                if (continueVisiting)
+                {
+                    base.VisitPropertyDeclaration(node);
+                }
+            }
+
+            public override void VisitVariableDeclarator(VariableDeclaratorSyntax node)
+            {
+                ProcessDeclarationSymbol(model.GetDeclaredSymbol(node), out bool continueVisiting);
+                if (continueVisiting)
+                {
+                    base.VisitVariableDeclarator(node);
+                }
             }
 
             public override void VisitInvocationExpression(InvocationExpressionSyntax node)
@@ -99,6 +115,8 @@ namespace EZUtils.Localization
                 {
                     string path = Path.Combine(catalogRoot, poFilePath);
                     _ = catalogBuilder
+                        //TODO: the current design has a hard dependency on file io, which isnt entirely ideal
+                        //as it makes it hard to unit test. granted, extraction is supposed to write to files.
                         .ForPoFile(path, locale, doc => doc
                             .AddEntry(e =>
                             {
@@ -116,6 +134,38 @@ namespace EZUtils.Localization
                                     : e.ConfigureValue(string.Empty);
                             }));
                 }
+            }
+
+            private void ProcessDeclarationSymbol(ISymbol symbol, out bool continueVisiting)
+            {
+                if (symbol == null)
+                {
+                    //we only stop visiting if we're sure; not if we dont know
+                    continueVisiting = true;
+                    return;
+                }
+
+                IReadOnlyList<(string poFilePath, Locale locale)> targets =
+                    GenerateLanguageAttributeParser.ParseTargets(symbol.GetAttributes());
+                if (targets.Count == 0)
+                {
+                    //we support GenerateLanguageAttribute on classes, fields, and properties
+                    //for classes, we dont support localizing such classes, which themselves are meant to provide localization
+                    //  NOTE: a slight improvement would be to additionally ensure the declared method isn't a LocalizationMethod
+                    //  but since these types should be doing localization themselves, we'll save the time
+                    //for fields and properties, we don't support them being localized, either.
+                    continueVisiting = true;
+                    return;
+                }
+
+                //even though we wont extract from these, we still want to add the files
+                //even if there are no (valid) calls to this class/field/property, we want an entryless file
+                foreach ((string poFilePath, Locale locale) in targets)
+                {
+                    _ = catalogBuilder.ForPoFile(poFilePath, locale, _ => { });
+                }
+
+                continueVisiting = false;
             }
         }
     }

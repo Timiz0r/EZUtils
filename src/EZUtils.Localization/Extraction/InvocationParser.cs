@@ -48,33 +48,9 @@ namespace EZUtils.Localization
             else throw new InvalidOperationException(
                 $"Unable to extract any attributes in order to find catalog generation attributes.");
 
-            (string poFilePath, Locale locale)[] targets = targetAttributes
-                .Where(a => a.AttributeClass.ToString() == "EZUtils.Localization.GenerateLanguageAttribute")
-                .Select(a =>
-                {
-                    CultureInfo cultureInfo = CultureInfo.GetCultureInfo((string)a.ConstructorArguments[0].Value);
-
-                    string GetRule(string ruleKind)
-                        => (string)a.NamedArguments.SingleOrDefault(kvp => kvp.Key == ruleKind).Value.Value;
-                    PluralRules pluralRules = new PluralRules(
-                        zero: GetRule("Zero"),
-                        one: GetRule("One"),
-                        two: GetRule("Two"),
-                        few: GetRule("Few"),
-                        many: GetRule("Many"),
-                        other: GetRule("Other"));
-
-                    bool useSpecialZero =
-                        a.NamedArguments.SingleOrDefault(kvp => kvp.Key == "UseSpecialZero").Value.Value is bool b && b;
-
-                    Locale locale = new Locale(cultureInfo, pluralRules, useSpecialZero);
-                    //the original thought was to have this rooted to invocationOperation.Syntax.GetLocation().GetLineSpan().Path
-                    //but that's kinda too complicated. it's up to the caller of GetTextExtractor to decide
-                    string poFilePath = (string)a.ConstructorArguments[1].Value;
-
-                    return (poFilePath, locale);
-                }).ToArray();
-            if (targets.Length == 0) return NonLocalized;
+            IReadOnlyList<(string poFilePath, Locale locale)> targets =
+                GenerateLanguageAttributeParser.ParseTargets(targetAttributes);
+            if (targets.Count == 0) return NonLocalized;
 
             InvocationParser invocationParser = new InvocationParser(targets);
             foreach (IArgumentOperation argument in invocationOperation.Arguments)

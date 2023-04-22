@@ -1,4 +1,4 @@
-namespace EZUtils.MMDAvatarTools.Tests
+namespace EZUtils.Localization.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -7,12 +7,6 @@ namespace EZUtils.MMDAvatarTools.Tests
     using EZUtils.Localization;
     using NUnit.Framework;
 
-    /*
-     * TODO analyzers
-     * add instructions for fixing issues
-     * double check that null renderers fail tests
-     */
-    //technically testing is a bit insufficient because we dont test sub state machines and only layers' state machines
     public class GetTextDocumentParsingTests
     {
         private static readonly string genericHeader = @"
