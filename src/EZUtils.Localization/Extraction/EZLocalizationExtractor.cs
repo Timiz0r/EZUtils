@@ -74,13 +74,6 @@ namespace EZUtils.Localization
             Debug.Log($"Performed EZLocalization extraction in {stopwatch.ElapsedMilliseconds}ms.");
         }
 
-        private class AssemblyDefinition
-        {
-            public string name;
-            public string pathToFile;
-            public Assembly assembly;
-        }
-
         public void ExtractFrom(string assemblyRoot)
         {
             GetTextExtractor getTextExtractor = new GetTextExtractor(
@@ -118,7 +111,7 @@ namespace EZUtils.Localization
                     .Prune()
                     .ForEachEntry(e => GetCompatibilityVersion(e))
                     .SortEntries(EntryComparer.Instance))
-                .WriteToDisk(root: string.Empty); //GetTextExtractor ends up using rooted paths
+                .WriteToDisk(root: string.Empty); //extractors end up using rooted paths
         }
 
         //TODO: eventually, if we have an editor that can support our more forgiving handling, we want the extraction
@@ -208,6 +201,13 @@ namespace EZUtils.Localization
                 => StringComparer.OrdinalIgnoreCase.Compare(
                     x.Header.References?.Count > 0 ? x.Header.References[0] : string.Empty,
                     y.Header.References?.Count > 0 ? y.Header.References[0] : string.Empty);
+        }
+
+        private class AssemblyDefinition
+        {
+            public string name;
+            public string pathToFile;
+            public Assembly assembly;
         }
     }
 }

@@ -162,7 +162,8 @@ namespace EZUtils.Localization
                 //even if there are no (valid) calls to this class/field/property, we want an entryless file
                 foreach ((string poFilePath, Locale locale) in targets)
                 {
-                    _ = catalogBuilder.ForPoFile(poFilePath, locale, _ => { });
+                    string path = Path.Combine(catalogRoot, poFilePath);
+                    _ = catalogBuilder.ForPoFile(path, locale, _ => { });
                 }
 
                 continueVisiting = false;
