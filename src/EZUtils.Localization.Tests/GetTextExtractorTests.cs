@@ -191,6 +191,68 @@ namespace EZUtils.Localization.Tests
             Assert.That(document.Entries.Count, Is.EqualTo(1));
         }
 
+        [Test]
+        public void ExtractsInterpolatedString_WhenPlaceholdersPresent()
+        {
+            string code = @"
+                loc.T($""foo {""abc"",2:ff} bar"");";
+
+            GetTextCatalogBuilder catalogBuilder = Extract(BasicLocDefinition, code);
+            GetTextDocument document = catalogBuilder.GetDocuments()[0];
+
+            Assert.That(document.Entries.Count, Is.EqualTo(2));
+            Assert.That(document.Entries[1].Id, Is.EqualTo("foo {0,2:ff} bar"));
+        }
+
+        [Test]
+        public void ExtractsInvocation_WhenCalledThroughProxyStyleInvocation()
+        {
+            string code = @"
+                namespace Foo
+                {
+                    using EZUtils.Localization;
+                    using static Localization;
+                    public class Bar
+                    {
+                        public static void Baz()
+                        {
+                            T(""foo bar baz"");
+                        }
+                    }
+
+                    [GenerateLanguage(""ja"", ""unittest-ja.po"", UseSpecialZero = true, Other = "" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"")]
+                    public static class Localization
+                    {
+                        [LocalizationMethod]
+                        public static void T(string id) { }
+                    }
+                }";
+            GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
+            IGetTextExtractionWorkRunner workRunner = GetTextExtractionWorkRunner.CreateSynchronous();
+            GetTextExtractor extractor = new GetTextExtractor(compilation => compilation, workRunner);
+
+            extractor.AddSource(source: code, displayPath: "Foo.cs", catalogRoot: string.Empty);
+            extractor.Extract(catalogBuilder);
+            GetTextDocument document = catalogBuilder.GetDocuments()[0];
+
+            Assert.That(document.Entries.Count, Is.EqualTo(2));
+            AssertHasEntry(document, context: null, id: "foo bar baz");
+        }
+
+        [Test]
+        public void AddsReferences_WhenFoundMultipleTimes()
+        {
+            string code = @"
+                loc.T(""foo bar baz"");
+                loc.T(""foo bar baz"");";
+
+            GetTextCatalogBuilder catalogBuilder = Extract(BasicLocDefinition, code);
+            GetTextDocument document = catalogBuilder.GetDocuments()[0];
+
+            Assert.That(document.Entries.Count, Is.EqualTo(2));
+            Assert.That(document.Entries[1].Header.References.Count, Is.EqualTo(2));
+        }
+
         private static void AssertHasEntry(GetTextDocument document, string context, string id) => Assert.That(
             document.Entries, Has.Exactly(1).Matches<GetTextEntry>(e => e.Context == context && e.Id == id));
 

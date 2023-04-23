@@ -21,7 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZUtils.Localization", "..\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZUtils.EditorEnhancements", "..\EZUtils.EditorEnhancements\EZUtils.EditorEnhancements.csproj", "{BCA4CFCA-6BF7-4A3D-AF4A-00B9C9C413D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EUtils.Localization.Tests", "..\EZUtils.Localization.Tests\EUtils.Localization.Tests.csproj", "{E2A8B6D1-8B1C-47EA-B75A-87B6F241E332}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZUtils.Localization.Tests", "..\EZUtils.Localization.Tests\EZUtils.Localization.Tests.csproj", "{E2A8B6D1-8B1C-47EA-B75A-87B6F241E332}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
