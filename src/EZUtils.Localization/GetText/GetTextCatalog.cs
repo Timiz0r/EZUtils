@@ -164,6 +164,21 @@ namespace EZUtils.Localization
                 many: default);
         [LocalizationMethod]
         public string T(
+            FormattableString id,
+            decimal count,
+            FormattableString other)
+            => T(
+                context: default,
+                id: new StringHelper(id),
+                count: count,
+                other: new StringHelper(other),
+                specialZero: default,
+                zero: default,
+                two: default,
+                few: default,
+                many: default);
+        [LocalizationMethod]
+        public string T(
             string context,
             FormattableString id,
             decimal count,

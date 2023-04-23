@@ -95,6 +95,21 @@ namespace EZUtils.Localization
         public string T(
             FormattableString id,
             decimal count,
+            FormattableString other)
+            => T(
+                context: default,
+                id: id,
+                count: count,
+                other: other,
+                specialZero: default,
+                zero: default,
+                two: default,
+                few: default,
+                many: default);
+        [LocalizationMethod]
+        public string T(
+            FormattableString id,
+            decimal count,
             FormattableString other,
             RawString specialZero) => catalogReference.Catalog.T(
                 id: id,
