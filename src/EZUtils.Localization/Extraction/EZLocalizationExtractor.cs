@@ -7,11 +7,8 @@ namespace EZUtils.Localization
     using UnityEditor;
 
     //TODO: shove extraction into a different assembly, so we dont have extraction running on users' projects
-    //TODO: improve sorting of entries
-    //  first, entries with more references are probably more important and should go further up
-    //  for entries with same number of references, could try to nominate the candidate reference based on commonality of directory, so to speak
-    //  next, we'll want to split line number from path, then sort candidate reference by them
     //TODO: integration testing
+    //TODO: cr and refactor
 
     //from a ports-and-adapters-perspective, EZLocalization is an adapter; GetTextExtractor is a port
     //TODO: since we ended up going with roslyn, this gives us the opportunity to generate a proxy based on what EZLocalization looks like
@@ -144,13 +141,43 @@ namespace EZUtils.Localization
             }
         }
 
+        //working under the assumption that more common entries are more interesting and should be higher up
+        //a couple alternate implementations to consider
+        //* first sort by directory of candidate reference, before sorting by reference count
+        //* pick candidate reference not by first reference, but by finding the most common sub-directory, then picking the first reference
         private class EntryComparer : IComparer<GetTextEntry>
         {
             public static EntryComparer Instance { get; } = new EntryComparer();
             public int Compare(GetTextEntry x, GetTextEntry y)
-                => StringComparer.OrdinalIgnoreCase.Compare(
-                    x.Header.References?.Count > 0 ? x.Header.References[0] : string.Empty,
-                    y.Header.References?.Count > 0 ? y.Header.References[0] : string.Empty);
+            {
+                bool xIsHeader = x.Context == null && x.Id.Length == 0;
+                bool yIsHeader = y.Context == null && y.Id.Length == 0;
+                int isHeaderComparer = Comparer<bool>.Default.Compare(yIsHeader, xIsHeader);
+                if (isHeaderComparer != 0) return isHeaderComparer;
+
+                int referenceCountComparison = y.Header.References.Count - x.Header.References.Count;
+                if (referenceCountComparison != 0) return referenceCountComparison;
+
+                (string path, int line) xReference = GetCandidateReference(x);
+                (string path, int line) yReference = GetCandidateReference(x);
+                int referencePathComparison = StringComparer.OrdinalIgnoreCase.Compare(xReference.path, yReference.path);
+                if (referencePathComparison != 0) return referenceCountComparison;
+
+                return yReference.line - xReference.line;
+
+                (string path, int line) GetCandidateReference(GetTextEntry entry)
+                    => entry.Header.References.Count == 0
+                        ? default
+                        : entry.Header.References[0] is string rawReference
+                            && rawReference.Split(':') is string[] splitReference
+                            && splitReference.Length == 2
+                            && (
+                                path: splitReference[0],
+                                line: int.TryParse(splitReference[1], out int line) ? line : 0
+                            ) is var result
+                                ? result
+                                : default;
+            }
         }
     }
 }

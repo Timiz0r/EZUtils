@@ -8,14 +8,10 @@ msgstr ""
 "X-PluralRules-SpecialZero: \n"
 "X-PluralRules-Other: \n"
 
-# plural[0]: other; language does not have separate forms for plurals
-# plural[1]: special zero; use in case of a special message for zero elements
-#, keep
-msgctxt "wat|foo"
-msgid "One friend online"
-msgid_plural "{friendCount} friends online."
-msgstr[0] "友達{friendCount}人がオンライン"
-msgstr[1] "友達はオンラインしていません"
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:17
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:18
+msgid "Donuts"
+msgstr "ドーナツ"
 
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:41
 msgid "EZLocalization manual testing"
@@ -49,10 +45,15 @@ msgstr "開始"
 msgid "Pudding"
 msgstr "プリン"
 
-#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:17
-msgid "Donuts"
-msgstr "ドーナツ"
-
-#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:19
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:20
 msgid "Have a nice day!"
 msgstr "良い一日を～"
+
+# plural[0]: other; language does not have separate forms for plurals
+# plural[1]: special zero; use in case of a special message for zero elements
+#, keep
+msgctxt "wat|foo"
+msgid "One friend online"
+msgid_plural "{friendCount} friends online."
+msgstr[0] "友達{friendCount}人がオンライン"
+msgstr[1] "友達はオンラインしていません"

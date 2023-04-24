@@ -7,6 +7,11 @@ msgstr "Language: ko\n"
 "X-PluralRules-Other:  @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\n"
 "X-PluralRules-SpecialZero: \n"
 
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:17
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:18
+msgid "Donuts"
+msgstr ""
+
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:41
 msgid "EZLocalization manual testing"
 msgstr ""
@@ -37,9 +42,5 @@ msgid "Start"
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:16
 msgid "Pudding"
 
-#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:17
-msgid "Donuts"
-msgstr ""
-
-#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:19
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:20
 msgid "Have a nice day!"

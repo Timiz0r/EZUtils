@@ -15,6 +15,7 @@
     <VisualElement>
       <Label text="loc:Pudding" />
       <Label text="loc:Donuts" />
+      <Label text="loc:Donuts" />
       <VisualElement>
         <Label text="loc:Have a nice day!" />
       </VisualElement>
