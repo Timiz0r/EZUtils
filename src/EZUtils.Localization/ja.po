@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Language: ja_JP2\n"
+"Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -14,7 +14,7 @@ msgstr ""
 "X-Crowdin-File-ID: 7\n"
 "Project-Id-Version: ezutils\n"
 "Language-Team: japanese-withzero\n"
-"PO-Revision-Date: 2023-04-24 14:50\n"
+"PO-Revision-Date: 2023-04-24 16:04\n"
 
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:17
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:18
@@ -42,9 +42,9 @@ msgstr "わかんない！"
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:45
 msgid "There is {0} cupcake."
 msgid_plural "There are {0} cupcakes."
-msgstr[0] "カップケーキが{0}個あります。"
-msgstr[1] "カップケーキがありません。"
-msgstr[2] ""
+msgstr[0] "カップケーキがありません。"
+msgstr[1] "カップケーキが{0}個あります。"
+msgstr[2] "カップケーキが{0}個あります。"
 
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:14
 msgid "Start"
@@ -60,5 +60,5 @@ msgstr "良い一日を～"
 
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:19
 msgid "Pancakes"
-msgstr ""
+msgstr "パンケーキ"
 
