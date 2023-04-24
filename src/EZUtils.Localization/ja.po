@@ -14,7 +14,7 @@ msgstr ""
 "X-Crowdin-File-ID: 7\n"
 "Project-Id-Version: ezutils\n"
 "Language-Team: Japanese\n"
-"PO-Revision-Date: 2023-04-24 13:11\n"
+"PO-Revision-Date: 2023-04-24 13:39\n"
 
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:17
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:18
@@ -52,7 +52,11 @@ msgstr "開始"
 msgid "Pudding"
 msgstr "プリン"
 
-#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:20
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:21
 msgid "Have a nice day!"
 msgstr "良い一日を～"
+
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:19
+msgid "Pancakes"
+msgstr ""
 
