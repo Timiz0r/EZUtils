@@ -30,6 +30,7 @@ namespace EZUtils.Localization.Proxy
         //locplural:one/id:type2:type3:type4
         //and which one each maps to depends on native locale
         //and will need to escape : with ::, ofc only if a localplural: prefix
+
         public static void TranslateElementTree(VisualElement rootElement) => loc.TranslateElementTree(rootElement: rootElement);
         [LocalizationMethod]
         public static void TranslateWindowTitle(

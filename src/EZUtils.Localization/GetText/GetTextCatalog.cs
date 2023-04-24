@@ -42,7 +42,8 @@ namespace EZUtils.Localization
             return correspondingLocale;
         }
 
-        //TODO: we could also add a method to choose, for instance, en if we pass in en-us, or vice-versa.
+        //NOTE: we could also add a method to choose, for instance, en if we pass in en-us, or vice-versa.
+        //but not important at time of writing
         public Locale SelectLocaleOrNative(params Locale[] locales)
         {
             foreach (Locale locale in locales)
@@ -75,9 +76,6 @@ namespace EZUtils.Localization
         public string T(RawString id) => T(context: null, id: new StringHelper(id));
         [LocalizationMethod]
         public string T(string context, RawString id) => T(context, new StringHelper(id));
-        //TODO: when extracting, add a comment for real format.
-        //while we could hypothetically maintain the actual format and do some magic to swap numbers back in,
-        //it would be nice to have a more universally compatible po file (granted we do non-standard plurals)
         [LocalizationMethod]
         public string T(FormattableString id) => T(context: null, id: new StringHelper(id));
         [LocalizationMethod]

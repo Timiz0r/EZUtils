@@ -117,13 +117,13 @@ namespace EZUtils.Localization
                     _ = catalogBuilder
                         //TODO: the current design has a hard dependency on file io, which isnt entirely ideal
                         //as it makes it hard to unit test. granted, extraction is supposed to write to files.
+                        //we currently work around it by referring to a non-existent file so we dont accidentally load it
                         .ForPoFile(path, locale, doc => doc
                             .AddEntry(e =>
                             {
                                 FileLinePositionSpan location = node.GetLocation().GetLineSpan();
                                 _ = e
                                     .AddEmptyLine() //entries tend to have whitespace on top to visually separate them
-                                    //TODO: add a header instead
                                     .AddComment($": {location.Path}:{location.StartLinePosition.Line}")
                                     .ConfigureContext(invocationParser.Context)
                                     .ConfigureId(invocationParser.Id);

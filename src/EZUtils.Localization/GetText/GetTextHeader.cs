@@ -7,8 +7,6 @@ namespace EZUtils.Localization
     using System.Text;
     using System.Text.RegularExpressions;
 
-    //TODO: it kinda makes more sense to integrate this into the doc, instead of having a separate class
-    //this design decision mainly depends on how we go about generating documenting for new languages
     public class GetTextHeader
     {
         //did this by eye scanning over all cultures; not so authoritative

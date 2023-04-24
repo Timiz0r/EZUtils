@@ -133,8 +133,8 @@ namespace EZUtils.Localization
                 if (node.Declaration.Type.ToString() != "EZLocalization") return null;
 
                 //we do let the user customize this, for path and sync key
-                //we also have no need to visit further
-                return node.WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
+                return base.VisitFieldDeclaration(
+                    node.WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed));
             }
 
             public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
@@ -175,9 +175,16 @@ namespace EZUtils.Localization
                                     SyntaxFactory.IdentifierName(node.Identifier.ValueText)),
                             argumentList)))
                     .WithTriviaFrom(node);
-                //we have no need to visit further
-                return newNode;
+
+                return base.VisitMethodDeclaration(newNode);
             }
+
+            //NOTE: we dont do this because havent figured out a way to get rid of whitespace, as well
+            //public override SyntaxTrivia VisitTrivia(SyntaxTrivia trivia)
+            //    => trivia.IsKind(SyntaxKind.SingleLineCommentTrivia)
+            //        || trivia.IsKind(SyntaxKind.MultiLineCommentTrivia)
+            //        ? default
+            //        : base.VisitTrivia(trivia);
 
             //these arent needed in the proxy type and shall be stripped
             public override SyntaxNode VisitEnumDeclaration(EnumDeclarationSyntax node) => null;

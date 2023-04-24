@@ -6,11 +6,6 @@ namespace EZUtils.Localization
     using System.Linq;
     using System.Xml.Linq;
 
-    //TODO: once we get around to unit testing, plural rule parsing can be considered its own application
-    //once thing we'll do is parse the whole xml, since we get free test cases
-    //also note that empty rules (with or without samples) probably dont parse right. giganto xml parsing should work there
-    //but dont get lazy and just parse xml, since it's harder to reason about there
-    //or do idk
     public class PluralRules : IEquatable<PluralRules>
     {
         private static readonly IReadOnlyDictionary<CultureInfo, PluralRules> defaultPluralRules = LoadDefaultPluralRules();
