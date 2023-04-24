@@ -92,7 +92,11 @@ namespace EZUtils.Localization
             return ForEachEntry(e =>
                 (e.Context == null && e.Id.Length == 0) //header entry that wont have references
                     || e.Header.Flags.Contains("keep")
-                    || e.Header.References.Count > 0
+                    || foundEntries.Contains((e.Context, e.Id))
+                    //we no longer prune based on this because our code as now written cannot fully strip all references
+                    //the first time we hit an entry, we do clear it, but then we also add it it
+                    //the only way this happens is if a user does it, and we'll assume they did it for a good reason
+                    // || e.Header.References.Count > 0
                     ? e
                     : MarkObsolete(e));
 
