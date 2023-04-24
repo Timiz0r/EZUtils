@@ -49,6 +49,10 @@ msgstr "開始"
 msgid "Pudding"
 msgstr "プリン"
 
-#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:18
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:17
+msgid "Donuts"
+msgstr "ドーナツ"
+
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:19
 msgid "Have a nice day!"
 msgstr "良い一日を～"

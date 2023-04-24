@@ -37,5 +37,9 @@ msgid "Start"
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:16
 msgid "Pudding"
 
-#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:18
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:17
+msgid "Donuts"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:19
 msgid "Have a nice day!"

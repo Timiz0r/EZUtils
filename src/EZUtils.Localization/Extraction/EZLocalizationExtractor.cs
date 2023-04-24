@@ -3,18 +3,15 @@ namespace EZUtils.Localization
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Linq;
-    using System.Reflection;
     using Microsoft.CodeAnalysis;
     using UnityEditor;
-    using UnityEngine;
 
     //TODO: shove extraction into a different assembly, so we dont have extraction running on users' projects
     //TODO: improve sorting of entries
     //  first, entries with more references are probably more important and should go further up
     //  for entries with same number of references, could try to nominate the candidate reference based on commonality of directory, so to speak
     //  next, we'll want to split line number from path, then sort candidate reference by them
-    //TODO: detect uxml changes, which dont result in domain reload
+    //TODO: integration testing
 
     //from a ports-and-adapters-perspective, EZLocalization is an adapter; GetTextExtractor is a port
     //TODO: since we ended up going with roslyn, this gives us the opportunity to generate a proxy based on what EZLocalization looks like
@@ -28,48 +25,6 @@ namespace EZUtils.Localization
         private readonly GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
         private readonly IGetTextExtractionWorkRunner extractionWorkRunner = GetTextExtractionWorkRunner.Create();
         private readonly List<string> uxmlPathsToExtract = new List<string>();
-
-        [InitializeOnLoadMethod]
-        private static void UnityInitialize() => EditorApplication.delayCall += Initialize;
-
-        private static void Initialize()
-        {
-            System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
-
-            Dictionary<string, Assembly> assemblies =
-                AppDomain.CurrentDomain.GetAssemblies().ToDictionary(a => a.GetName().Name, a => a);
-            IEnumerable<AssemblyDefinition> assemblyDefinitions = AssetDatabase
-                .FindAssets("t:AssemblyDefinitionAsset")
-                .Select(id =>
-                {
-                    AssemblyDefinition def = new AssemblyDefinition()
-                    {
-                        pathToFile = AssetDatabase.GUIDToAssetPath(id)
-                    };
-
-                    //reads in name
-                    EditorJsonUtility.FromJsonOverwrite (
-                        File.ReadAllText(def.pathToFile),
-                        def);
-
-                    def.assembly = assemblies.TryGetValue(def.name, out Assembly assembly) ? assembly : null;
-
-                    return def;
-                });
-
-
-            EZLocalizationExtractor extractor = new EZLocalizationExtractor();
-            foreach (AssemblyDefinition def in assemblyDefinitions
-                .Where(ad => ad.assembly?.GetCustomAttribute<LocalizedAssemblyAttribute>() != null))
-            {
-                string assemblyRoot = Path.GetDirectoryName(def.pathToFile);
-                extractor.ExtractFrom(assemblyRoot);
-            }
-            extractor.Finish();
-
-            stopwatch.Stop();
-            Debug.Log($"Performed EZLocalization extraction in {stopwatch.ElapsedMilliseconds}ms.");
-        }
 
         public void ExtractFrom(string assemblyRoot)
         {
@@ -196,13 +151,6 @@ namespace EZUtils.Localization
                 => StringComparer.OrdinalIgnoreCase.Compare(
                     x.Header.References?.Count > 0 ? x.Header.References[0] : string.Empty,
                     y.Header.References?.Count > 0 ? y.Header.References[0] : string.Empty);
-        }
-
-        private class AssemblyDefinition
-        {
-            public string name;
-            public string pathToFile;
-            public Assembly assembly;
         }
     }
 }
