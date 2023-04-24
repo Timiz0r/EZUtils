@@ -4,6 +4,7 @@ namespace EZUtils.Localization
     using UnityEditor;
     using UnityEngine;
     using UnityEngine.UIElements;
+    using static Proxy.Localization;
 
     public class ManualTestingEditorWindow : EditorWindow
     {
@@ -25,11 +26,11 @@ namespace EZUtils.Localization
             temp = (temp + 1) % 2;
             if (temp == 0)
             {
-                loc.SelectLocale(CultureInfo.GetCultureInfo("en"));
+                _ = SelectLocale(CultureInfo.GetCultureInfo("en"));
             }
             else
             {
-                loc.SelectLocale(CultureInfo.GetCultureInfo("ja"));
+                _ = SelectLocale(CultureInfo.GetCultureInfo("ja"));
             }
         }
 
@@ -38,14 +39,14 @@ namespace EZUtils.Localization
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 "Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml");
             visualTree.CloneTree(rootVisualElement);
-            loc.TranslateElementTree(rootVisualElement);
-            loc.TranslateWindowTitle(this, titleText: "EZLocalization manual testing");
+            TranslateElementTree(rootVisualElement);
+            TranslateWindowTitle(this, titleText: "EZLocalization manual testing");
 
             _ = Proxy.Localization.T("wat");
-            Debug.Log(loc.T(LocalizationParameter.Count));
-            Debug.Log(loc.T("the rain in spain falls mainly on the plain"));
+            Debug.Log(T(LocalizationParameter.Count));
+            Debug.Log(T("the rain in spain falls mainly on the plain"));
             decimal value = new System.Random().Next();
-            Debug.Log(loc.T($"There is {value} cupcake.", value, $"There are {value} cupcakes."));
+            Debug.Log(T($"There is {value} cupcake.", value, $"There are {value} cupcakes."));
 
             rootVisualElement.Q<Button>().clicked += () =>
             {

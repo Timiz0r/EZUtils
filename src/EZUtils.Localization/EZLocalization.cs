@@ -95,8 +95,7 @@ namespace EZUtils.Localization
         public string T(
             FormattableString id,
             decimal count,
-            FormattableString other)
-            => T(
+            FormattableString other) => T(
                 context: default,
                 id: id,
                 count: count,

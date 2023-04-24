@@ -12,23 +12,23 @@ msgstr "Language: ko\n"
 msgid "Donuts"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:41
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:42
 msgid "EZLocalization manual testing"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:43
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:44
 msgid "wat"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:44
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:45
 msgid "count"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:45
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:46
 msgid "the rain in spain falls mainly on the plain"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:47
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.cs:48
 # plural[1]: Other;  @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …
 # plural[2]: special zero; use in case of a special message for zero elements
 msgid "There is {0} cupcake."

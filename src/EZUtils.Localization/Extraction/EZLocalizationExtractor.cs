@@ -9,14 +9,6 @@ namespace EZUtils.Localization
     //TODO: shove extraction into a different assembly, so we dont have extraction running on users' projects
     //TODO: integration testing
     //TODO: cr and refactor
-
-    //from a ports-and-adapters-perspective, EZLocalization is an adapter; GetTextExtractor is a port
-    //TODO: since we ended up going with roslyn, this gives us the opportunity to generate a proxy based on what EZLocalization looks like
-    //we can generate it on domain reload and should be pretty deterministic. or we could play it safe and only write to the proxy if we see something isn't right.
-    //it'll ideally be a two-pass thing. we'll generate the proxy, let domain reload happen, and extract (so that we can load up all the required syntax trees, including proxy)
-    //  or maybe we can block domain reload (vaguely recall there's a way), generate, extract, and let it happen
-    //actually, since we'll move extraction into a separate package, there too go the roslyn libs
-    //instead, we'll just go template-style, or nvm, since the proxy doesnt depend on the generation code
     public class EZLocalizationExtractor
     {
         private readonly GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();

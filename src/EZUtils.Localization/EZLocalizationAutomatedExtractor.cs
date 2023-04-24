@@ -39,8 +39,11 @@ namespace EZUtils.Localization
                 .Where(ad => ad.assembly?.GetCustomAttribute<LocalizedAssemblyAttribute>() != null))
             {
                 extractor.ExtractFrom(def.root);
+                LocalizationProxyGenerator.Generate(def.root);
             }
             extractor.Finish();
+            //particularly for proxy generation
+            AssetDatabase.Refresh();
 
             stopwatch.Stop();
             Debug.Log($"Performed EZLocalization extraction in {stopwatch.ElapsedMilliseconds}ms.");
