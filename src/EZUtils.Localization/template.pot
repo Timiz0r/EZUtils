@@ -44,6 +44,10 @@ msgstr ""
 msgid "Pudding"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:20
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:21
 msgid "Have a nice day!"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:19
+msgid "Pancakes"
 msgstr ""

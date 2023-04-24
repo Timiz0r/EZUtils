@@ -16,6 +16,7 @@
       <Label text="loc:Pudding" />
       <Label text="loc:Donuts" />
       <Label text="loc:Donuts" />
+      <Label text="loc:Pancakes" />
       <VisualElement>
         <Label text="loc:Have a nice day!" />
       </VisualElement>
