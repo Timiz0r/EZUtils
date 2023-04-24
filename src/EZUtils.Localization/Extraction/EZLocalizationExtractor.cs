@@ -5,7 +5,6 @@ namespace EZUtils.Localization
     using System.IO;
     using System.Linq;
     using System.Reflection;
-    using System.Threading.Tasks.Dataflow;
     using Microsoft.CodeAnalysis;
     using UnityEditor;
     using UnityEngine;
@@ -15,8 +14,6 @@ namespace EZUtils.Localization
     //  first, entries with more references are probably more important and should go further up
     //  for entries with same number of references, could try to nominate the candidate reference based on commonality of directory, so to speak
     //  next, we'll want to split line number from path, then sort candidate reference by them
-    //TODO: automated testing
-    //  will just be at GetTextExtrator-level
     //TODO: detect uxml changes, which dont result in domain reload
 
     //from a ports-and-adapters-perspective, EZLocalization is an adapter; GetTextExtractor is a port
@@ -83,9 +80,7 @@ namespace EZUtils.Localization
             DirectoryInfo directory = new DirectoryInfo(assemblyRoot);
             foreach (FileInfo file in directory.EnumerateFiles("*.cs", SearchOption.AllDirectories))
             {
-                string displayPath = Path
-                    .Combine(assemblyRoot, file.FullName.Substring(directory.FullName.Length + 1))
-                    .Replace("\\", "/");
+                string displayPath = PathUtil.GetRelative(directory.FullName, file.FullName, newRoot: assemblyRoot);
                 getTextExtractor.AddFile(
                     sourceFilePath: file.FullName,
                     displayPath: displayPath,

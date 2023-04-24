@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<xs:schema xmlns:editor="UnityEditor.UIElements" xmlns:ezui="EZUtils.UIElements" xmlns:engine="UnityEngine.UIElements" xmlns="UnityEditor.UIElements.Debugger" elementFormDefault="qualified" targetNamespace="EZUtils.UIElements" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<xs:schema xmlns:editor="UnityEditor.UIElements" xmlns:ezui="EZUtils.UIElements" xmlns:engine="UnityEngine.UIElements" xmlns="EZUtils.Localization.UIElements" elementFormDefault="qualified" targetNamespace="EZUtils.UIElements" xmlns:xs="http://www.w3.org/2001/XMLSchema">
   <xs:import schemaLocation="UnityEngine.UIElements.xsd" namespace="UnityEngine.UIElements" />
   <xs:complexType name="SettingsProviderContainerType">
     <xs:complexContent mixed="false">

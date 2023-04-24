@@ -9,16 +9,17 @@ namespace EZUtils.Localization
 
     public class GetTextDocumentBuilder
     {
-        private readonly string path;
         //we dont store the doc, since we can be more efficient by storing underlying entries
         //but if things get too complicated, we can go back to storing the doc
         private ImmutableList<GetTextEntry> underlyingEntries = ImmutableList<GetTextEntry>.Empty;
         private ImmutableHashSet<(string context, string id)> foundEntries =
             ImmutableHashSet<(string context, string id)>.Empty;
 
+        public string Path { get; }
+
         private GetTextDocumentBuilder(string path)
         {
-            this.path = path;
+            Path = path;
         }
 
         public static GetTextDocumentBuilder ForDocumentAt(string path, Locale locale)
@@ -119,10 +120,10 @@ namespace EZUtils.Localization
 
         public GetTextDocumentBuilder WriteToDisk(string root)
         {
-            string savePath = path;
-            if (!Path.IsPathRooted(savePath))
+            string savePath = Path;
+            if (!System.IO.Path.IsPathRooted(savePath))
             {
-                savePath = Path.Combine(root, savePath);
+                savePath = System.IO.Path.Combine(root, savePath);
             }
             //granted, even after adding the root, the path may still not be rooted
             //the check is just because adding a root to a rooted path makes no sense
@@ -141,7 +142,7 @@ namespace EZUtils.Localization
             Locale existingLocale = GetTextHeader.FromEntry(underlyingEntries[0]).Locale;
             return existingLocale != locale
                 || !existingLocale.PluralRules.Equals(locale.PluralRules)
-                ? throw new InvalidOperationException($"Inconsistent locales for '{path}'.")
+                ? throw new InvalidOperationException($"Inconsistent locales for '{Path}'.")
                 : this;
         }
 
