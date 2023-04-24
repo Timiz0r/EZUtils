@@ -8,8 +8,7 @@ namespace EZUtils.Localization.Proxy
 
     //ports-and-adapters-wise, EZLocalization is a driver adapter connecting unity editor to a catalog
     [LocalizationProxy]
-    [GenerateLanguage("ja", "ja.po", UseSpecialZero = true, Other = " @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")]
-    [GenerateLanguage("ko", "ko.po", UseSpecialZero = true, Other = " @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")]
+    [GenerateLanguage("en", "template.pot", UseSpecialZero = true, Other = " @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")]
     public static class Localization
     {
         private static readonly EZLocalization loc = EZLocalization.ForCatalogUnder("Packages/com.timiz0r.ezutils.localization", "EZUtils");
@@ -30,7 +29,6 @@ namespace EZUtils.Localization.Proxy
         //locplural:one/id:type2:type3:type4
         //and which one each maps to depends on native locale
         //and will need to escape : with ::, ofc only if a localplural: prefix
-
         public static void TranslateElementTree(VisualElement rootElement) => loc.TranslateElementTree(rootElement: rootElement);
         [LocalizationMethod]
         public static void TranslateWindowTitle(
