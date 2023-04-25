@@ -5,7 +5,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n == 1 ? 1 : 0;\n"
-"X-PluralRules-SpecialZero: \n"
+"X-PluralRules-Zero: n = 0 @integer 0 @decimal 0.0, 0.00, 0.000, 0.0000\n"
 "X-PluralRules-Other: \n"
 
 #: Packages/com.timiz0r.ezutils.localization/ManualTestingEditorWindow.uxml:17

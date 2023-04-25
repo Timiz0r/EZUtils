@@ -40,10 +40,6 @@ namespace EZUtils.Localization.UIElements
             {
                 name = "other",
             };
-            private readonly UxmlStringAttributeDescription useSpecialZeroAttribute = new UxmlStringAttributeDescription
-            {
-                name = "useSpecialZero",
-            };
             public override void Init(VisualElement ve, IUxmlAttributes bag, CreationContext cc) => base.Init(ve, bag, cc);
         }
     }

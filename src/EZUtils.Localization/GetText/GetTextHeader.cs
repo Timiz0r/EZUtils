@@ -48,8 +48,7 @@ namespace EZUtils.Localization
             _ = sb.Append("Content-Transfer-Encoding: 8bit\n");
 
             //we generate these so that poedit or other tools can see the plural strings property
-            int pluralFormCount = Locale.PluralRules.Count;
-            if (Locale.UseSpecialZero) pluralFormCount++;
+            int pluralFormCount = locale.PluralRules.Count;
             if (pluralFormCount < 1) throw new InvalidOperationException("There must be at least one plural form.");
             _ = sb.Append($"Plural-Forms: nplurals={pluralFormCount}; ");
             for (int i = 1; i < pluralFormCount; i++)
@@ -64,7 +63,6 @@ namespace EZUtils.Localization
             if (Locale.PluralRules.Few is string few) _ = sb.Append($"X-PluralRules-Few: {few}\n");
             if (Locale.PluralRules.Many is string many) _ = sb.Append($"X-PluralRules-Many: {many}\n");
             if (Locale.PluralRules.Other is string other) _ = sb.Append($"X-PluralRules-Other: {other}\n");
-            if (Locale.UseSpecialZero) _ = sb.Append($"X-PluralRules-SpecialZero: \n");
 
             GetTextEntry entry = new GetTextEntryBuilder()
                 .ConfigureId(string.Empty)

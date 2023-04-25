@@ -11,6 +11,5 @@ namespace EZUtils.Localization
         public const string Few = "few";
         public const string Many = "many";
         public const string Other = "other";
-        public const string SpecialZero = "specialZero";
     }
 }

@@ -105,7 +105,6 @@ namespace EZUtils.Localization
                         CultureInfo cultureInfo = null;
                         string poFilePath = null;
                         string zero = null, one = null, two = null, few = null, many = null, other = null;
-                        bool useSpecialZero = false;
                         while (xml.MoveToNextAttribute())
                         {
                             switch (xml.Name)
@@ -134,9 +133,6 @@ namespace EZUtils.Localization
                                 case "other":
                                     other = xml.Value;
                                     break;
-                                case "useSpecialZero":
-                                    useSpecialZero = bool.Parse(xml.Value);
-                                    break;
                                 default:
                                     throw new InvalidOperationException(
                                         $"Attribute '{xml.Name}' is not valid for <GenerateLanguage />.");
@@ -158,8 +154,7 @@ namespace EZUtils.Localization
                                 two: two,
                                 few: few,
                                 many: many,
-                                other: other),
-                            useSpecialZero);
+                                other: other));
 
                         if (currentLanguage == null || currentLanguage.DepthFound != currentDepth)
                         {

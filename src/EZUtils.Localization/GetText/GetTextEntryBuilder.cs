@@ -78,7 +78,6 @@ namespace EZUtils.Localization
             AddEmptyPluralForm("Few", locale.PluralRules.Few);
             AddEmptyPluralForm("Many", locale.PluralRules.Many);
             AddEmptyPluralForm("Other", locale.PluralRules.Other);
-            AddSpecialZeroPluralForm();
 
             return this;
 
@@ -87,14 +86,6 @@ namespace EZUtils.Localization
                 if (pluralRule == null) return;
 
                 AddLine(new GetTextLine(comment: $" plural[{pluralValues.Count + 1}]: {pluralRuleName}; {pluralRule}"));
-                _ = ConfigureAdditionalPluralValue(string.Empty);
-            }
-
-            void AddSpecialZeroPluralForm()
-            {
-                if (!locale.UseSpecialZero) return;
-                AddLine(new GetTextLine(
-                    comment: $" plural[{pluralValues.Count + 1}]: special zero; use in case of a special message for zero elements"));
                 _ = ConfigureAdditionalPluralValue(string.Empty);
             }
         }

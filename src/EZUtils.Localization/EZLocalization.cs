@@ -100,111 +100,36 @@ namespace EZUtils.Localization
                 id: id,
                 count: count,
                 other: other,
-                specialZero: default,
                 zero: default,
                 two: default,
                 few: default,
                 many: default);
-        [LocalizationMethod]
-        public string T(
-            FormattableString id,
-            decimal count,
-            FormattableString other,
-            RawString specialZero) => catalogReference.Catalog.T(
-                id: id,
-                count: count,
-                other: other,
-                specialZero: specialZero,
-                zero: default,
-                two: default,
-                few: default,
-                many: default);
-        [LocalizationMethod]
-        public string T(
-            FormattableString id,
-            decimal count,
-            FormattableString other,
-            FormattableString specialZero) => catalogReference.Catalog.T(
-                id: id,
-                count: count,
-                other: other,
-                specialZero: specialZero,
-                zero: default,
-                two: default,
-                few: default,
-                many: default);
-        [LocalizationMethod]
-        public string T(
-            FormattableString id,
-            decimal count,
-            FormattableString other,
-            RawString specialZero = default,
-            FormattableString zero = default,
-            FormattableString two = default,
-            FormattableString few = default,
-            FormattableString many = default) => catalogReference.Catalog.T(
-                id: id,
-                count: count,
-                other: other,
-                zero: zero,
-                specialZero: specialZero,
-                two: two,
-                few: few,
-                many: many);
-        [LocalizationMethod]
-        public string T(
-            FormattableString id,
-            decimal count,
-            FormattableString other,
-            FormattableString specialZero,
-            FormattableString zero = default,
-            FormattableString two = default,
-            FormattableString few = default,
-            FormattableString many = default) => catalogReference.Catalog.T(
-                id: id,
-                count: count,
-                other: other,
-                zero: zero,
-                specialZero: specialZero,
-                two: two,
-                few: few,
-                many: many);
         [LocalizationMethod]
         public string T(
             string context,
             FormattableString id,
             decimal count,
-            FormattableString other,
-            RawString specialZero,
-            FormattableString zero = default,
-            FormattableString two = default,
-            FormattableString few = default,
-            FormattableString many = default) => catalogReference.Catalog.T(
+            FormattableString other) => catalogReference.Catalog.T(
                 context: context,
                 id: id,
                 count: count,
                 other: other,
-                zero: zero,
-                specialZero: specialZero,
-                two: two,
-                few: few,
-                many: many);
+                zero: default,
+                two: default,
+                few: default,
+                many: default);
         [LocalizationMethod]
         public string T(
-            string context,
             FormattableString id,
             decimal count,
             FormattableString other,
-            FormattableString specialZero,
             FormattableString zero = default,
             FormattableString two = default,
             FormattableString few = default,
             FormattableString many = default) => catalogReference.Catalog.T(
-                context: context,
                 id: id,
                 count: count,
                 other: other,
-                specialZero: specialZero,
                 zero: zero,
                 two: two,
                 few: few,
@@ -223,7 +148,6 @@ namespace EZUtils.Localization
                 id: id,
                 count: count,
                 other: other,
-                specialZero: default,
                 zero: zero,
                 two: two,
                 few: few,

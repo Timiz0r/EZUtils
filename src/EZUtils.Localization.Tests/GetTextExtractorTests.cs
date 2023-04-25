@@ -11,8 +11,8 @@ namespace EZUtils.Localization.Tests
         public void CreatesDocuments_ForEachLangugeAttribute()
         {
             string locDefinition = $@"
-            [GenerateLanguage(""ja"", ""unittest-ja.po"", UseSpecialZero = true, Zero = ""@integer 0"", One = ""@integer 1"", Two = ""@integer 2"", Few = ""@integer 3"", Many = ""@integer 4"", Other = "" @integer 5"")]
-            [GenerateLanguage(""ko"", ""unittest-ko.po"", UseSpecialZero = false, Few = ""@integer 0"", Other = ""@integer 1"")]
+            [GenerateLanguage(""ja"", ""unittest-ja.po"", Zero = ""@integer 0"", One = ""@integer 1"", Two = ""@integer 2"", Few = ""@integer 3"", Many = ""@integer 4"", Other = "" @integer 5"")]
+            [GenerateLanguage(""ko"", ""unittest-ko.po"", Few = ""@integer 0"", Other = ""@integer 1"")]
             private static readonly GetTextCatalog loc;";
             string code = @"
                 loc.T(""foo bar baz"");";
@@ -23,7 +23,6 @@ namespace EZUtils.Localization.Tests
             GetTextDocument koDocument = documents.Single(d => d.Header.Locale.CultureInfo.Name == "ko");
 
             Assert.That(jaDocument.Header.Locale.CultureInfo, Is.EqualTo(CultureInfo.GetCultureInfo("ja")));
-            Assert.That(jaDocument.Header.Locale.UseSpecialZero, Is.True);
             Assert.That(jaDocument.Header.Locale.PluralRules.Zero, Is.EqualTo("@integer 0"));
             Assert.That(jaDocument.Header.Locale.PluralRules.One, Is.EqualTo("@integer 1"));
             Assert.That(jaDocument.Header.Locale.PluralRules.Two, Is.EqualTo("@integer 2"));
@@ -32,7 +31,6 @@ namespace EZUtils.Localization.Tests
             Assert.That(jaDocument.Header.Locale.PluralRules.Other, Is.EqualTo("@integer 5"));
 
             Assert.That(koDocument.Header.Locale.CultureInfo, Is.EqualTo(CultureInfo.GetCultureInfo("ko")));
-            Assert.That(koDocument.Header.Locale.UseSpecialZero, Is.False);
             Assert.That(koDocument.Header.Locale.PluralRules.Zero, Is.Null);
             Assert.That(koDocument.Header.Locale.PluralRules.One, Is.Null);
             Assert.That(koDocument.Header.Locale.PluralRules.Two, Is.Null);
@@ -71,14 +69,13 @@ namespace EZUtils.Localization.Tests
         public void ExtractsPluralInvocation()
         {
             string locDefinition = $@"
-                [GenerateLanguage(""ja"", ""unittest-ja.po"", UseSpecialZero = true, Zero = ""@integer 0"", One = ""@integer 1"", Two = ""@integer 2"", Few = ""@integer 3"", Many = ""@integer 4"", Other = "" @integer 5"")]
+                [GenerateLanguage(""ja"", ""unittest-ja.po"", Zero = ""@integer 0"", One = ""@integer 1"", Two = ""@integer 2"", Few = ""@integer 3"", Many = ""@integer 4"", Other = "" @integer 5"")]
                 private static readonly GetTextCatalog loc;";
             string code = @"
                 loc.T(
                     $""foo bar baz"",
                     1m,
                     other: $""other"",
-                    specialZero: ""special zero"",
                     zero: $""zero"",
                     two: $""two"",
                     few: $""few"",
@@ -91,7 +88,7 @@ namespace EZUtils.Localization.Tests
             Assert.That(document.Entries.Count, Is.EqualTo(2));
             Assert.That(entry.Id, Is.EqualTo("foo bar baz"));
             Assert.That(entry.PluralId, Is.EqualTo("other"));
-            Assert.That(entry.PluralValues.Count, Is.EqualTo(7));
+            Assert.That(entry.PluralValues.Count, Is.EqualTo(6));
             Assert.That(entry.PluralValues, Is.All.Empty);
         }
 
@@ -104,7 +101,7 @@ namespace EZUtils.Localization.Tests
                     using EZUtils.Localization;
                     public class Bar
                     {
-                        [GenerateLanguage(""ja"", ""unittest-ja.po"", UseSpecialZero = true, Other = "" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"")]
+                        [GenerateLanguage(""ja"", ""unittest-ja.po"", Other = "" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"")]
                         private static readonly Localization loc = null;
                         public static void Baz()
                         {
@@ -139,7 +136,7 @@ namespace EZUtils.Localization.Tests
                     using EZUtils.Localization;
                     public class Bar
                     {
-                        [GenerateLanguage(""ja"", ""unittest-ja.po"", UseSpecialZero = true, Other = "" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"")]
+                        [GenerateLanguage(""ja"", ""unittest-ja.po"", Other = "" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"")]
                         private static readonly Localization loc = null;
                         public static void Baz()
                         {
@@ -220,7 +217,7 @@ namespace EZUtils.Localization.Tests
                         }
                     }
 
-                    [GenerateLanguage(""ja"", ""unittest-ja.po"", UseSpecialZero = true, Other = "" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"")]
+                    [GenerateLanguage(""ja"", ""unittest-ja.po"", Other = "" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"")]
                     public static class Localization
                     {
                         [LocalizationMethod]
@@ -257,7 +254,7 @@ namespace EZUtils.Localization.Tests
             document.Entries, Has.Exactly(1).Matches<GetTextEntry>(e => e.Context == context && e.Id == id));
 
         private static readonly string BasicLocDefinition = @"
-            [GenerateLanguage(""ja"", ""unittest-ja.po"", UseSpecialZero = true, Other = "" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"")]
+            [GenerateLanguage(""ja"", ""unittest-ja.po"", Other = "" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"")]
             private static readonly GetTextCatalog loc;";
         private static GetTextCatalogBuilder Extract(string locDefinition, string code)
         {

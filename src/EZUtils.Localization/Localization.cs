@@ -8,7 +8,7 @@ namespace EZUtils.Localization.Proxy
 
     //ports-and-adapters-wise, EZLocalization is a driver adapter connecting unity editor to a catalog
     [LocalizationProxy]
-    [GenerateLanguage("en", "template.pot", UseSpecialZero = true, Other = " @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")]
+    [GenerateLanguage("en", "template.pot", Other = " @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …", Zero = "n = 0 @integer 0 @decimal 0.0, 0.00, 0.000, 0.0000")]
     public static class Localization
     {
         private static readonly EZLocalization loc = EZLocalization.ForCatalogUnder("Packages/com.timiz0r.ezutils.localization", "EZUtils");
@@ -51,58 +51,19 @@ namespace EZUtils.Localization.Proxy
             FormattableString other) => loc.T(id: id, count: count, other: other);
         [LocalizationMethod]
         public static string T(
-            FormattableString id,
-            decimal count,
-            FormattableString other,
-            RawString specialZero) => loc.T(id: id, count: count, other: other, specialZero: specialZero);
-        [LocalizationMethod]
-        public static string T(
-            FormattableString id,
-            decimal count,
-            FormattableString other,
-            FormattableString specialZero) => loc.T(id: id, count: count, other: other, specialZero: specialZero);
-        [LocalizationMethod]
-        public static string T(
-            FormattableString id,
-            decimal count,
-            FormattableString other,
-            RawString specialZero = default,
-            FormattableString zero = default,
-            FormattableString two = default,
-            FormattableString few = default,
-            FormattableString many = default) => loc.T(id: id, count: count, other: other, specialZero: specialZero, zero: zero, two: two, few: few, many: many);
-        [LocalizationMethod]
-        public static string T(
-            FormattableString id,
-            decimal count,
-            FormattableString other,
-            FormattableString specialZero,
-            FormattableString zero = default,
-            FormattableString two = default,
-            FormattableString few = default,
-            FormattableString many = default) => loc.T(id: id, count: count, other: other, specialZero: specialZero, zero: zero, two: two, few: few, many: many);
-        [LocalizationMethod]
-        public static string T(
             string context,
             FormattableString id,
             decimal count,
-            FormattableString other,
-            RawString specialZero,
-            FormattableString zero = default,
-            FormattableString two = default,
-            FormattableString few = default,
-            FormattableString many = default) => loc.T(context: context, id: id, count: count, other: other, specialZero: specialZero, zero: zero, two: two, few: few, many: many);
+            FormattableString other) => loc.T(context: context, id: id, count: count, other: other);
         [LocalizationMethod]
         public static string T(
-            string context,
             FormattableString id,
             decimal count,
             FormattableString other,
-            FormattableString specialZero,
             FormattableString zero = default,
             FormattableString two = default,
             FormattableString few = default,
-            FormattableString many = default) => loc.T(context: context, id: id, count: count, other: other, specialZero: specialZero, zero: zero, two: two, few: few, many: many);
+            FormattableString many = default) => loc.T(id: id, count: count, other: other, zero: zero, two: two, few: few, many: many);
         [LocalizationMethod]
         public static string T(
             string context,

@@ -18,7 +18,6 @@ namespace EZUtils.Localization
         public string Few { get; set; }
         public string Many { get; set; }
         public string Other { get; set; }
-        public bool UseSpecialZero { get; set; }
 
         public GenerateLanguageAttribute(string cultureInfoCode, string poFilePath)
         {

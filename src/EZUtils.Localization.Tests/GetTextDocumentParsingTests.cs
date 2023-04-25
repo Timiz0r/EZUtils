@@ -36,7 +36,6 @@ msgstr ""Language: az_AZ@latin\n""";
 
             Assert.That(header.Locale.CultureInfo.Name, Is.EqualTo("az-Latn-AZ"));
             Assert.That(header.Locale.PluralRules, Is.EqualTo(new PluralRules()));
-            Assert.That(header.Locale.UseSpecialZero, Is.False);
         }
 
         [Test]
@@ -58,7 +57,6 @@ msgstr ""Language: az_AZ@latin\n""
 ""X-PluralRules-Few: {expectedPluralRules.Few}\n""
 ""X-PluralRules-Many: {expectedPluralRules.Many}\n""
 ""X-PluralRules-Other: {expectedPluralRules.Other}\n""
-""X-PluralRules-SpecialZero: \n""
 ";
 
             GetTextDocument getTextDocument = GetTextDocument.Parse(document);
@@ -66,7 +64,6 @@ msgstr ""Language: az_AZ@latin\n""
 
             Assert.That(header.Locale.CultureInfo.Name, Is.EqualTo("az-Latn-AZ"));
             Assert.That(header.Locale.PluralRules, Is.EqualTo(expectedPluralRules));
-            Assert.That(header.Locale.UseSpecialZero, Is.True);
         }
 
         [Test]
