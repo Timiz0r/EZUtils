@@ -13,15 +13,25 @@ namespace EZUtils.Localization
             ImmutableDictionary<string, GetTextDocumentBuilder>.Empty;
 
         public GetTextCatalogBuilder ForPoFile(
-            string path, Locale locale, Action<GetTextDocumentBuilder> documentBuilderAction)
+            string path,
+            Locale locale,
+            bool changeLocaleIfDifferent,
+            Action<GetTextDocumentBuilder> documentBuilderAction)
         {
             GetTextDocumentBuilder document = ImmutableInterlocked.GetOrAdd(ref documents, path, p => GetTextDocumentBuilder.ForDocumentAt(p, locale));
-            _ = document.VerifyLocaleMatches(locale);
+            _ = changeLocaleIfDifferent
+                ? document.SetLocale(locale)
+                : document.VerifyLocaleMatches(locale);
 
             documentBuilderAction(document);
 
             return this;
         }
+        public GetTextCatalogBuilder ForPoFile(
+            string path,
+            Locale locale,
+            Action<GetTextDocumentBuilder> documentBuilderAction)
+            => ForPoFile(path, locale, changeLocaleIfDifferent: false, documentBuilderAction: documentBuilderAction);
 
         public GetTextCatalogBuilder ForEachDocument(Action<GetTextDocumentBuilder> documentBuilderAction)
         {

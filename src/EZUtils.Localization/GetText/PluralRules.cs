@@ -41,7 +41,7 @@ namespace EZUtils.Localization
             manyExpression = PluralRuleParser.Parse(many);
             //every set of pluralrules should have the catch-all other
             //though we wont stop someone from making the poor move of actually providing a more restrictive expression
-            otherExpression = zero == null
+            otherExpression = string.IsNullOrEmpty(other)
                 ? o => true
                 : PluralRuleParser.Parse(other);
             Zero = zero;

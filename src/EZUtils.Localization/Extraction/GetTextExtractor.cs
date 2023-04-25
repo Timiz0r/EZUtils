@@ -118,7 +118,7 @@ namespace EZUtils.Localization
                         //TODO: the current design has a hard dependency on file io, which isnt entirely ideal
                         //as it makes it hard to unit test. granted, extraction is supposed to write to files.
                         //we currently work around it by referring to a non-existent file so we dont accidentally load it
-                        .ForPoFile(path, locale, doc => doc
+                        .ForPoFile(path, locale, changeLocaleIfDifferent: true, doc => doc
                             .AddEntry(e =>
                             {
                                 FileLinePositionSpan location = node.GetLocation().GetLineSpan();
@@ -163,7 +163,7 @@ namespace EZUtils.Localization
                 foreach ((string poFilePath, Locale locale) in targets)
                 {
                     string path = Path.Combine(catalogRoot, poFilePath);
-                    _ = catalogBuilder.ForPoFile(path, locale, _ => { });
+                    _ = catalogBuilder.ForPoFile(path, locale, changeLocaleIfDifferent: true, _ => { });
                 }
 
                 continueVisiting = false;

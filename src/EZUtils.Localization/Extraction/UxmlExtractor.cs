@@ -71,7 +71,8 @@ namespace EZUtils.Localization
                                     foreach ((string poFilePath, Locale locale) in currentLanguage.Languages)
                                     {
                                         string path = Path.Combine(root, poFilePath);
-                                        _ = catalogBuilder.ForPoFile(path, locale, doc => AddEntry(doc));
+                                        _ = catalogBuilder.ForPoFile(
+                                            path, locale, changeLocaleIfDifferent: true, doc => AddEntry(doc));
                                     }
                                 }
                                 else

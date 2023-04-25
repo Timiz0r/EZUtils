@@ -23,7 +23,7 @@ namespace EZUtils.Localization
         {
             if (entries.Count > 0 && entries[0].Id != string.Empty) throw new InvalidOperationException("The first entry must be a header.");
             Entries = entries;
-            Header = GetTextHeader.FromEntry(entries[0]);
+            Header = new GetTextHeader(entries[0]);
         }
 
         //in our implementation, we dont consider the plural id an actual id

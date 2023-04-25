@@ -5,6 +5,7 @@ namespace EZUtils.Localization
     using System.Collections.Immutable;
     using System.IO;
     using System.Linq;
+    using System.Text.RegularExpressions;
     using Microsoft.CodeAnalysis;
 
     public class GetTextDocumentBuilder
@@ -28,7 +29,7 @@ namespace EZUtils.Localization
             {
                 underlyingEntries = File.Exists(path)
                     ? GetTextDocument.LoadFrom(path).Entries.ToImmutableList()
-                    : ImmutableList<GetTextEntry>.Empty.Add(new GetTextHeader(locale).ToEntry())
+                    : ImmutableList<GetTextEntry>.Empty.Add(GetTextHeader.ForLocale(locale).UnderlyingEntry)
             };
             return builder;
         }
@@ -143,11 +144,21 @@ namespace EZUtils.Localization
             //two locales are equal if just their cultures are the same
             //but we want to verify that the author has consistent plural rules across potentially multiple declarations
             //of the same catalog
-            Locale existingLocale = GetTextHeader.FromEntry(underlyingEntries[0]).Locale;
+            Locale existingLocale = new GetTextHeader(underlyingEntries[0]).Locale;
             return existingLocale != locale
                 || !existingLocale.PluralRules.Equals(locale.PluralRules)
                 ? throw new InvalidOperationException($"Inconsistent locales for '{Path}'.")
                 : this;
+        }
+
+        public GetTextDocumentBuilder SetLocale(Locale locale)
+        {
+            underlyingEntries = underlyingEntries.SetItem(0,
+                new GetTextHeader(underlyingEntries[0])
+                    .WithLocale(locale)
+                    .UnderlyingEntry);
+
+            return this;
         }
 
         private static GetTextEntry MergeEntries(GetTextEntry existingEntry, GetTextEntry builtEntry, bool foundFirstInstanceOfEntry)
