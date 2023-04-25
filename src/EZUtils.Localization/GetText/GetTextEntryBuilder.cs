@@ -22,6 +22,13 @@ namespace EZUtils.Localization
             return this;
         }
 
+        public GetTextEntryBuilder AddHeaderReference(string path, int line)
+        {
+            AddLine(new GetTextLine(comment: string.Concat($": {path}:{line}")));
+
+            return this;
+        }
+
         public GetTextEntryBuilder ConfigureContext(string context, string inlineComment = null)
         {
             if (this.context != null) throw new InvalidOperationException("Can only set the context once.");

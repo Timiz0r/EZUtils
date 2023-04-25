@@ -7,6 +7,7 @@ namespace EZUtils.Localization
     using System.Linq;
     using System.Text;
     using Microsoft.CodeAnalysis;
+    using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Operations;
 
     public class InvocationParser
@@ -18,10 +19,10 @@ namespace EZUtils.Localization
 
         public IReadOnlyList<(string poFilePath, Locale locale)> Targets { get; }
         public string Context { get; private set; }
-        public string Id { get; private set; }
+        public ExtractedString Id { get; private set; }
         //it's overall relatively hard to not have a successful extraction, so we default to true
         public bool Success { get; private set; } = true;
-        public (bool countFound, string pluralId) PluralStatus { get; private set; }
+        public (bool countFound, ExtractedString pluralId) PluralStatus { get; private set; }
 
         private InvocationParser(IReadOnlyList<(string poFilePath, Locale locale)> targets)
         {
@@ -89,14 +90,14 @@ namespace EZUtils.Localization
                     ? p
                     : argument.Parameter.Name;
 
-            if (!TryGetString(argument, out string value))
+            if (!TryGetString(argument, out ExtractedString value))
             {
                 Success = false;
             }
             switch (parameterName)
             {
                 case LocalizationParameter.Context:
-                    Context = value;
+                    Context = value.Value;
                     break;
                 case LocalizationParameter.Id:
                     Id = value;
@@ -111,7 +112,7 @@ namespace EZUtils.Localization
             }
         }
 
-        private static bool TryGetString(IOperation operation, out string result)
+        private static bool TryGetString(IOperation operation, out ExtractedString result)
         {
             if (operation is IArgumentOperation argumentOperation)
             {
@@ -125,7 +126,7 @@ namespace EZUtils.Localization
 
             if (operation is ILiteralOperation literalOperation && literalOperation.Type.ToString() == "string")
             {
-                result = (string)literalOperation.ConstantValue.Value;
+                result = new ExtractedString((string)literalOperation.ConstantValue.Value);
                 return true;
             }
 
@@ -136,9 +137,9 @@ namespace EZUtils.Localization
                 foreach (IInterpolatedStringContentOperation part in interpolatedStringOperation.Parts)
                 {
                     if (part is IInterpolatedStringTextOperation textOperation
-                        && TryGetString(textOperation.Text, out string textOperationString))
+                        && TryGetString(textOperation.Text, out ExtractedString textOperationString))
                     {
-                        _ = interpolationStringBuilder.Append(textOperationString);
+                        _ = interpolationStringBuilder.Append(textOperationString.Value);
                     }
                     else if (part is IInterpolationOperation interpolationOperation)
                     {
@@ -158,16 +159,20 @@ namespace EZUtils.Localization
                     else throw new InvalidOperationException($"Extracting from '{part.Kind}' is not supported.");
                 }
 
-                result = interpolationStringBuilder.ToString();
+                result = new ExtractedString(
+                    value: interpolationStringBuilder.ToString(),
+                    originalFormat: ((InterpolatedStringExpressionSyntax)interpolatedStringOperation.Syntax).Contents.ToString());
                 return true;
             }
 
             if (operation is IBinaryOperation binaryOperation
                 && binaryOperation.OperatorKind == BinaryOperatorKind.Add
-                && TryGetString(binaryOperation.LeftOperand, out string leftOperandString)
-                && TryGetString(binaryOperation.RightOperand, out string rightOperandString))
+                && TryGetString(binaryOperation.LeftOperand, out ExtractedString leftOperandString)
+                && TryGetString(binaryOperation.RightOperand, out ExtractedString rightOperandString))
             {
-                result = string.Concat(leftOperandString, rightOperandString);
+                result = new ExtractedString(
+                    value: string.Concat(leftOperandString.Value, rightOperandString.Value),
+                    originalFormat: string.Concat(leftOperandString.OriginalFormat, rightOperandString.OriginalFormat));
                 return true;
             }
 
@@ -184,11 +189,11 @@ namespace EZUtils.Localization
                 //    nameof(operation),
                 //    $"{fieldReferenceOperation.Type} is not a constant. Reference: {fieldReferenceOperation.Syntax}");
 
-                result = (string)fieldReferenceOperation.ConstantValue.Value;
+                result = new ExtractedString((string)fieldReferenceOperation.ConstantValue.Value);
                 return true;
             }
 
-            result = null;
+            result = default;
             return false;
             //throw new ArgumentOutOfRangeException(nameof(operation), $"Do not know how to handle extracting string from '{operation.Kind}'. Current operation: {operation.Syntax}");
         }

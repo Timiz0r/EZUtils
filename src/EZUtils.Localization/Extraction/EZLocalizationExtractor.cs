@@ -6,13 +6,11 @@ namespace EZUtils.Localization
     using Microsoft.CodeAnalysis;
     using UnityEditor;
 
+    //TODO: exception audit
+    //TODO: comment the florp out of T methods
     //TODO: shove extraction into a different assembly, so we dont have extraction running on users' projects
     //TODO: integration testing
     //TODO: cr and refactor
-    //TODO: add headers instead of reference comments
-    //TODO: comment the florp out of T methods
-    //TODO: extract out original formatted string into a comment
-    //TODO: exception audit
     public class EZLocalizationExtractor
     {
         private readonly GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();

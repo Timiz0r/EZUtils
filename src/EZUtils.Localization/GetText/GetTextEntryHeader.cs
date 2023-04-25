@@ -25,11 +25,11 @@ namespace EZUtils.Localization
                 .ToArray();
 
             string[] references = headerComments
-                .Where(c => c.StartsWith(":"))
+                .Where(c => c.StartsWith(":", System.StringComparison.Ordinal))
                 .Select(c => c.Substring(1).Trim())
                 .ToArray();
 
-            string unsplitFlags = headerComments.SingleOrDefault(c => c.StartsWith(",")) ?? string.Empty;
+            string unsplitFlags = headerComments.SingleOrDefault(c => c.StartsWith(",", System.StringComparison.Ordinal)) ?? string.Empty;
             //not 100% sure if split and trim is what we should do
             //but the documented flags dont have spaces, so might as well
             string[] flags = unsplitFlags

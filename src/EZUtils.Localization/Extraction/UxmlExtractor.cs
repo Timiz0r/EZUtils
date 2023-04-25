@@ -92,7 +92,7 @@ namespace EZUtils.Localization
                                 void AddEntry(GetTextDocumentBuilder doc) => doc
                                     .AddEntry(e => _ = e
                                         .AddEmptyLine() //entries tend to have whitespace on top to visually separate them
-                                        .AddComment($": {referencePath}:{lineInfo.LineNumber}")
+                                        .AddHeaderReference(referencePath, lineInfo.LineNumber)
                                         .ConfigureContext(context)
                                         .ConfigureId(id)
                                         .ConfigureValue(string.Empty));

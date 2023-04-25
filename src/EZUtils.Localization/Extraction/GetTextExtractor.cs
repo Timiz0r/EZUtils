@@ -107,7 +107,7 @@ namespace EZUtils.Localization
                 InvocationParser invocationParser = InvocationParser.ForInvocation(invocationOperation);
                 if (!invocationParser.Success) return;
 
-                if (string.IsNullOrEmpty(invocationParser.Id)) throw new InvalidOperationException(
+                if (string.IsNullOrEmpty(invocationParser.Id.Value)) throw new InvalidOperationException(
                     $"Could not extract id from invocation: {node}");
                 //should also theoretically invalidate an entry that has incomplete plural arguments
 
@@ -124,14 +124,27 @@ namespace EZUtils.Localization
                                 FileLinePositionSpan location = node.GetLocation().GetLineSpan();
                                 _ = e
                                     .AddEmptyLine() //entries tend to have whitespace on top to visually separate them
-                                    .AddComment($": {location.Path}:{location.StartLinePosition.Line}")
-                                    .ConfigureContext(invocationParser.Context)
-                                    .ConfigureId(invocationParser.Id);
+                                    .AddHeaderReference(location.Path, location.StartLinePosition.Line)
+                                    .ConfigureContext(invocationParser.Context);
+                                if (invocationParser.Id.OriginalFormat is string idFormat)
+                                {
+                                    _ = e.AddComment($" id format: {idFormat}");
+                                }
+                                _ = e.ConfigureId(invocationParser.Id.Value);
 
-                                (bool countFound, string pluralId) = invocationParser.PluralStatus;
-                                _ = countFound && pluralId != null
-                                    ? e.ConfigureAsPlural(pluralId, locale)
-                                    : e.ConfigureValue(string.Empty);
+                                (bool countFound, ExtractedString extractedPluralId) = invocationParser.PluralStatus;
+                                if (countFound && extractedPluralId.Value is string pluralId)
+                                {
+                                    if (extractedPluralId.OriginalFormat is string pluralFormat)
+                                    {
+                                        _ = e.AddComment($" plural id format: {pluralFormat}");
+                                    }
+                                    _ = e.ConfigureAsPlural(pluralId, locale);
+                                }
+                                else
+                                {
+                                    _ = e.ConfigureValue(string.Empty);
+                                }
                             }));
                 }
             }
