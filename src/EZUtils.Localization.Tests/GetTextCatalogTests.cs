@@ -213,5 +213,50 @@ namespace EZUtils.Localization.Tests
             decimal count = 2;
             Assert.That(catalog.T($"{count} foo", count, $"{count} foos", zero: $"no foos"), Is.EqualTo("2 foo"));
         }
+
+        [Test]
+        public void T_ReturnsNativeLocaleValue_WhenNotEnoughPluralValues()
+        {
+            GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
+            GetTextCatalog catalog = catalogBuilder
+                .ForPoFile("unittest-ja.po", jpWithZero, d => d
+                    .AddEntry(e => e
+                        .ConfigureId("{0} foo")
+                        .ConfigureAsPlural("{0} foos")
+                        .ConfigureAdditionalPluralValue("{0} foo")))
+                .GetCatalog(Locale.English.WithZeroPluralRule());
+
+            catalog.SelectLocale(jpWithZero);
+
+            decimal count = 2;
+            Assert.That(catalog.T($"{count} foo", count, $"{count} foos", zero: $"no foos"), Is.EqualTo("2 foos"));
+            count = 0;
+            Assert.That(catalog.T($"{count} foo", count, $"{count} foos", zero: $"no foos"), Is.EqualTo("no foos"));
+        }
+
+        [Test]
+        public void T_ReturnsNativeOtherValue_WhenNotEnoughPluralValuesAndNativeLanguageDoesntSupportPluralForm()
+        {
+            GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
+            GetTextCatalog catalog = catalogBuilder
+                .ForPoFile("unittest-ja.po", jpWithZero, d => d
+                    .AddEntry(e => e
+                        .ConfigureId("{0} foo")
+                        .ConfigureAsPlural("{0} foos")
+                        .ConfigureAdditionalPluralValue("{0} foo")))
+                .GetCatalog(Locale.English);
+
+            catalog.SelectLocale(jpWithZero);
+
+            //to summarize, the native language only has one and other.
+            //the selected language has zero, one, and other.
+            //we pass 0, so we'd normally use the selected language other value from the entry.
+            //however, that entry doesnt have the right number of plural values,
+            //  so we fall back to using the native language other.
+            //furthermore, the native language doesn't provide an other value (in the callsite),
+            //  so we fall back to the other value (in the callsite)
+            decimal count = 0;
+            Assert.That(catalog.T($"{count} foo", count, $"{count} foos"), Is.EqualTo("0 foos"));
+        }
     }
 }

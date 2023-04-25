@@ -178,24 +178,16 @@ namespace EZUtils.Localization
                 targetEntryString = entry?.Value;
                 targetStringHelper = id;
             }
-            else if (entry?.PluralValues?.Count is int totalPluralValues
-                && index >= totalPluralValues)
-            {
-                //TODO: need a bit more thought on this, since generally prefer not to throw when translating
-                //because it may be on a hot path that really shouldn't disrupt things
-                //one options is to validate and throw on load -- fail fast and up front
-                //another options is to return the error as a string here
-                //another options is to not throw on load but expose the success or failure as a result
-                //will probably do options 2+3, allowing unit tests to work, result to be logged, and not throw anywhere
-                //for this low-pri hot-path code.
-                //TODO: also audit exceptions as a whole for this project
-                throw new InvalidOperationException(
-                    $"Cannot get plural value '{index} ({pluralType})' because only {entry.PluralValues.Count} " +
-                    $"plural values are provided for entry '{idValue}'.");
-            }
             else
             {
-                targetEntryString = entry?.PluralValues?[index];
+                //it's hard to know what to do if the counts dont match
+                //since we cant really know which one to pick
+                //so we force it to use native language
+                targetEntryString =
+                    entry?.PluralValues?.Count is int totalPluralValues
+                        && totalPluralValues == selectedLocale.PluralRules.Count
+                            ? entry?.PluralValues?[index]
+                            : null;
                 switch (pluralType)
                 {
                     //for this overload, these are normal strings
@@ -222,6 +214,12 @@ namespace EZUtils.Localization
                         throw new InvalidOperationException("Hit an unknown plural form");
                 }
             }
+            if (targetStringHelper.IsEmpty)
+            {
+                //would typically happen because the selected language has more plural forms
+                //than the native language -- totally normal
+                targetStringHelper = other;
+            }
 
             string result = targetStringHelper.GetEntryValue(selectedLocale, targetEntryString);
             return result;
@@ -233,6 +231,8 @@ namespace EZUtils.Localization
         {
             private readonly RawString rawString;
             private readonly FormattableString formattableString;
+
+            public bool IsEmpty => rawString.Value == null && formattableString == null;
 
             public StringHelper(RawString rawString)
             {

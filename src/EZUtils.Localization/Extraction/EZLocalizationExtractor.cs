@@ -6,6 +6,9 @@ namespace EZUtils.Localization
     using Microsoft.CodeAnalysis;
     using UnityEditor;
 
+    //TODO: instead of raw format, provide 0=foo, 1=bar style comment
+    //TODO: for plural formatting, we pick the stringhelper based on the plural type
+    //  instead, we should always use other, for consistency. of course, for the native value, we still should continue with the plural type.
     //TODO: exception audit
     //TODO: comment the florp out of T methods
     //TODO: shove extraction into a different assembly, so we dont have extraction running on users' projects

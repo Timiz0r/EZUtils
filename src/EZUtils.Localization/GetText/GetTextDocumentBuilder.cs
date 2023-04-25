@@ -161,6 +161,10 @@ namespace EZUtils.Localization
             return this;
         }
 
+        //TODO: hit a minor issue where we generated more comments, but these comments dont end up in existing entries
+        //plus, the implementation here is already pretty complicated. if possible, would be nice to have a nice
+        //more generic merge logic that doesnt lose data. still, the current implementation is okay, since we maintain
+        //existing data just fine, and comments arent all that important.
         private static GetTextEntry MergeEntries(GetTextEntry existingEntry, GetTextEntry builtEntry, bool foundFirstInstanceOfEntry)
         {
             string builtEntryReference = builtEntry.Header.References[0];
