@@ -21,7 +21,8 @@ namespace EZUtils.Localization
 
         public GetTextDocument(IReadOnlyList<GetTextEntry> entries)
         {
-            if (entries.Count > 0 && entries[0].Id != string.Empty) throw new InvalidOperationException("The first entry must be a header.");
+            if (entries.Count > 0 && entries[0].Id != string.Empty) throw new InvalidOperationException(
+                "The first entry must be a header.");
             Entries = entries;
             Header = new GetTextHeader(entries[0]);
         }

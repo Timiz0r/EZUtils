@@ -82,7 +82,7 @@ namespace EZUtils.Localization
         {}
 
         public static GetTextLine Parse(string line)
-            => TryParse(line, out GetTextLine result) ? result : throw new InvalidOperationException($"Invalid line: {line}");
+            => TryParse(line, out GetTextLine result) ? result : throw new InvalidOperationException($"Invalid GetTextLine: {line}");
 
         public static bool TryParse(string line, out GetTextLine result)
         {

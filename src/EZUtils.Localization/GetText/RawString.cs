@@ -15,9 +15,11 @@ namespace EZUtils.Localization
             Value = str;
         }
 
+#pragma warning disable
         public static implicit operator RawString(string s) => new RawString(s);
 
         public static implicit operator RawString(FormattableString formattableString)
             => throw new InvalidOperationException("This never gets hit.");
+#pragma warning restore
     }
 }

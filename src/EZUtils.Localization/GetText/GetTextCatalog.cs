@@ -206,6 +206,8 @@ namespace EZUtils.Localization
                     case PluralType.Other:
                         targetStringHelper = other;
                         break;
+
+                    //though we avoid exceptions in T code, these are expected to be impossible and so should be here
                     case PluralType.One:
                         //should not happen given condition above
                         throw new InvalidOperationException("Hit one plural form even though we have a separate hanlding for it here.");

@@ -84,7 +84,6 @@ namespace EZUtils.Localization
 
             //we generate these so that poedit or other tools can see the plural strings property
             int pluralFormCount = locale.PluralRules.Count;
-            if (pluralFormCount < 1) throw new InvalidOperationException("There must be at least one plural form.");
             _ = sb.Append($"Plural-Forms: nplurals={pluralFormCount}; ");
             for (int i = 1; i < pluralFormCount; i++)
             {
