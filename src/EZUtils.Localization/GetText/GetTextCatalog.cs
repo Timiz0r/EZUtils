@@ -73,21 +73,21 @@ namespace EZUtils.Localization
         }
 
         [LocalizationMethod]
-        public string T(RawString id) => T(context: null, id: new StringHelper(id));
+        public string T(RawString id) => T(context: null, id: id);
         [LocalizationMethod]
-        public string T(string context, RawString id) => T(context, new StringHelper(id));
+        public string T(string context, RawString id)
+            => selectedDocument?.FindEntry(context: context, id: id.Value)?.Value ?? id.Value;
         [LocalizationMethod]
-        public string T(FormattableString id) => T(context: null, id: new StringHelper(id));
+        public string T(FormattableString id) => T(context: null, id: id);
         [LocalizationMethod]
-        public string T(string context, FormattableString id) => T(context, new StringHelper(id));
-        private string T(string context, StringHelper id)
+        public string T(string context, FormattableString id)
         {
             Locale selectedLocale = GetSelectedLocale();
-            GetTextEntry entry = selectedDocument?.FindEntry(context: context, id: id.GetUnformattedValue());
+            GetTextEntry entry = selectedDocument?.FindEntry(context: context, id: id.Format);
 
             string result = entry == null
-                ? id.GetValue(selectedLocale)
-                : id.FormatValue(selectedLocale, entry.Value);
+                ? id.ToString(selectedLocale.CultureInfo)
+                : string.Format(selectedLocale.CultureInfo, entry.Value, id.GetArguments());
             return result;
         }
 
@@ -98,9 +98,9 @@ namespace EZUtils.Localization
             FormattableString other)
             => T(
                 context: default,
-                id: new StringHelper(id),
+                id: id,
                 count: count,
-                other: new StringHelper(other),
+                other: other,
                 zero: default,
                 two: default,
                 few: default,
@@ -113,9 +113,9 @@ namespace EZUtils.Localization
             FormattableString other)
             => T(
                 context: context,
-                id: new StringHelper(id),
+                id: id,
                 count: count,
-                other: new StringHelper(other),
+                other: other,
                 zero: default,
                 two: default,
                 few: default,
@@ -131,13 +131,13 @@ namespace EZUtils.Localization
             FormattableString many = default)
             => T(
                 context: default,
-                id: new StringHelper(id),
+                id: id,
                 count: count,
-                other: new StringHelper(other),
-                zero: new StringHelper(zero),
-                two: new StringHelper(two),
-                few: new StringHelper(few),
-                many: new StringHelper(many));
+                other: other,
+                zero: zero,
+                two: two,
+                few: few,
+                many: many);
         [LocalizationMethod]
         public string T(
             string context,
@@ -148,112 +148,57 @@ namespace EZUtils.Localization
             FormattableString two = default,
             FormattableString few = default,
             FormattableString many = default)
-            => T(
-                context: context,
-                id: new StringHelper(id),
-                count: count,
-                other: new StringHelper(other),
-                zero: new StringHelper(zero),
-                two: new StringHelper(two),
-                few: new StringHelper(few),
-                many: new StringHelper(many));
-
-        //PluralStringHelper and these private methods give us a common and performant common implementation
-        //the public methods contain a mix of normal strings and formattable strings to cover the expected
-        //cases of formattability performantly
-        private string T(
-            string context,
-            StringHelper id,
-            decimal count,
-            StringHelper other,
-            StringHelper zero,
-            StringHelper two,
-            StringHelper few,
-            StringHelper many)
         {
             Locale selectedLocale = GetSelectedLocale();
             PluralType pluralType = selectedLocale.PluralRules.Evaluate(count, out int index);
 
-            string idValue = id.GetUnformattedValue();
-            GetTextEntry entry = selectedDocument?.FindEntry(context: context, id: idValue);
+            GetTextEntry entry = selectedDocument?.FindEntry(context: context, id: id.Format);
 
             if (entry == null
                 //it's hard to know what to do if the counts dont match since we cant really know which one to pick
                 //so we force it to use native language
                 || entry.PluralValues.Count != selectedLocale.PluralRules.Count)
             {
-                StringHelper targetStringHelper;
+                FormattableString targetFormattableString;
                 switch (pluralType)
                 {
                     //for this overload, these are normal strings
                     case PluralType.Zero:
-                        targetStringHelper = zero;
+                        targetFormattableString = zero;
                         break;
                     case PluralType.One:
-                        targetStringHelper = id;
+                        targetFormattableString = id;
                         break;
                     case PluralType.Two:
-                        targetStringHelper = two;
+                        targetFormattableString = two;
                         break;
                     case PluralType.Few:
-                        targetStringHelper = few;
+                        targetFormattableString = few;
                         break;
                     case PluralType.Many:
-                        targetStringHelper = many;
+                        targetFormattableString = many;
                         break;
                     case PluralType.Other:
-                        targetStringHelper = other;
+                        targetFormattableString = other;
                         break;
                     default:
                         //should not realistically happen, but silences static code analysis
                         throw new InvalidOperationException("Hit an unknown plural form");
                 }
-                if (targetStringHelper.IsEmpty)
+                if (targetFormattableString == null)
                 {
-                    targetStringHelper = other;
+                    targetFormattableString = other;
                 }
 
-                string nativeResult = targetStringHelper.GetValue(selectedLocale);
+                string nativeResult = targetFormattableString.ToString(selectedLocale.CultureInfo);
                 return nativeResult;
             }
 
             string entryFormat = entry.PluralValues[index];
-            string result = other.FormatValue(selectedLocale, entryFormat);
+            string result = string.Format(selectedLocale.CultureInfo, entryFormat, other.GetArguments());
             return result;
         }
 
         private Locale GetSelectedLocale() => selectedDocument?.Header.Locale ?? nativeLocale;
-
-        private readonly ref struct StringHelper
-        {
-            private readonly RawString rawString;
-            private readonly FormattableString formattableString;
-
-            public bool IsEmpty => rawString.Value == null && formattableString == null;
-
-            public StringHelper(RawString rawString)
-            {
-                this.rawString = rawString;
-                formattableString = null;
-            }
-            public StringHelper(FormattableString formattableString)
-            {
-                rawString = default;
-                this.formattableString = formattableString;
-            }
-
-            public string GetUnformattedValue() => rawString.Value is string rawStringValue
-                ? rawStringValue
-                : formattableString.Format;
-
-            public string GetValue(Locale selectedLocale) => rawString.Value is string rawStringValue
-                ? rawStringValue
-                : formattableString.ToString(selectedLocale.CultureInfo);
-
-            public string FormatValue(Locale selectedLocale, string format)
-                => formattableString == null
-                    ? format
-                    : string.Format(selectedLocale.CultureInfo, format, formattableString.GetArguments());
-        }
     }
 }
