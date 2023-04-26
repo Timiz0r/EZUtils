@@ -19,7 +19,14 @@
       "version": "file:../src/EZUtils.Localization",
       "depth": 0,
       "source": "local",
+      "dependencies": {}
+    },
+    "com.timiz0r.ezutils.localization.extraction": {
+      "version": "file:../src/EZUtils.Localization.Extraction",
+      "depth": 0,
+      "source": "local",
       "dependencies": {
+        "com.timiz0r.ezutils.localization": "0.0.1",
         "com.timiz0r.ezutils.common": "1.0.3"
       }
     },

@@ -3,6 +3,7 @@
     "com.timiz0r.ezutils.common": "file:../src/EZUtils.Common",
     "com.timiz0r.ezutils.editorenhancements": "file:../src/EZUtils.EditorEnhancements",
     "com.timiz0r.ezutils.localization": "file:../src/EZUtils.Localization",
+    "com.timiz0r.ezutils.localization.extraction": "file:../src/EZUtils.Localization.Extraction",
     "com.timiz0r.ezutils.localization.tests": "file:../src/EZUtils.Localization.Tests",
     "com.timiz0r.ezutils.mmdavatartools": "file:../src/EZUtils.MMDAvatarTools",
     "com.timiz0r.ezutils.mmdavatartools.tests": "file:../src/EZUtils.MMDAvatarTools.Tests",

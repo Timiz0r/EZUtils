@@ -1,6 +1,8 @@
 {
-    "name": "EZUtils.Localization",
+    "name": "EZUtils.Localization.Extraction",
     "references": [
+        "EZUtils.Localization",
+        "EZUtils.Common"
     ],
     "includePlatforms": [
         "Editor"

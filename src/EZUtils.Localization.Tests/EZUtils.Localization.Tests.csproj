@@ -2,6 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="$(SrcRoot)\EZUtils.Localization\EZUtils.Localization.csproj" />
+    <ProjectReference Include="$(SrcRoot)\EZUtils.Localization\EZUtils.Localization.Extraction.csproj" />
 
     <!--
       referencing the generated csproj doesnt seem to work

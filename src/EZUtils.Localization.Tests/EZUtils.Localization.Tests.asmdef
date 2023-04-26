@@ -4,6 +4,7 @@
         "UnityEditor.TestRunner",
         "UnityEngine.TestRunner",
         "EZUtils.Localization",
+        "EZUtils.Localization.Extraction",
         "EZUtils.TestUtils",
         "EZUtils.Common"
     ],

@@ -6,8 +6,8 @@ namespace EZUtils.Localization
     using Microsoft.CodeAnalysis;
     using UnityEditor;
 
-    //TODO: comment the florp out of T methods
-    //TODO: shove extraction into a different assembly, so we dont have extraction running on users' projects
+    //TODO: should we go with one instead of other for plural entries? at least note why we choose other
+    //TODO: use plural id after all. consider case where ids are same between plural and non-plural call
     //TODO: integration testing
     //TODO: cr and refactor
     public class EZLocalizationExtractor
