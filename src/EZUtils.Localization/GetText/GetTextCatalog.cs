@@ -80,9 +80,16 @@ namespace EZUtils.Localization
         public string T(FormattableString id) => T(context: null, id: new StringHelper(id));
         [LocalizationMethod]
         public string T(string context, FormattableString id) => T(context, new StringHelper(id));
-        private string T(string context, StringHelper id) => id.GetEntryValue(
-            GetSelectedLocale(),
-            selectedDocument?.FindEntry(context: context, id: id.GetUnformattedValue())?.Value);
+        private string T(string context, StringHelper id)
+        {
+            Locale selectedLocale = GetSelectedLocale();
+            GetTextEntry entry = selectedDocument?.FindEntry(context: context, id: id.GetUnformattedValue());
+
+            string result = entry == null
+                ? id.GetValue(selectedLocale)
+                : id.FormatValue(selectedLocale, entry.Value);
+            return result;
+        }
 
         [LocalizationMethod]
         public string T(
@@ -170,29 +177,20 @@ namespace EZUtils.Localization
             string idValue = id.GetUnformattedValue();
             GetTextEntry entry = selectedDocument?.FindEntry(context: context, id: idValue);
 
-            string targetEntryString;
-            StringHelper targetStringHelper;
-
-            if (pluralType == PluralType.One)
-            {
-                targetEntryString = entry?.Value;
-                targetStringHelper = id;
-            }
-            else
-            {
-                //it's hard to know what to do if the counts dont match
-                //since we cant really know which one to pick
+            if (entry == null
+                //it's hard to know what to do if the counts dont match since we cant really know which one to pick
                 //so we force it to use native language
-                targetEntryString =
-                    entry?.PluralValues?.Count is int totalPluralValues
-                        && totalPluralValues == selectedLocale.PluralRules.Count
-                            ? entry?.PluralValues?[index]
-                            : null;
+                || entry.PluralValues.Count != selectedLocale.PluralRules.Count)
+            {
+                StringHelper targetStringHelper;
                 switch (pluralType)
                 {
                     //for this overload, these are normal strings
                     case PluralType.Zero:
                         targetStringHelper = zero;
+                        break;
+                    case PluralType.One:
+                        targetStringHelper = id;
                         break;
                     case PluralType.Two:
                         targetStringHelper = two;
@@ -206,24 +204,21 @@ namespace EZUtils.Localization
                     case PluralType.Other:
                         targetStringHelper = other;
                         break;
-
-                    //though we avoid exceptions in T code, these are expected to be impossible and so should be here
-                    case PluralType.One:
-                        //should not happen given condition above
-                        throw new InvalidOperationException("Hit one plural form even though we have a separate hanlding for it here.");
                     default:
                         //should not realistically happen, but silences static code analysis
                         throw new InvalidOperationException("Hit an unknown plural form");
                 }
-            }
-            if (targetStringHelper.IsEmpty)
-            {
-                //would typically happen because the selected language has more plural forms
-                //than the native language -- totally normal
-                targetStringHelper = other;
+                if (targetStringHelper.IsEmpty)
+                {
+                    targetStringHelper = other;
+                }
+
+                string nativeResult = targetStringHelper.GetValue(selectedLocale);
+                return nativeResult;
             }
 
-            string result = targetStringHelper.GetEntryValue(selectedLocale, targetEntryString);
+            string entryFormat = entry.PluralValues[index];
+            string result = other.FormatValue(selectedLocale, entryFormat);
             return result;
         }
 
@@ -251,19 +246,14 @@ namespace EZUtils.Localization
                 ? rawStringValue
                 : formattableString.Format;
 
-            public string GetEntryValue(Locale selectedLocale, string entryString)
-            {
-                if (entryString == null)
-                {
-                    return rawString.Value is string rawStringValue
-                        ? rawStringValue
-                        : formattableString.ToString(selectedLocale.CultureInfo);
-                }
+            public string GetValue(Locale selectedLocale) => rawString.Value is string rawStringValue
+                ? rawStringValue
+                : formattableString.ToString(selectedLocale.CultureInfo);
 
-                return formattableString == null
-                    ? entryString
-                    : string.Format(selectedLocale.CultureInfo, entryString, formattableString.GetArguments());
-            }
+            public string FormatValue(Locale selectedLocale, string format)
+                => formattableString == null
+                    ? format
+                    : string.Format(selectedLocale.CultureInfo, format, formattableString.GetArguments());
         }
     }
 }

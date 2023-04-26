@@ -161,6 +161,7 @@ namespace EZUtils.Localization
 
                 result = new ExtractedString(
                     value: interpolationStringBuilder.ToString(),
+                    //a previous design had an "0=`expression`" format, but decided to keep the string for better readability
                     originalFormat: ((InterpolatedStringExpressionSyntax)interpolatedStringOperation.Syntax).Contents.ToString());
                 return true;
             }
