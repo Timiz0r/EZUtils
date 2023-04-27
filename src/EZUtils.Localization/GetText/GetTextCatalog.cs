@@ -29,15 +29,15 @@ namespace EZUtils.Localization
                 : documents.SingleOrDefault(d => d.Header.Locale == locale)
                     ?? throw new ArgumentOutOfRangeException(
                         nameof(locale),
-                        $"This catalog does not support the locale '{locale}'. " +
-                        $"Supported locales: {string.Join(", ", documents.Select(d => d.Header.Locale.CultureInfo))}");
+                        $"This catalog does not support the locale '{locale.CultureInfo}'. " +
+                        $"Supported locales: {string.Join(", ", supportedLocales.Select(l => l.CultureInfo))}");
         public Locale SelectLocale(CultureInfo cultureInfo)
         {
             Locale correspondingLocale = supportedLocales.SingleOrDefault(l => l.CultureInfo == cultureInfo)
                 ?? throw new ArgumentOutOfRangeException(
                     nameof(cultureInfo),
                     $"This catalog does not support the culture '{cultureInfo}'. " +
-                    $"Supported locales: {string.Join(", ", documents.Select(d => d.Header.Locale.CultureInfo))}");
+                    $"Supported locales: {string.Join(", ", supportedLocales.Select(l => l.CultureInfo))}");
             SelectLocale(correspondingLocale);
             return correspondingLocale;
         }

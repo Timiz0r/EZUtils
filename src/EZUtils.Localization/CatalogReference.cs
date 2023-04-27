@@ -29,11 +29,10 @@ namespace EZUtils.Localization
         private readonly Dictionary<string, GetTextDocument> documents = new Dictionary<string, GetTextDocument>();
 
         private readonly string root;
-        private readonly string localeSynchronizationKey;
         private GetTextCatalog catalog;
         //catalogLocaleSynchronizer does a getstring which needs to be called as late as possible to avoid throws,
         //particularly when opening an editorwindow
-        private CatalogLocaleSynchronizer catalogLocaleSynchronizer;
+        private Lazy<CatalogLocaleSynchronizer> catalogLocaleSynchronizer;
         private bool lateInitializationPerformed = false;
 
         private bool disposedValue;
@@ -42,7 +41,9 @@ namespace EZUtils.Localization
         {
             this.root = root;
             NativeLocale = nativeLocale;
-            this.localeSynchronizationKey = localeSynchronizationKey;
+            catalogLocaleSynchronizer = new Lazy<CatalogLocaleSynchronizer>(
+                () => CatalogLocaleSynchronizer.Register(localeSynchronizationKey, this),
+                System.Threading.LazyThreadSafetyMode.None);
 
             fsw = new FileSystemWatcher()
             {
@@ -74,11 +75,6 @@ namespace EZUtils.Localization
                     catalog = new GetTextCatalog(documents.Values.ToArray(), NativeLocale);
                     fsw.EnableRaisingEvents = true;
                     lateInitializationPerformed = true;
-
-                    //NOTE: this would cause infinite recursion if not for lateInitializationPerformed
-                    //due to a call to SetLocaleOrNative
-                    //it's certainly not the most ideal design, but it gets the job done
-                    catalogLocaleSynchronizer = CatalogLocaleSynchronizer.Register(localeSynchronizationKey, this);
                 }
 
                 return catalog;
@@ -114,27 +110,27 @@ namespace EZUtils.Localization
 
         public void SelectLocale(Locale locale)
         {
-            catalogLocaleSynchronizer.SelectLocale(locale);
+            catalogLocaleSynchronizer.Value.SelectLocale(locale);
             Retranslate();
         }
 
         public Locale SelectLocale(CultureInfo cultureInfo)
         {
-            Locale locale = catalogLocaleSynchronizer.SelectLocale(cultureInfo);
+            Locale locale = catalogLocaleSynchronizer.Value.SelectLocale(cultureInfo);
             Retranslate();
             return locale;
         }
 
         public Locale SelectLocaleOrNative(Locale[] locales)
         {
-            Locale locale = catalogLocaleSynchronizer.SelectLocaleOrNative(locales);
+            Locale locale = catalogLocaleSynchronizer.Value.SelectLocaleOrNative(locales);
             Retranslate();
             return locale;
         }
 
         public Locale SelectLocaleOrNative(CultureInfo[] cultureInfos)
         {
-            Locale locale = catalogLocaleSynchronizer.SelectLocaleOrNative(cultureInfos);
+            Locale locale = catalogLocaleSynchronizer.Value.SelectLocaleOrNative(cultureInfos);
             Retranslate();
             return locale;
         }
@@ -142,7 +138,9 @@ namespace EZUtils.Localization
         private void ReloadCatalog()
         {
             catalog = new GetTextCatalog(documents.Values.ToArray(), NativeLocale);
-            catalog.SelectLocale(catalogLocaleSynchronizer.SelectedLocale);
+            //we dont call our methods because, if the synchronized locale isnt in this catalog, we dont want to
+            //proparate a change just based on this. we want a deliberate user action to change it.
+            _ = catalog.SelectLocaleOrNative(catalogLocaleSynchronizer.Value.SelectedLocale);
             Retranslate();
         }
 
