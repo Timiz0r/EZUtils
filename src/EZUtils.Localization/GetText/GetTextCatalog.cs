@@ -71,6 +71,7 @@ namespace EZUtils.Localization
             SelectLocale(nativeLocale);
             return nativeLocale;
         }
+        public Locale SelectLocaleOrNative() => SelectLocaleOrNative(Array.Empty<Locale>());
 
         [LocalizationMethod]
         public string T(RawString id) => T(context: null, id: id);

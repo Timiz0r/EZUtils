@@ -1,6 +1,5 @@
 namespace EZUtils.Localization.Tests.Integration
 {
-    using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.Globalization;
@@ -11,7 +10,9 @@ namespace EZUtils.Localization.Tests.Integration
     using UnityEditor;
     using UnityEngine.TestTools;
 
-    //note that, perhaps in conjuction with breakpoints, or perhaps not, debugging can be tempermental
+    //NOTE: perhaps in conjuction with breakpoints, or perhaps not, debugging can be tempermental
+    //additionally, domain reloading seems to clear out locals, hence why, in some cases, we recompute values
+    //  via local functions instead of normal locals. in general, avoid accessing locals after a domain reload!
     public class EZLocalizationExtractorIntegrationTests
     {
         private const string TestArtifactRootFolder = "Packages/com.timiz0r.ezutils.localization.tests/IntegrationTestGen";
@@ -69,7 +70,11 @@ namespace EZUtils.Localization.Tests.Integration
             loc.SelectLocale(CultureInfo.GetCultureInfo(""ja""));
             result.Add(loc.T(""foo""));
             decimal value = 1m;
-            result.Add(loc.T($""{value} foo"", 1m, $""{value} foos""));
+            result.Add(loc.T($""{value} foo"", value, $""{value} foos""));
+
+            loc.SelectLocaleOrNative();
+            result.Add(loc.T(""foo""));
+            result.Add(loc.T($""{value} foo"", value, $""{value} foos""));
             ");
 
             AssetDatabase.Refresh();
@@ -92,7 +97,13 @@ namespace EZUtils.Localization.Tests.Integration
 
             IReadOnlyList<string> result = new IntegrationTestAction().Execute();
 
-            Assert.That(result, Is.EqualTo(new[] { "ja:foo", "ja:1 foos" }));
+            Assert.That(result, Is.EqualTo(new[]
+            {
+                "ja:foo",
+                "ja:1 foos",
+                "foo",
+                "1 foo"
+            }));
         }
 
         private static void GenerateAssemblyAttribute()

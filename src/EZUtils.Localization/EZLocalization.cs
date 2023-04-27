@@ -38,6 +38,7 @@ namespace EZUtils.Localization
             => _ = catalogReference.SelectLocaleOrNative(locales);
         public Locale SelectLocaleOrNative(params CultureInfo[] cultureInfos)
             => _ = catalogReference.SelectLocaleOrNative(cultureInfos);
+        public Locale SelectLocaleOrNative() => SelectLocaleOrNative(Array.Empty<Locale>());
 
         //while we support custom retranslation via IRetranslatable, the most recommended way to support retranslation
         //for elements created in-code is to call EZLocalization.TranslateElementTree for the newly created element.

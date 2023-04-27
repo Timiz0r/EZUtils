@@ -116,6 +116,7 @@ namespace EZUtils.Localization
             }
             return SelectedLocale;
         }
+        public Locale SelectLocaleOrNative() => SelectLocaleOrNative(Array.Empty<Locale>());
 
         //when the language is changed, we get a domain reload
         //so tracking language changes requires persisting it somewhere and looking it up, all from a cctor

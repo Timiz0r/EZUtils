@@ -134,6 +134,7 @@ namespace EZUtils.Localization
             Retranslate();
             return locale;
         }
+        public Locale SelectLocaleOrNative() => SelectLocaleOrNative(Array.Empty<Locale>());
 
         private void ReloadCatalog()
         {
