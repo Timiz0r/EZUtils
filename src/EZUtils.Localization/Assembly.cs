@@ -1,1 +1,0 @@
-[assembly: EZUtils.Localization.LocalizedAssembly]

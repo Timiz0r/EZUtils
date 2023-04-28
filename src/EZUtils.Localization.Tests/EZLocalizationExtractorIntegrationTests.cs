@@ -43,7 +43,6 @@ namespace EZUtils.Localization.Tests.Integration
             result.Add(loc.SelectLocaleOrNative(CultureInfo.GetCultureInfo(""ja"")) == Locale.English ? ""isNative"" : ""isNotNative"");
             ");
 
-            //TODO: yet to be determined if we need another refresh or not for proxy. probably do.
             AssetDatabase.Refresh();
             yield return new WaitForDomainReload();
             IReadOnlyList<string> result = new IntegrationTestAction().Execute();

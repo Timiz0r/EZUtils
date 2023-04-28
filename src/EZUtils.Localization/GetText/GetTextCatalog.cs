@@ -5,7 +5,6 @@ namespace EZUtils.Localization
     using System.Globalization;
     using System.Linq;
 
-    //TODO: not in the habit of doc comments, but probably want one here and in EZLocalization
     public class GetTextCatalog
     {
         private readonly IReadOnlyList<GetTextDocument> documents;
