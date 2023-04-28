@@ -83,7 +83,7 @@ namespace EZUtils.Localization
 
         public static GetTextDocument LoadFrom(string path)
         {
-            using (StreamReader sr = new StreamReader(path))
+            using (StreamReader sr = new StreamReader(path, System.Text.Encoding.UTF8))
             {
                 return LoadFrom(sr);
             }
@@ -226,7 +226,7 @@ namespace EZUtils.Localization
 
         public void Save(string path)
         {
-            using (StreamWriter sw = new StreamWriter(path))
+            using (StreamWriter sw = new StreamWriter(File.OpenWrite(path), System.Text.Encoding.UTF8))
             {
                 foreach (GetTextEntry entry in Entries)
                 {

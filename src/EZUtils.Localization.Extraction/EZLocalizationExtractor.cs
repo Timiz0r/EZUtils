@@ -9,8 +9,10 @@ namespace EZUtils.Localization
 
     //TODO: integration test locale synchronization
     //TODO: integration test survival of invalid po file
+    //  presumably T will end up throwing due to poor parsing. dont want that to happen. since this would be in unityland via catalogreference, we can log it!
+    //  also test how reloads will work. also want to nullify and log. or keep current doc?
     //TODO: integration test obsoletion
-    //TODO: read and write utf8
+    //  also consider how hard we want to try to keep the doc hidden in the  catalog. probably still want to, and we'll read the doc to inspect it.
     //TODO: integration test for uxml extraction
     //TODO: cr and refactor
     internal class EZLocalizationExtractor
