@@ -17,6 +17,7 @@ namespace EZUtils.Localization.Proxy
         public static Locale SelectLocale(CultureInfo cultureInfo) => loc.SelectLocale(cultureInfo: cultureInfo);
         public static Locale SelectLocaleOrNative(params Locale[] locales) => loc.SelectLocaleOrNative(locales: locales);
         public static Locale SelectLocaleOrNative(params CultureInfo[] cultureInfos) => loc.SelectLocaleOrNative(cultureInfos: cultureInfos);
+        public static Locale SelectLocaleOrNative() => loc.SelectLocaleOrNative();
 
         //while we support custom retranslation via IRetranslatable, the most recommended way to support retranslation
         //for elements created in-code is to call EZLocalization.TranslateElementTree for the newly created element.

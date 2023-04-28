@@ -23,6 +23,7 @@ namespace EZUtils.Localization
         {
             CSharpCompilation compilation = CSharpCompilation.Create("EZLocalizationExtractor")
                 //we need a reference for each thing that we inspect from EZLocalization
+                .AddReferences(MetadataReference.CreateFromFile(typeof(GetTextCatalog).Assembly.Location))
                 .AddReferences(MetadataReference.CreateFromFile(typeof(GetTextExtractor).Assembly.Location))
                 .AddReferences(MetadataReference.CreateFromFile(typeof(CultureInfo).Assembly.Location));
 

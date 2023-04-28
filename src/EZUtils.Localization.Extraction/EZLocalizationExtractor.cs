@@ -3,6 +3,8 @@ namespace EZUtils.Localization
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
+    using System.Reflection;
     using Microsoft.CodeAnalysis;
     using UnityEditor;
 
@@ -13,19 +15,22 @@ namespace EZUtils.Localization
     public class EZLocalizationExtractor
     {
         private readonly GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
-        private readonly IGetTextExtractionWorkRunner extractionWorkRunner = GetTextExtractionWorkRunner.Create();
-        private readonly List<string> uxmlPathsToExtract = new List<string>();
+        private readonly IGetTextExtractionWorkRunner extractionWorkRunner = GetTextExtractionWorkRunner.CreateSynchronous();
+        private readonly List<(string path, string root)> uxmlPathsToExtract = new List<(string, string)>();
 
-        public void ExtractFrom(string assemblyRoot)
+        public void ExtractFrom(AssemblyDefinition assemblyDefinition)
         {
             GetTextExtractor getTextExtractor = new GetTextExtractor(
                 compilation => compilation
+                    .AddReferences(MetadataReference.CreateFromFile(assemblyDefinition.Assembly.Location))
                     .AddReferences(MetadataReference.CreateFromFile(typeof(EditorWindow).Assembly.Location)),
                 extractionWorkRunner);
-            DirectoryInfo directory = new DirectoryInfo(assemblyRoot);
-            foreach (FileInfo file in directory.EnumerateFiles("*.cs", SearchOption.AllDirectories))
+            string assemblyRoot = assemblyDefinition.Root;
+            DirectoryInfo assemblyRootDirectory = new DirectoryInfo(assemblyRoot);
+            foreach (FileInfo file in assemblyDefinition.GetFiles("*.cs"))
             {
-                string displayPath = PathUtil.GetRelative(directory.FullName, file.FullName, newRoot: assemblyRoot);
+                string displayPath = PathUtil.GetRelative(
+                    assemblyRootDirectory.FullName, file.FullName, newRoot: assemblyRoot);
                 getTextExtractor.AddFile(
                     sourceFilePath: file.FullName,
                     displayPath: displayPath,
@@ -33,7 +38,10 @@ namespace EZUtils.Localization
             }
             getTextExtractor.Extract(catalogBuilder);
 
-            uxmlPathsToExtract.Add(assemblyRoot);
+            uxmlPathsToExtract.AddRange(
+                assemblyDefinition.GetFiles("*.uxml").Select(f => (
+                    path: PathUtil.GetRelative(assemblyRootDirectory.FullName, f.FullName, newRoot: assemblyRoot),
+                    root: assemblyRoot)));
         }
 
         public void Finish()
@@ -41,9 +49,9 @@ namespace EZUtils.Localization
             extractionWorkRunner.FinishWork();
 
             UxmlExtractor uxmlExtractor = new UxmlExtractor(catalogBuilder);
-            foreach (string path in uxmlPathsToExtract)
+            foreach ((string path, string root) in uxmlPathsToExtract)
             {
-                uxmlExtractor.ExtractAll(path);
+                uxmlExtractor.Extract(uxmlFilePath: path, root: root);
             }
 
             _ = catalogBuilder

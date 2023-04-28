@@ -5,6 +5,7 @@
         "UnityEngine.TestRunner",
         "EZUtils.Localization",
         "EZUtils.Localization.Extraction",
+        "EZUtils.Localization.Tests.IntegrationTestAssembly",
         "EZUtils.TestUtils",
         "EZUtils.Common"
     ],

@@ -11,18 +11,11 @@ namespace EZUtils.Localization
 
     public static class LocalizationProxyGenerator
     {
-        public static void Generate(string assemblyRoot)
+        public static void Generate(AssemblyDefinition assemblyDefinition)
         {
-            DirectoryInfo directory = new DirectoryInfo(assemblyRoot);
-            foreach (SyntaxTree syntaxTree in directory
-                    .EnumerateFiles()
-                    .Select(f =>
-                    {
-                        string path = PathUtil.GetRelative(directory.FullName, f.FullName, newRoot: assemblyRoot);
-                        SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(f.FullName), path: path);
-                        return syntaxTree;
-                    }))
+            foreach (FileInfo file in assemblyDefinition.GetFiles("*.cs"))
             {
+                SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(file.FullName));
                 SyntaxNode root = syntaxTree.GetRoot();
                 foreach (ClassDeclarationSyntax classDeclaration in root.DescendantNodes().OfType<ClassDeclarationSyntax>())
                 {
@@ -45,7 +38,7 @@ namespace EZUtils.Localization
                     //since we'll be overwriting everything else
 
                     SyntaxTree newSyntaxTree = ProxyRewriter.Generate(declaredNamespaces[0], classDeclaration);
-                    File.WriteAllText(newSyntaxTree.FilePath, newSyntaxTree.ToString());
+                    File.WriteAllText(file.FullName, newSyntaxTree.ToString());
                 }
             }
         }
@@ -153,11 +146,14 @@ namespace EZUtils.Localization
                         default,
                         SyntaxFactory.IdentifierName(p.Identifier.ValueText)))
                     .ToArray();
-                IEnumerable<SyntaxToken> separators = Enumerable.Repeat(
-                    SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(SyntaxFactory.Space),
-                    arguments.Length - 1);
-                ArgumentListSyntax argumentList = SyntaxFactory.ArgumentList(
-                    SyntaxFactory.SeparatedList(arguments, separators));
+                ArgumentListSyntax argumentList = arguments.Length == 0
+                    ? SyntaxFactory.ArgumentList()
+                    : SyntaxFactory.ArgumentList(
+                        SyntaxFactory.SeparatedList(
+                            arguments,
+                            Enumerable.Repeat(
+                                SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(SyntaxFactory.Space),
+                                arguments.Length - 1)));
 
                 MethodDeclarationSyntax newNode = node
                     .WithModifiers(

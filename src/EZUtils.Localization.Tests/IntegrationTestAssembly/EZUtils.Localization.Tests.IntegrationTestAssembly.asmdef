@@ -1,0 +1,19 @@
+{
+    "name": "EZUtils.Localization.Tests.IntegrationTestAssembly",
+    "references": [
+        "EZUtils.Localization"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+    ],
+    "autoReferenced": false,
+    "defineConstraints": [
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
