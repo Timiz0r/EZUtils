@@ -7,13 +7,11 @@ namespace EZUtils.Localization
     using Microsoft.CodeAnalysis;
     using UnityEditor;
 
-    //TODO: merging entries assumes we always have references, which isn't always the case
-    //TODO: integration testing
     //TODO: cr and refactor
     public class EZLocalizationExtractor
     {
         private readonly GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
-        private readonly IGetTextExtractionWorkRunner extractionWorkRunner = GetTextExtractionWorkRunner.CreateSynchronous();
+        private readonly IGetTextExtractionWorkRunner extractionWorkRunner = GetTextExtractionWorkRunner.Create();
         private readonly List<(string path, string root)> uxmlPathsToExtract = new List<(string, string)>();
 
         public void ExtractFrom(AssemblyDefinition assemblyDefinition)

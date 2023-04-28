@@ -5,7 +5,6 @@ namespace EZUtils.Localization
     using System.Collections.Immutable;
     using System.IO;
     using System.Linq;
-    using System.Text.RegularExpressions;
     using Microsoft.CodeAnalysis;
 
     public class GetTextDocumentBuilder
@@ -167,6 +166,8 @@ namespace EZUtils.Localization
         //existing data just fine, and comments arent all that important.
         private static GetTextEntry MergeEntries(GetTextEntry existingEntry, GetTextEntry builtEntry, bool foundFirstInstanceOfEntry)
         {
+            if (builtEntry.Header.References.Count == 0) return existingEntry;
+
             string builtEntryReference = builtEntry.Header.References[0];
 
             GetTextEntryHeader header = existingEntry.Header;
