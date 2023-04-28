@@ -78,20 +78,18 @@ namespace EZUtils.Localization.Tests.Integration
             AssetDatabase.Refresh();
             yield return new WaitForDomainReload();
 
-            Assert.That(
-                File.Exists(Path.Combine(TestArtifactRootFolder, "ja-integrationtest.po")),
-                Is.True);
+            string poFilePath = Path.Combine(TestArtifactRootFolder, "ja-integrationtest.po");
+            Assert.That(File.Exists(poFilePath), Is.True);
             _ = new GetTextCatalogBuilder()
-                .ForPoFile("ja-integrationtest.po", locale(), d => d
-                    .AddEntry(e => e
+                .ForPoFile(poFilePath, locale(), d => d
+                    .OverwriteEntry(e => e
                         .ConfigureId("foo")
                         .ConfigureValue("ja:foo"))
-                    .AddEntry(e => e
+                    .OverwriteEntry(e => e
                         .ConfigureId("{0} foo")
                         .ConfigureAsPlural("{0} foos")
-                        .ConfigureValue("ja:{0} foo")
                         .ConfigureAdditionalPluralValue("ja:{0} foos")))
-                .WriteToDisk(TestArtifactRootFolder);
+                .WriteToDisk();
 
             IReadOnlyList<string> result = new IntegrationTestAction().Execute();
 
@@ -118,7 +116,6 @@ namespace EZUtils.Localization.Tests.Integration
             yield return new WaitForDomainReload();
 
             GenerateTestAction(
-                localizationFieldDeclaration: string.Empty,
                 code: @"
             SelectLocale(CultureInfo.GetCultureInfo(""ja""));
             result.Add(T(""foo""));
@@ -133,20 +130,18 @@ namespace EZUtils.Localization.Tests.Integration
             AssetDatabase.Refresh();
             yield return new WaitForDomainReload();
 
-            Assert.That(
-                File.Exists(Path.Combine(TestArtifactRootFolder, "ja-integrationtest.po")),
-                Is.True);
+            string poFilePath = Path.Combine(TestArtifactRootFolder, "ja-integrationtest.po");
+            Assert.That(File.Exists(poFilePath), Is.True);
             _ = new GetTextCatalogBuilder()
-                .ForPoFile("ja-integrationtest.po", locale(), d => d
-                    .AddEntry(e => e
+                .ForPoFile(poFilePath, locale(), d => d
+                    .OverwriteEntry(e => e
                         .ConfigureId("foo")
                         .ConfigureValue("ja:foo"))
-                    .AddEntry(e => e
+                    .OverwriteEntry(e => e
                         .ConfigureId("{0} foo")
                         .ConfigureAsPlural("{0} foos")
-                        .ConfigureValue("ja:{0} foo")
                         .ConfigureAdditionalPluralValue("ja:{0} foos")))
-                .WriteToDisk(TestArtifactRootFolder);
+                .WriteToDisk();
 
             IReadOnlyList<string> result = new IntegrationTestAction().Execute();
 
