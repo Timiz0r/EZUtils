@@ -23,12 +23,12 @@ namespace EZUtils.Localization
         public bool Supports(Locale locale) => supportedLocales.Contains(locale);
 
         public void SelectLocale(Locale locale) => selectedDocument =
-            locale == nativeLocale
+            nativeLocale == locale
                 ? null
                 : documents.SingleOrDefault(d => d.Header.Locale == locale)
                     ?? throw new ArgumentOutOfRangeException(
                         nameof(locale),
-                        $"This catalog does not support the locale '{locale.CultureInfo}'. " +
+                        $"This catalog does not support the locale '{locale?.CultureInfo.ToString() ?? string.Empty}'. " +
                         $"Supported locales: {string.Join(", ", supportedLocales.Select(l => l.CultureInfo))}");
         public Locale SelectLocale(CultureInfo cultureInfo)
         {
@@ -40,12 +40,11 @@ namespace EZUtils.Localization
             SelectLocale(correspondingLocale);
             return correspondingLocale;
         }
-
         //NOTE: we could also add a method to choose, for instance, en if we pass in en-us, or vice-versa.
         //but not important at time of writing
         public Locale SelectLocaleOrNative(params Locale[] locales)
         {
-            foreach (Locale locale in locales)
+            foreach (Locale locale in locales ?? Enumerable.Empty<Locale>())
             {
                 if (Supports(locale))
                 {
@@ -58,7 +57,7 @@ namespace EZUtils.Localization
         }
         public Locale SelectLocaleOrNative(params CultureInfo[] cultureInfos)
         {
-            foreach (CultureInfo cultureInfo in cultureInfos)
+            foreach (CultureInfo cultureInfo in cultureInfos ?? Enumerable.Empty<CultureInfo>())
             {
                 Locale correspondingLocale = supportedLocales.SingleOrDefault(l => l.CultureInfo == cultureInfo);
                 if (correspondingLocale != null)
@@ -82,6 +81,8 @@ namespace EZUtils.Localization
         [LocalizationMethod]
         public string T(string context, FormattableString id)
         {
+            if (id == null) throw new ArgumentNullException(nameof(id));
+
             Locale selectedLocale = GetSelectedLocale();
             GetTextEntry entry = selectedDocument?.FindEntry(context: context, id: id.Format);
 
@@ -149,56 +150,63 @@ namespace EZUtils.Localization
             FormattableString few = default,
             FormattableString many = default)
         {
+            if (id == null) throw new ArgumentNullException(nameof(id));
+            if (other == null) throw new ArgumentNullException(nameof(other));
+
             Locale selectedLocale = GetSelectedLocale();
             PluralType pluralType = selectedLocale.PluralRules.Evaluate(count, out int index);
 
             GetTextEntry entry = selectedDocument?.FindPluralEntry(context: context, id: id.Format, pluralId: other.Format);
 
-            if (entry == null
+            if (entry != null
                 //it's hard to know what to do if the counts dont match since we cant really know which one to pick
-                //so we force it to use native language
-                || entry.PluralValues.Count != selectedLocale.PluralRules.Count)
+                //so we force it to use native language in that case
+                && entry.PluralValues.Count == selectedLocale.PluralRules.Count)
             {
-                FormattableString targetFormattableString;
-                switch (pluralType)
-                {
-                    //for this overload, these are normal strings
-                    case PluralType.Zero:
-                        targetFormattableString = zero;
-                        break;
-                    case PluralType.One:
-                        targetFormattableString = id;
-                        break;
-                    case PluralType.Two:
-                        targetFormattableString = two;
-                        break;
-                    case PluralType.Few:
-                        targetFormattableString = few;
-                        break;
-                    case PluralType.Many:
-                        targetFormattableString = many;
-                        break;
-                    case PluralType.Other:
-                        targetFormattableString = other;
-                        break;
-                    default:
-                        //should not realistically happen, but silences static code analysis
-                        throw new InvalidOperationException("Hit an unknown plural form");
-                }
-                if (targetFormattableString == null)
-                {
-                    //hypothetically, we could go with one or other, for determining formatting
-                    //basically arbitrarily choosing other
-                    targetFormattableString = other;
-                }
+                string entryFormat = entry.PluralValues[index];
+                //hypothetically, we could go with one or other, for determining formatting
+                //basically arbitrarily choosing other
+                object[] arguments = other.GetArguments();
 
-                string nativeResult = targetFormattableString.ToString(selectedLocale.CultureInfo);
-                return nativeResult;
+                string result = string.Format(selectedLocale.CultureInfo, entryFormat, arguments);
+                return result;
             }
 
-            string entryFormat = entry.PluralValues[index];
-            string result = string.Format(selectedLocale.CultureInfo, entryFormat, other.GetArguments());
-            return result;
+            FormattableString targetFormattableString;
+            switch (pluralType)
+            {
+                //for this overload, these are normal strings
+                case PluralType.Zero:
+                    targetFormattableString = zero;
+                    break;
+                case PluralType.One:
+                    targetFormattableString = id;
+                    break;
+                case PluralType.Two:
+                    targetFormattableString = two;
+                    break;
+                case PluralType.Few:
+                    targetFormattableString = few;
+                    break;
+                case PluralType.Many:
+                    targetFormattableString = many;
+                    break;
+                case PluralType.Other:
+                    targetFormattableString = other;
+                    break;
+                default:
+                    //should not realistically happen, but silences static code analysis
+                    throw new InvalidOperationException("Hit an unknown plural form");
+            }
+            if (targetFormattableString == null)
+            {
+                //this is user error, but, as non-critical code, we need to return something
+                //since other is meant to be the most common case, we'll go with that
+                targetFormattableString = other;
+            }
+
+            string nativeResult = targetFormattableString.ToString(selectedLocale.CultureInfo);
+            return nativeResult;
         }
 
         private Locale GetSelectedLocale() => selectedDocument?.Header.Locale ?? nativeLocale;

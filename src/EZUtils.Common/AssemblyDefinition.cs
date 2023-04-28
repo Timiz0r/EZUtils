@@ -9,6 +9,8 @@ namespace EZUtils
 
     public class AssemblyDefinition
     {
+        private readonly string assemblyRootFullPath;
+
         public string Name { get; }
         public string Root { get; }
         public Assembly Assembly { get; }
@@ -18,6 +20,7 @@ namespace EZUtils
             Name = name;
             Root = root;
             Assembly = assembly;
+            assemblyRootFullPath = Path.GetFullPath(root);
         }
 
         public IEnumerable<FileInfo> GetFiles(string fileFilter)
@@ -35,6 +38,9 @@ namespace EZUtils
                                 .EnumerateDirectories("*", SearchOption.TopDirectoryOnly)
                                 .SelectMany(d => EnumerateSubDirectories(d)));
         }
+
+        public string GetUnityPath(string fileAbsolutePath)
+            => PathUtil.GetRelative(assemblyRootFullPath, fileAbsolutePath, newRoot: Root);
 
         public static IEnumerable<AssemblyDefinition> GetAssemblyDefinitions()
         {

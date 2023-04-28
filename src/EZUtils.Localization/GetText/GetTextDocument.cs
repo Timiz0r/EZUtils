@@ -21,8 +21,9 @@ namespace EZUtils.Localization
 
         public GetTextDocument(IReadOnlyList<GetTextEntry> entries)
         {
-            if (entries.Count > 0 && entries[0].Id != string.Empty) throw new InvalidOperationException(
-                "The first entry must be a header.");
+            if (entries == null) throw new ArgumentNullException(nameof(entries));
+            if (entries.Count > 0 && entries[0].Id.Length > 0) throw new ArgumentOutOfRangeException(
+                nameof(entries), "The first entry must be a header.");
             Entries = entries;
             Header = new GetTextHeader(entries[0]);
         }
@@ -90,6 +91,8 @@ namespace EZUtils.Localization
 
         public static GetTextDocument LoadFrom(TextReader reader)
         {
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
+
             List<GetTextLine> lines = new List<GetTextLine>();
 
             string rawLine;
@@ -101,7 +104,7 @@ namespace EZUtils.Localization
             //serves the dual purpose of making sure we start with the header and some special handling around first entry
             bool haveHeader = false;
             bool processingContextualEntry = false;
-            HashSet<(string context, string id)> parsedIds = new HashSet<(string context, string id)>();
+            HashSet<(string context, string id, string pluralId)> parsedIds = new HashSet<(string, string, string)>();
             List<GetTextEntry> entries = new List<GetTextEntry>();
             List<GetTextLine> currentEntryLines = new List<GetTextLine>();
             List<GetTextLine> currentCommentBlock = new List<GetTextLine>();
@@ -125,12 +128,12 @@ namespace EZUtils.Localization
                 }
                 //is a string or a keyworded line after this point
 
-                //since the header cannot be deprecated, we inspect the actual line here
+                //since the header cannot be obsolete, we inspect the actual line here
                 if (!haveHeader && actualLine.Keyword?.Keyword == "msgctxt") throw new InvalidOperationException(
                     "The first entry should be the header, and the header should not have a msgctxt.");
                 if (!haveHeader && actualLine.Keyword?.Keyword == "msgid")
                 {
-                    if (actualLine.StringValue.Raw != string.Empty) throw new InvalidOperationException(
+                    if (actualLine.StringValue.Raw.Length > 0) throw new InvalidOperationException(
                         $"First entry must be header. Found: {actualLine.RawLine}");
                     haveHeader = true;
 
@@ -205,8 +208,11 @@ namespace EZUtils.Localization
             {
                 GetTextEntry entry = GetTextEntry.Parse(currentEntryLines.ToArray());
 
-                if (!parsedIds.Add((context: entry.Context, id: entry.Id))) throw new InvalidOperationException(
-                    $"Duplicate entry found. Context: '{entry.Context}', Id: '{entry.Id}'");
+                if (!parsedIds.Add((
+                    context: entry.Context,
+                    id: entry.Id,
+                    pluralId: entry.PluralId))) throw new InvalidOperationException(
+                        $"Duplicate entry found. Context: '{entry.Context}', Id: '{entry.Id}', PluralId: '{entry.PluralId}'");
 
                 currentEntryLines.Clear();
                 entries.Add(entry);

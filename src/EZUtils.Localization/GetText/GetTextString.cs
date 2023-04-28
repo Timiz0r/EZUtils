@@ -1,6 +1,7 @@
 namespace EZUtils.Localization
 {
     using System;
+    using System.Globalization;
     using System.Text.RegularExpressions;
 
     public class GetTextString
@@ -96,7 +97,7 @@ namespace EZUtils.Localization
                         m.Value == "\v" ? @"\v" :
                         m.Value == @"\" ? @"\\" :
                         m.Value == @"""" ? @"\""" :
-                        char.IsControl(m.Value[0]) && Convert.ToByte(m.Value[0]).ToString("x2") is string hexValue
+                        char.IsControl(m.Value[0]) && Convert.ToByte(m.Value[0]).ToString("x2", CultureInfo.InvariantCulture) is string hexValue
                             ? $@"\x{hexValue}"
                             : throw new InvalidOperationException($"Cannot handle character '{Convert.ToByte(m.Value[0]):x2}'.");
 

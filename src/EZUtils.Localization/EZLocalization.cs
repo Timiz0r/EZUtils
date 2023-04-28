@@ -17,9 +17,15 @@ namespace EZUtils.Localization
             this.catalogReference = catalogReference;
         }
 
+        public static EZLocalization ForCatalogUnder(string root, string localeSynchronizationKey)
+            => ForCatalogUnder(root, localeSynchronizationKey, Locale.English);
+
         public static EZLocalization ForCatalogUnder(string root, string localeSynchronizationKey, Locale nativeLocale)
         {
-            root = root.Trim(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+            root = root?.Trim(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
+            //as a unityland class, we expect an assert or package dir. if a user provides "/" and we stript it
+            //we still consider that invalid and want to through (with an albeit slightly inaccurate exception)
+            if (string.IsNullOrEmpty(root)) throw new ArgumentNullException(nameof(root));
 
             CatalogReference catalog = new CatalogReference(
                 root: root,
@@ -29,8 +35,6 @@ namespace EZUtils.Localization
 
             return result;
         }
-        public static EZLocalization ForCatalogUnder(string root, string localeSynchronizationKey)
-            => ForCatalogUnder(root, localeSynchronizationKey, Locale.English);
 
         public void SelectLocale(Locale locale) => catalogReference.SelectLocale(locale);
         public Locale SelectLocale(CultureInfo cultureInfo) => catalogReference.SelectLocale(cultureInfo);
@@ -157,9 +161,11 @@ namespace EZUtils.Localization
         private static bool InheritsFromGenericType(Type typeToInspect, Type genericTypeDefinition)
         {
             if (typeToInspect == null) return false;
+#pragma warning disable IDE0046 // Convert to conditional expression; prefer it here
             if (typeToInspect.IsGenericType
                 && typeToInspect.GetGenericTypeDefinition() is Type genericType
                 && genericType == genericTypeDefinition) return true;
+#pragma warning restore IDE0046 // Convert to conditional expression
             return InheritsFromGenericType(typeToInspect.BaseType, genericTypeDefinition);
         }
     }

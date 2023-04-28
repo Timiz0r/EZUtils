@@ -27,7 +27,7 @@ namespace EZUtils.Localization
                 .AddReferences(MetadataReference.CreateFromFile(typeof(GetTextExtractor).Assembly.Location))
                 .AddReferences(MetadataReference.CreateFromFile(typeof(CultureInfo).Assembly.Location));
 
-            this.compilation = compilationBuilder(compilation);
+            this.compilation = compilationBuilder?.Invoke(compilation) ?? compilation;
             this.extractionQueue = extractionQueue;
         }
 
@@ -98,6 +98,11 @@ namespace EZUtils.Localization
             {
                 base.VisitInvocationExpression(node);
 
+                //NOTE: this requires slightly more thought
+                //if a compilation doesnt have the necessary references added, we won't be able to get an operation
+                //this is hard to debug for those that might write custom extraction.
+                //but there are many invocations that wont result in an operation that we don't care about,
+                //so logging and whatnot isn't useful.
                 if (!(model.GetOperation(node) is IInvocationOperation invocationOperation)) return;
 
                 ImmutableArray<AttributeData> attributes = invocationOperation.TargetMethod.GetAttributes();
@@ -107,10 +112,6 @@ namespace EZUtils.Localization
 
                 InvocationParser invocationParser = InvocationParser.ForInvocation(invocationOperation);
                 if (!invocationParser.Success) return;
-
-                if (string.IsNullOrEmpty(invocationParser.Id.Value)) throw new InvalidOperationException(
-                    $"Could not extract id from invocation: {node}");
-                //should also theoretically invalidate an entry that has incomplete plural arguments
 
                 foreach ((string poFilePath, Locale locale) in invocationParser.Targets)
                 {
@@ -154,7 +155,7 @@ namespace EZUtils.Localization
             {
                 if (symbol == null)
                 {
-                    //we only stop visiting if we're sure; not if we dont know
+                    //we only stop visiting if we're sure; not if we dont know how to get a symbol
                     continueVisiting = true;
                     return;
                 }

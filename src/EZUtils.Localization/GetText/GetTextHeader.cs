@@ -6,7 +6,6 @@ namespace EZUtils.Localization
     using System.Linq;
     using System.Text;
     using System.Text.RegularExpressions;
-    using static UnityEngine.EventSystems.EventTrigger;
 
     public class GetTextHeader
     {
@@ -33,7 +32,7 @@ namespace EZUtils.Localization
 
         public GetTextHeader(GetTextEntry underlyingEntry)
         {
-            UnderlyingEntry = underlyingEntry;
+            UnderlyingEntry = underlyingEntry ?? throw new ArgumentNullException(nameof(underlyingEntry));
 
             Match languageMatch = Regex.Match(
                 underlyingEntry.Value,
@@ -75,6 +74,8 @@ namespace EZUtils.Localization
 
         public static GetTextHeader ForLocale(Locale locale)
         {
+            if (locale == null) throw new ArgumentNullException(nameof(locale));
+
             StringBuilder sb = new StringBuilder();
             string language = GetGetTextLanguageFromCultureInfo(locale.CultureInfo);
             _ = sb.Append($"Language: {language}\n");
@@ -108,6 +109,8 @@ namespace EZUtils.Localization
 
         public GetTextHeader WithLocale(Locale locale)
         {
+            if (locale == null) throw new ArgumentNullException(nameof(locale));
+
             List<GetTextLine> underlyingLines = UnderlyingEntry.Lines.ToList();
 
             //while not every ToEntry line is related to locale, at least at time of writing, it's fine
@@ -142,7 +145,7 @@ namespace EZUtils.Localization
                 if (targetIndex == -1)
                 {
                     int lastPluralRuleIndex = underlyingLines.FindLastIndex(
-                        l => l.StringValue.Value.StartsWith("X-PluralRules-"));
+                        l => l.StringValue.Value.StartsWith("X-PluralRules-", StringComparison.Ordinal));
                     int insertionPoint = lastPluralRuleIndex == -1 ? underlyingLines.Count : lastPluralRuleIndex + 1;
                     underlyingLines.Insert(insertionPoint, ruleLine);
                 }

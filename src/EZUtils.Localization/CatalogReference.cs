@@ -7,6 +7,7 @@ namespace EZUtils.Localization
     using System.Linq;
     using UnityEditor;
     using UnityEngine.UIElements;
+    using Object = UnityEngine.Object;
 
     //previously, we had a dictionary of these so that instances' locales could be synced
     //with the introduction of localeSynchronizationKey and the synchronizer, that dictionary has effectively moved to
@@ -17,8 +18,8 @@ namespace EZUtils.Localization
     //we can keep hiding the underlying catalog in EZLocalization this way.
     internal class CatalogReference : IDisposable
     {
-        private readonly List<(UnityEngine.Object obj, Action action)> retranslatableObjects =
-            new List<(UnityEngine.Object obj, Action action)>();
+        private readonly List<(Object obj, Action action)> retranslatableObjects =
+            new List<(Object obj, Action action)>();
         private readonly List<(VisualElement element, Action action)> retranslatableElements =
             new List<(VisualElement element, Action action)>();
 
@@ -32,8 +33,7 @@ namespace EZUtils.Localization
         private GetTextCatalog catalog;
         //catalogLocaleSynchronizer does a getstring which needs to be called as late as possible to avoid throws,
         //particularly when opening an editorwindow
-        private Lazy<CatalogLocaleSynchronizer> catalogLocaleSynchronizer;
-        private bool lateInitializationPerformed = false;
+        private readonly Lazy<CatalogLocaleSynchronizer> catalogLocaleSynchronizer;
 
         private bool disposedValue;
 
@@ -57,11 +57,13 @@ namespace EZUtils.Localization
             fsw.Renamed += PoFileRenamed;
         }
 
+        public Locale NativeLocale { get; }
+
         public GetTextCatalog Catalog
         {
             get
             {
-                if (!lateInitializationPerformed)
+                if (catalog == null)
                 {
                     DirectoryInfo directory = new DirectoryInfo(root);
                     if (directory.Exists)
@@ -74,14 +76,11 @@ namespace EZUtils.Localization
 
                     catalog = new GetTextCatalog(documents.Values.ToArray(), NativeLocale);
                     fsw.EnableRaisingEvents = true;
-                    lateInitializationPerformed = true;
                 }
 
                 return catalog;
             }
         }
-
-        public Locale NativeLocale { get; }
 
         public void Retranslate()
         {
@@ -97,7 +96,7 @@ namespace EZUtils.Localization
                 action();
             }
         }
-        public void TrackRetranslatable(UnityEngine.Object obj, Action action)
+        public void TrackRetranslatable(Object obj, Action action)
         {
             retranslatableObjects.Add((obj, action));
             action();
@@ -145,7 +144,7 @@ namespace EZUtils.Localization
             Retranslate();
         }
 
-        //NOTE: fsw is not thread-safe in two ways:
+        //NOTE: fsw is not thread-safe by default in two ways:
         //1. our editing of documents
         //2. the potential retranslation of visualelements
         //so we get things back on the main thread with delaycall

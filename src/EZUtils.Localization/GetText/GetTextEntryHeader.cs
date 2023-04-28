@@ -1,5 +1,6 @@
 namespace EZUtils.Localization
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -10,8 +11,8 @@ namespace EZUtils.Localization
 
         public GetTextEntryHeader(IReadOnlyList<string> references, IReadOnlyList<string> flags)
         {
-            References = references;
-            Flags = flags;
+            References = references ?? Array.Empty<string>();
+            Flags = flags ?? Array.Empty<string>();
         }
 
         //could hypothetically accept header-only lines, but this is certainly more flexible
@@ -25,15 +26,15 @@ namespace EZUtils.Localization
                 .ToArray();
 
             string[] references = headerComments
-                .Where(c => c.StartsWith(":", System.StringComparison.Ordinal))
+                .Where(c => c.StartsWith(":", StringComparison.Ordinal))
                 .Select(c => c.Substring(1).Trim())
                 .ToArray();
 
-            string unsplitFlags = headerComments.SingleOrDefault(c => c.StartsWith(",", System.StringComparison.Ordinal)) ?? string.Empty;
+            string unsplitFlags = headerComments.SingleOrDefault(c => c.StartsWith(",", StringComparison.Ordinal)) ?? string.Empty;
             //not 100% sure if split and trim is what we should do
             //but the documented flags dont have spaces, so might as well
             string[] flags = unsplitFlags
-                .Split(new[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries)
+                .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(f => f.Trim())
                 .ToArray();
 

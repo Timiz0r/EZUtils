@@ -10,6 +10,8 @@ namespace EZUtils.Localization
     //https://github.com/unicode-org/cldr/blob/main/docs/ldml/tr35-numbers.md
     //https://github.com/unicode-org/cldr/blob/main/common/supplemental/plurals.xml
 
+    //NOTE: we could have used lambdas instead of expressions
+    //but expressions ended up being easier in practice, and, should the need arise, we can tostring it and have it look nice
     internal static class PluralRuleParser
     {
         private const int ScaleShift = 16;
@@ -17,6 +19,9 @@ namespace EZUtils.Localization
 
         public static Func<Operands, bool> Parse(string rule)
         {
+            //it would actually be pretty correct to instead return something that always returns true
+            //however, as our application is designed, null means not provided so don't use
+            //and, further up, we have special handling for null
             if (string.IsNullOrEmpty(rule)) return null;
 
             string condition = Regex.Match(rule, "^[^@]+").Value.Trim();
@@ -203,7 +208,7 @@ namespace EZUtils.Localization
                 yield break;
             }
 
-            int decimalDigits = decimal.GetBits(split[0])[3] >> ScaleShift & 31;
+            int decimalDigits = (decimal.GetBits(split[0])[3] >> ScaleShift) & 31;
             decimal increment = increments[decimalDigits];
             for (decimal i = split[0]; i <= split[1]; i += increment)
             {

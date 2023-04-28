@@ -67,7 +67,6 @@ namespace EZUtils.Localization
 
         public PluralType Evaluate(decimal value, out int index)
         {
-            //note: if for some reason we care about perf later, precompute zeroIndex, etc., and return those
             index = -1;
             Operands operands = new Operands(value);
             if (zeroExpression != null && ++index > -1 && zeroExpression(operands)) return PluralType.Zero;
@@ -75,12 +74,17 @@ namespace EZUtils.Localization
             if (twoExpression != null && ++index > -1 && twoExpression(operands)) return PluralType.Two;
             if (fewExpression != null && ++index > -1 && fewExpression(operands)) return PluralType.Few;
             if (manyExpression != null && ++index > -1 && manyExpression(operands)) return PluralType.Many;
+#pragma warning disable IDE0046 // Convert to conditional expression
             if (otherExpression != null && ++index > -1 && otherExpression(operands)) return PluralType.Other;
+#pragma warning restore IDE0046 // Convert to conditional expression
             throw new InvalidOperationException("No rules evaluated to true.");
         }
 
+        //TODO: consider axing this code, since we've generally done with a design that requires them be explicitly provided
         public static PluralRules GetDefault(CultureInfo cultureInfo)
         {
+            if (cultureInfo == null) throw new ArgumentNullException(nameof(cultureInfo));
+
             while (cultureInfo != CultureInfo.InvariantCulture)
             {
                 if (defaultPluralRules.TryGetValue(cultureInfo, out PluralRules pluralRules)) return pluralRules;

@@ -44,6 +44,7 @@ namespace EZUtils.Localization
         public GetTextEntryBuilder ConfigureId(string id, string inlineComment = null)
         {
             if (this.id != null) throw new InvalidOperationException("Can only set the id once.");
+            //but they can be empty (header)
             this.id = id ?? throw new ArgumentNullException(nameof(id), "Entry ids cannot be null.");
 
             AddKeywordedLine("msgid", id, inlineComment: inlineComment);
@@ -53,7 +54,10 @@ namespace EZUtils.Localization
         public GetTextEntryBuilder ConfigureAsPlural(string pluralId, string inlineComment = null)
         {
             if (this.pluralId != null) throw new InvalidOperationException("Can only set as plural once.");
-            this.pluralId = pluralId ?? throw new ArgumentNullException(nameof(pluralId), "Plural ids cannot be null.");
+            if (string.IsNullOrEmpty(pluralId)) throw new ArgumentNullException(
+                nameof(pluralId), "Plural ids cannot be null or empty.");
+
+            this.pluralId = pluralId;
 
             AddKeywordedLine("msgid_plural", pluralId, inlineComment: inlineComment);
             return this;
@@ -62,7 +66,10 @@ namespace EZUtils.Localization
         public GetTextEntryBuilder ConfigureAsPlural(string pluralId, int pluralForms, string inlineComment = null)
         {
             if (this.pluralId != null) throw new InvalidOperationException("Can only set as plural once.");
-            this.pluralId = pluralId ?? throw new ArgumentNullException(nameof(pluralId), "Plural ids cannot be null.");
+            if (string.IsNullOrEmpty(pluralId)) throw new ArgumentNullException(
+                nameof(pluralId), "Plural ids cannot be null or empty.");
+
+            this.pluralId = pluralId;
 
             AddKeywordedLine("msgid_plural", pluralId, inlineComment: inlineComment);
             for (int i = 0; i < pluralForms; i++)
@@ -75,7 +82,11 @@ namespace EZUtils.Localization
         public GetTextEntryBuilder ConfigureAsPlural(string pluralId, Locale locale, string inlineComment = null)
         {
             if (this.pluralId != null) throw new InvalidOperationException("Can only set as plural once.");
-            this.pluralId = pluralId ?? throw new ArgumentNullException(nameof(pluralId), "Plural ids cannot be null.");
+            if (string.IsNullOrEmpty(pluralId)) throw new ArgumentNullException(
+                nameof(pluralId), "Plural ids cannot be null or empty.");
+            if (locale == null) throw new ArgumentNullException(nameof(locale));
+
+            this.pluralId = pluralId;
 
             AddKeywordedLine("msgid_plural", pluralId, inlineComment: inlineComment);
 
@@ -120,16 +131,27 @@ namespace EZUtils.Localization
             return this;
         }
 
-        public GetTextEntry Create() => new GetTextEntry(
-            lines: lines,
-            header: GetTextEntryHeader.ParseEntryLines(lines),
-            isObsolete: false,
-            context: context,
-            id: id,
-            pluralId: pluralId,
-            value: value,
-            pluralValues: pluralValues
-        );
+        public GetTextEntry Create()
+        {
+            if (id == null) throw new InvalidOperationException("Id not provided.");
+            if (pluralId != null && value != null) throw new InvalidOperationException(
+                "Plural id provided, making this entry a plural, but value also provided, making this entry non-plural.");
+            if (pluralId != null && pluralValues.Count == 0) throw new InvalidOperationException("Plural id provided, but no plural values provided.");
+#pragma warning disable IDE0046 // Convert to conditional expression
+            if (pluralValues.Count > 0 && pluralId == null) throw new InvalidOperationException("Plural values provided, but no plural id provided.");
+#pragma warning restore IDE0046 // Convert to conditional expression
+
+            return new GetTextEntry(
+                lines: lines,
+                header: GetTextEntryHeader.ParseEntryLines(lines),
+                isObsolete: false,
+                context: context,
+                id: id,
+                pluralId: pluralId,
+                value: value,
+                pluralValues: pluralValues
+            );
+        }
 
         //or multiple lines if newlines are present
         //conventionally, the file contains only line feeds, but read and split by whatever newline
@@ -145,7 +167,7 @@ namespace EZUtils.Localization
                 return;
             }
 
-            //in multiline mode, $ eats up \n, so we dont use it
+            //NOTE: in multiline mode, $ eats up \n, so we dont use it
             //we want to maintain newline chars
             string[] values = Regex.Matches(value, @"(?m)^[^\r\n]+\r?\n?").Cast<Match>().Select(m => m.Value).ToArray();
             AddLine(new GetTextLine(

@@ -102,7 +102,7 @@ dotnet_code_quality_unused_parameters = all:warning
 
 # Suppression preferences
 dotnet_diagnostic.IDE0079.severity = warning
-dotnet_remove_unnecessary_suppression_exclusions = all:warning
+dotnet_remove_unnecessary_suppression_exclusions = IDE0046 #even when valid still got flagged
 
 #### C# Coding Conventions ####
 

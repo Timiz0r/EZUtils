@@ -31,7 +31,7 @@ namespace EZUtils.Localization
 
                     Locale locale = new Locale(cultureInfo, pluralRules);
                     //the original thought was to have this rooted to invocationOperation.Syntax.GetLocation().GetLineSpan().Path
-                    //but that's kinda too complicated. it's up to the caller of GetTextExtractor to decide
+                    //but that's kinda too complicated. it's up to the caller of GetTextExtractor to decide roots
                     string poFilePath = (string)a.ConstructorArguments[1].Value;
 
                     return (poFilePath, locale);

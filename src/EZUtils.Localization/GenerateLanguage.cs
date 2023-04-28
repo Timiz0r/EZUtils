@@ -8,6 +8,7 @@ namespace EZUtils.Localization.UIElements
 
         private new class UxmlTraits : VisualElement.UxmlTraits
         {
+#pragma warning disable IDE0052,CA1823 // Remove unread private members; is meant to be read in uxml
             private readonly UxmlStringAttributeDescription poFilePathAttribute = new UxmlStringAttributeDescription
             {
                 name = "poFilePath",
@@ -40,6 +41,7 @@ namespace EZUtils.Localization.UIElements
             {
                 name = "other",
             };
+#pragma warning restore IDE0052,CA1823 // Remove unread private members
             public override void Init(VisualElement ve, IUxmlAttributes bag, CreationContext cc) => base.Init(ve, bag, cc);
         }
     }

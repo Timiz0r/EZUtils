@@ -22,9 +22,9 @@ namespace EZUtils.Localization
     //to do it.
     internal class CatalogLocaleSynchronizer
     {
-        private static CultureInfo newlySelectedUnityEditorLanguage;
         private static readonly Dictionary<string, CatalogLocaleSynchronizer> synchronizers =
             new Dictionary<string, CatalogLocaleSynchronizer>();
+        private static CultureInfo newlySelectedUnityEditorLanguage;
 
         private readonly string selectedLocaleEditorPrefKey;
         private readonly CatalogReference representativeCatalogReference;
@@ -36,22 +36,6 @@ namespace EZUtils.Localization
         {
             selectedLocaleEditorPrefKey = $"EZUtils.Localization.SelectedLocale.{localeSynchronizationKey}";
             this.representativeCatalogReference = representativeCatalogReference;
-
-            string prefValue = EditorPrefs.GetString(selectedLocaleEditorPrefKey);
-            if (!string.IsNullOrEmpty(prefValue))
-            {
-                CultureInfo locale = CultureInfo.GetCultureInfo(prefValue);
-                //if newlySelectedUnityEditorLanguage is null then we'll prefer one from setting
-                _ = SelectLocaleOrNative(newlySelectedUnityEditorLanguage, locale);
-            }
-            else if (newlySelectedUnityEditorLanguage != null)
-            {
-                _ = SelectLocaleOrNative(newlySelectedUnityEditorLanguage);
-            }
-            else
-            {
-                _ = SelectLocaleOrNative(Array.Empty<Locale>());
-            }
         }
 
         public static CatalogLocaleSynchronizer Register(string localeSynchronizationKey, CatalogReference catalogReference)
@@ -60,6 +44,12 @@ namespace EZUtils.Localization
             {
                 synchronizers[localeSynchronizationKey] = value = new CatalogLocaleSynchronizer(
                     localeSynchronizationKey, catalogReference);
+
+                string prefValue = EditorPrefs.GetString(value.selectedLocaleEditorPrefKey);
+                CultureInfo storedLocale = !string.IsNullOrEmpty(prefValue)
+                    ? CultureInfo.GetCultureInfo(prefValue)
+                    : null;
+                _ = value.SelectLocaleOrNative(newlySelectedUnityEditorLanguage, storedLocale);
             }
             else
             {
@@ -116,12 +106,15 @@ namespace EZUtils.Localization
             }
             return SelectedLocale;
         }
+        //needed to disambiguate between locale vs cultureinfo params arrays
         public Locale SelectLocaleOrNative() => SelectLocaleOrNative(Array.Empty<Locale>());
 
         //when the language is changed, we get a domain reload
         //so tracking language changes requires persisting it somewhere and looking it up, all from a cctor
         [InitializeOnLoadMethod]
+#pragma warning disable IDE0051 //Private member is unused; unity message
         private static void UnityInitialize()
+#pragma warning restore IDE0051
         {
             Type localizationDatabaseType = Type.GetType("UnityEditor.LocalizationDatabase, UnityEditor");
 

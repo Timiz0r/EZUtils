@@ -6,6 +6,9 @@ namespace EZUtils.Localization
     //from string and not an implicit conversion to FormattableString.
     //the (readonly) ref struct just keeps things performant, though certainly with mild restrictions (like accessing
     //the underling value in linq or other lambdas).
+    //
+    //it's worth noting early designs saw many more T overloads that differed based on RawString vs FormattableString
+    //but now it's been slimmed down to few usages of this struct. even still, it's worth having.
     public readonly ref struct RawString
     {
         public string Value { get; }

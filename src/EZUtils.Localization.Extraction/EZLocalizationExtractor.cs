@@ -7,6 +7,11 @@ namespace EZUtils.Localization
     using Microsoft.CodeAnalysis;
     using UnityEditor;
 
+    //TODO: integration test locale synchronization
+    //TODO: integration test survival of invalid po file
+    //TODO: integration test obsoletion
+    //TODO: read and write utf8
+    //TODO: integration test for uxml extraction
     //TODO: cr and refactor
     internal class EZLocalizationExtractor
     {
@@ -22,21 +27,18 @@ namespace EZUtils.Localization
                     .AddReferences(MetadataReference.CreateFromFile(typeof(EditorWindow).Assembly.Location)),
                 extractionWorkRunner);
             string assemblyRoot = assemblyDefinition.Root;
-            DirectoryInfo assemblyRootDirectory = new DirectoryInfo(assemblyRoot);
             foreach (FileInfo file in assemblyDefinition.GetFiles("*.cs"))
             {
-                string displayPath = PathUtil.GetRelative(
-                    assemblyRootDirectory.FullName, file.FullName, newRoot: assemblyRoot);
                 getTextExtractor.AddFile(
                     sourceFilePath: file.FullName,
-                    displayPath: displayPath,
+                    displayPath: assemblyDefinition.GetUnityPath(file.FullName),
                     catalogRoot: assemblyRoot);
             }
             getTextExtractor.Extract(catalogBuilder);
 
             uxmlPathsToExtract.AddRange(
                 assemblyDefinition.GetFiles("*.uxml").Select(f => (
-                    path: PathUtil.GetRelative(assemblyRootDirectory.FullName, f.FullName, newRoot: assemblyRoot),
+                    path: assemblyDefinition.GetUnityPath(f.FullName),
                     root: assemblyRoot)));
         }
 
@@ -75,6 +77,7 @@ namespace EZUtils.Localization
                     newLines.Add(line);
                     continue;
                 }
+
                 //we make sure all lines in an entry are not separated by whitespace
                 //we could turn them into comments, but it would conflict weirdly with wiping out mid-entry comments
                 doneWithInitialWhitespace = true;
@@ -84,6 +87,7 @@ namespace EZUtils.Localization
                     newLines.Add(line);
                 }
             }
+
             foreach (GetTextLine line in entry.Lines)
             {
                 if (line.IsCommentOrWhiteSpace) continue;
@@ -106,16 +110,9 @@ namespace EZUtils.Localization
                 }
             }
 
-            //could parse, but our transformation should be the same as `this`, except for lines
-            GetTextEntry newEntry = new GetTextEntry(
-                lines: newLines,
-                header: entry.Header,
-                isObsolete: entry.IsObsolete,
-                context: entry.Context,
-                id: entry.Id,
-                pluralId: entry.PluralId,
-                value: entry.Value,
-                pluralValues: entry.PluralValues);
+            //a previous design just provided new set of lines and left other properties intact
+            //but decided to do parsing to increase verification that we didn't break anything
+            GetTextEntry newEntry = GetTextEntry.Parse(newLines);
             return newEntry;
 
             bool IsAlreadyCompatible()
@@ -149,6 +146,7 @@ namespace EZUtils.Localization
             {
                 bool xIsHeader = x.Context == null && x.Id.Length == 0;
                 bool yIsHeader = y.Context == null && y.Id.Length == 0;
+
                 int isHeaderComparer = Comparer<bool>.Default.Compare(yIsHeader, xIsHeader);
                 if (isHeaderComparer != 0) return isHeaderComparer;
 
@@ -157,10 +155,11 @@ namespace EZUtils.Localization
 
                 (string path, int line) xReference = GetCandidateReference(x);
                 (string path, int line) yReference = GetCandidateReference(x);
-                int referencePathComparison = StringComparer.OrdinalIgnoreCase.Compare(xReference.path, yReference.path);
-                if (referencePathComparison != 0) return referenceCountComparison;
 
-                return yReference.line - xReference.line;
+                int referencePathComparison = StringComparer.OrdinalIgnoreCase.Compare(xReference.path, yReference.path);
+                return referencePathComparison != 0
+                    ? referenceCountComparison
+                    : yReference.line - xReference.line;
 
                 (string path, int line) GetCandidateReference(GetTextEntry entry)
                     => entry.Header.References.Count == 0

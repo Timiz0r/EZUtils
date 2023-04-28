@@ -25,9 +25,11 @@ namespace EZUtils.Localization
         public IReadOnlyList<string> PluralValues { get; }
         public IReadOnlyList<GetTextLine> Lines { get; }
 
-        //is only public because of the builder. not many good alternatives.
-        //but since users should prefer the builder over this, not really a problem.
-        public GetTextEntry(
+        //is not private because builder needs it
+        //is not public because we prefer users provide lines to parse, in order to maintain strict control
+        //over how lines and entries are mapped to each other.
+        //also isn't yet a use-case for making it public; not a dealbreaker though.
+        internal GetTextEntry(
             IReadOnlyList<GetTextLine> lines,
             GetTextEntryHeader header,
             bool isObsolete,
@@ -44,7 +46,9 @@ namespace EZUtils.Localization
             Id = id;
             PluralId = pluralId;
             Value = value;
-            PluralValues = pluralValues;
+            //plural id is what determines if an entry is for a plural or not
+            //for small reasons not worth mentioning, it's convenient for this not to be null
+            PluralValues = pluralValues ?? Array.Empty<string>();
         }
 
         public static GetTextEntry Parse(IReadOnlyList<GetTextLine> lines)
@@ -53,7 +57,7 @@ namespace EZUtils.Localization
             Dictionary<int, StringBuilder> pluralMap = new Dictionary<int, StringBuilder>();
             StringBuilder currentKeyword = null;
             bool hasObsoleteLines = false;
-            foreach (GetTextLine currentLine in lines)
+            foreach (GetTextLine currentLine in lines ?? Enumerable.Empty<GetTextLine>())
             {
                 GetTextLine line = currentLine;
                 if (currentLine.IsMarkedObsolete)
@@ -87,11 +91,11 @@ namespace EZUtils.Localization
                 }
             }
 
-            //we check this after the loop in case the entry starts with non-obsolete lines but has obsolete ones in the middle
+            //we check this after the loop in case the entry starts with non-obsolete lines but has obsolete ones later
             if (hasObsoleteLines && lines.Any(l => !l.IsCommentOrWhiteSpace)) throw new InvalidOperationException(
                 "Entry has lines marked obsolete but has non-obsolete lines as well.");
 
-            int expectedPluralCount = pluralMap.Count == 0 ? 0 : pluralMap.Keys.Max() + 1;
+            int expectedPluralCount = pluralMap.Count == 0 ? 0 : pluralMap.Keys.Max() + 1; //so if highest key is 2, expected count 3 (0, 1, 2)
             if (pluralMap.Count != expectedPluralCount) throw new InvalidOperationException(
                 $"Expected a plural count of '{expectedPluralCount}' based on the highest found index, but only found '{pluralMap.Count}' plural entries.");
             if (keywordMap.ContainsKey("msgid_plural") && pluralMap.Count == 0) throw new InvalidOperationException("Plural id provided, but no plurals found.");

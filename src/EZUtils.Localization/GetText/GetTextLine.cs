@@ -32,7 +32,7 @@ namespace EZUtils.Localization
             IsCommentOrWhiteSpace = keyword == null && stringValue == null;
             IsWhiteSpace = IsCommentOrWhiteSpace && comment == null;
             IsComment = IsCommentOrWhiteSpace && comment != null;
-            IsMarkedObsolete = IsComment && Comment.StartsWith("~");
+            IsMarkedObsolete = IsComment && Comment.StartsWith("~", StringComparison.Ordinal);
         }
 
         public GetTextLine(GetTextKeyword keyword, GetTextString stringValue, string comment)
@@ -41,14 +41,9 @@ namespace EZUtils.Localization
             StringBuilder sb = new StringBuilder();
             if (keyword?.Keyword is string keywordValue)
             {
-                if (keyword?.Index is int i)
-                {
-                    _ = sb.Append(keywordValue).Append('[').Append(i).Append(']');
-                }
-                else
-                {
-                    _ = sb.Append(keywordValue);
-                }
+                _ = keyword?.Index is int i
+                    ? sb.Append(keywordValue).Append('[').Append(i).Append(']')
+                    : sb.Append(keywordValue);
 
                 //will be a space between this and a string or comment
                 if (stringValue != null || comment != null)
@@ -75,11 +70,11 @@ namespace EZUtils.Localization
             RawLine = sb.ToString();
         }
         public GetTextLine(string comment) : this(keyword: null, stringValue: null, comment)
-        {}
+        { }
         public GetTextLine(GetTextString stringValue) : this(keyword: null, stringValue: stringValue, comment: null)
-        {}
+        { }
         public GetTextLine(GetTextKeyword keyword, GetTextString stringValue) : this(keyword: keyword, stringValue: stringValue, comment: null)
-        {}
+        { }
 
         public static GetTextLine Parse(string line)
             => TryParse(line, out GetTextLine result) ? result : throw new InvalidOperationException($"Invalid GetTextLine: {line}");

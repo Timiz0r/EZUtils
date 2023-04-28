@@ -2,7 +2,6 @@ namespace EZUtils.Localization
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Reflection;
     using UnityEditor;
@@ -11,11 +10,15 @@ namespace EZUtils.Localization
     internal class EZLocalizationAutomatedExtractor : AssetPostprocessor
     {
         [InitializeOnLoadMethod]
+#pragma warning disable IDE0051 //Private member is unused; unity message
         private static void UnityInitialize() => EditorApplication.delayCall += DomainReloaded;
+#pragma warning restore IDE0051
 
         private static void DomainReloaded() => PerformExtractionFor(AssemblyDefinition.GetAssemblyDefinitions());
 
+#pragma warning disable IDE0051 //Private member is unused; unity message
         private static void OnPostprocessAllAssets(
+#pragma warning restore IDE0051
             string[] importedAssets, string[] deletedAssets, string[] movedAssets, string[] movedFromAssetPaths)
         {
             string[] allPaths = importedAssets
@@ -41,6 +44,7 @@ namespace EZUtils.Localization
                 extractor.ExtractFrom(def);
                 LocalizationProxyGenerator.Generate(def);
             }
+
             extractor.Finish();
             //particularly for proxy generation
             AssetDatabase.Refresh();

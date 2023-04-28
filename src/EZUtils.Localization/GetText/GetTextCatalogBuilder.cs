@@ -18,12 +18,15 @@ namespace EZUtils.Localization
             bool changeLocaleIfDifferent,
             Action<GetTextDocumentBuilder> documentBuilderAction)
         {
+            if (string.IsNullOrEmpty(path)) throw new ArgumentNullException(nameof(path));
+            if (locale == null) throw new ArgumentNullException(nameof(locale));
+
             GetTextDocumentBuilder document = ImmutableInterlocked.GetOrAdd(ref documents, path, p => GetTextDocumentBuilder.ForDocumentAt(p, locale));
             _ = changeLocaleIfDifferent
                 ? document.SetLocale(locale)
                 : document.VerifyLocaleMatches(locale);
 
-            documentBuilderAction(document);
+            documentBuilderAction?.Invoke(document);
 
             return this;
         }
@@ -37,13 +40,13 @@ namespace EZUtils.Localization
         {
             foreach (GetTextDocumentBuilder documentBuilder in documents.Values)
             {
-                documentBuilderAction(documentBuilder);
+                documentBuilderAction?.Invoke(documentBuilder);
             }
 
             return this;
         }
 
-        public GetTextCatalogBuilder WriteToDisk(string root)
+        public GetTextCatalogBuilder WriteToDisk(string root = "")
         {
             foreach (GetTextDocumentBuilder doc in documents.Values)
             {
@@ -54,7 +57,7 @@ namespace EZUtils.Localization
         }
 
         public GetTextCatalog GetCatalog(Locale nativeLocale)
-            => new GetTextCatalog(GetDocuments(), nativeLocale);
+            => new GetTextCatalog(GetDocuments(), nativeLocale ?? throw new ArgumentNullException(nameof(nativeLocale)));
 
         public IReadOnlyList<GetTextDocument> GetDocuments()
             => documents.Values.Select(db => db.GetGetTextDocument()).ToArray();
