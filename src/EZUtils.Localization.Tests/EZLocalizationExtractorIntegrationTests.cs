@@ -37,7 +37,6 @@ namespace EZUtils.Localization.Tests.Integration
                     new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")));
             GenerateEmptyProxyType(languageAttribute);
             GenerateTestAction(
-                usings: string.Empty,
                 localizationFieldDeclaration: GenerateLocalizationFieldDeclaration(languageAttribute),
                 code: @"
             result.Add(loc.T(""foo""));
@@ -65,7 +64,6 @@ namespace EZUtils.Localization.Tests.Integration
                 new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"));
             string languageAttribute = GenerateLocalizationAttribute("Gen/ja-integrationtest.po", locale());
             GenerateTestAction(
-                usings: string.Empty,
                 localizationFieldDeclaration: GenerateLocalizationFieldDeclaration(languageAttribute),
                 code: @"
             loc.SelectLocale(CultureInfo.GetCultureInfo(""ja""));
@@ -80,7 +78,6 @@ namespace EZUtils.Localization.Tests.Integration
 
             AssetDatabase.Refresh();
             yield return new WaitForDomainReload();
-            yield return null;
 
             Assert.That(
                 File.Exists(Path.Combine(TestArtifactRootFolder, "ja-integrationtest.po")),
@@ -122,7 +119,6 @@ namespace EZUtils.Localization.Tests.Integration
             yield return new WaitForDomainReload();
 
             GenerateTestAction(
-                usings: string.Empty,
                 localizationFieldDeclaration: string.Empty,
                 code: @"
             SelectLocale(CultureInfo.GetCultureInfo(""ja""));
@@ -164,6 +160,138 @@ namespace EZUtils.Localization.Tests.Integration
             }));
         }
 
+        [UnityTest]
+        public IEnumerator EZLocalization_AutoRetranslates_WhenLocaleChanged()
+        {
+            GenerateAssemblyAttribute();
+            Locale locale() => new Locale(
+                CultureInfo.GetCultureInfo("ja"),
+                new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"));
+            string languageAttribute = GenerateLocalizationAttribute("Gen/ja-integrationtest.po", locale());
+            GenerateEmptyProxyType(languageAttribute);
+
+            AssetDatabase.Refresh();
+            yield return new WaitForDomainReload();
+
+            GenerateTestAction(
+                localizationFieldDeclaration: string.Empty,
+                code: @"
+            Label label = new Label(text: ""loc:foo label"");
+            TextField textField = new TextField(label: ""loc:foo textfield"");
+            IntegrationTestWindow window = IntegrationTestWindow.Create(label, textField);
+            TranslateElementTree(label);
+            TranslateElementTree(textField);
+
+            result.Add(label.text);
+            result.Add(textField.label);
+
+            SelectLocale(CultureInfo.GetCultureInfo(""ja""));
+
+            result.Add(label.text);
+            result.Add(textField.label);
+
+            window.Close();
+            ");
+
+            AssetDatabase.Refresh();
+            yield return new WaitForDomainReload();
+
+            Assert.That(
+                File.Exists(Path.Combine(TestArtifactRootFolder, "ja-integrationtest.po")),
+                Is.True);
+            _ = new GetTextCatalogBuilder()
+                .ForPoFile("ja-integrationtest.po", locale(), d => d
+                    .AddEntry(e => e
+                        .ConfigureId("foo label")
+                        .ConfigureValue("ja:foo label"))
+                    .AddEntry(e => e
+                        .ConfigureId("foo textfield")
+                        .ConfigureValue("ja:foo textfield")))
+                .WriteToDisk(TestArtifactRootFolder);
+
+            IReadOnlyList<string> result = new IntegrationTestAction().Execute();
+
+            Assert.That(result, Is.EqualTo(new[]
+            {
+                "foo label",
+                "foo textfield",
+                "ja:foo label",
+                "ja:foo textfield",
+            }));
+        }
+
+        [UnityTest]
+        public IEnumerator EZLocalization_AutoRetranslates_WhenPoFileChanged()
+        {
+            GenerateAssemblyAttribute();
+            Locale locale() => new Locale(
+                CultureInfo.GetCultureInfo("ja"),
+                new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"));
+            string languageAttribute = GenerateLocalizationAttribute("Gen/ja-integrationtest.po", locale());
+            GenerateEmptyProxyType(languageAttribute);
+
+            AssetDatabase.Refresh();
+            yield return new WaitForDomainReload();
+
+            GenerateTestAction(
+                localizationFieldDeclaration: string.Empty,
+                code: $@"
+            Label label = new Label(text: ""loc:foo label"");
+            TextField textField = new TextField(label: ""loc:foo textfield"");
+            IntegrationTestWindow window = IntegrationTestWindow.Create(label, textField);
+            TranslateElementTree(label);
+            TranslateElementTree(textField);
+
+            SelectLocale(CultureInfo.GetCultureInfo(""ja""));
+
+            result.Add(label.text);
+            result.Add(textField.label);
+
+            //will assume the underlying file already exists, since our other tests verify that much
+            _ = new GetTextCatalogBuilder()
+                .ForPoFile(
+                    ""ja-integrationtest.po"",
+                    new Locale(
+                        CultureInfo.GetCultureInfo(""ja""),
+                        new PluralRules(other: ""@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"")),
+                    d => d
+                        .AddEntry(e => e
+                            .ConfigureId(""foo label"")
+                            .ConfigureValue(""ja:foo label""))
+                        .AddEntry(e => e
+                            .ConfigureId(""foo textfield"")
+                            .ConfigureValue(""ja:foo textfield"")))
+                    .WriteToDisk(""{TestArtifactRootFolder}"");
+
+            //need to wait for reload and refresh to happen
+            //the sleep is to make sure the asynchronous FileSystemWatcher adds its delaycall first,
+            //to make testing more deterministic
+            System.Threading.Thread.Sleep(1000);
+            EditorApplication.delayCall += () =>
+            {{
+                result.Add(label.text);
+                result.Add(textField.label);
+                window.Close();
+            }};
+            ");
+
+            AssetDatabase.Refresh();
+            yield return new WaitForDomainReload();
+
+            IReadOnlyList<string> result = new IntegrationTestAction().Execute();
+
+            //since the test action does delay calls waiting for reloads to happen, we need to wait all the same
+            yield return null;
+
+            Assert.That(result, Is.EqualTo(new[]
+            {
+                "foo label",
+                "foo textfield",
+                "ja:foo label",
+                "ja:foo textfield",
+            }));
+        }
+
         private static void GenerateAssemblyAttribute()
         => File.WriteAllText(
             Path.Combine(TestArtifactRootFolder, "Assembly.cs"),
@@ -184,17 +312,18 @@ namespace EZUtils.Localization.Tests.Integration
         {GenerateLocalizationFieldDeclaration(languageAttributes)}
     }}
 }}");
-        private static void GenerateTestAction(string usings, string code)
-            => GenerateTestAction(usings, string.Empty, code);
-        private static void GenerateTestAction(string usings, string localizationFieldDeclaration, string code)
+        private static void GenerateTestAction(string code)
+            => GenerateTestAction(string.Empty, code);
+        private static void GenerateTestAction(string localizationFieldDeclaration, string code)
             => File.WriteAllText(Path.Combine(TestArtifactRootFolder, "IntegrationTestAction.cs"), $@"
 namespace EZUtils.Localization.Tests.Integration
 {{
     using EZUtils.Localization;
     using System.Globalization;
     using System.Collections.Generic;
+    using UnityEditor;
+    using UnityEngine.UIElements;
     using static Localization;
-    {usings}
 
     public partial class IntegrationTestAction
     {{
@@ -242,7 +371,7 @@ namespace EZUtils.Localization.Tests.Integration
             StringBuilder sb = new StringBuilder();
             foreach (string languageAttribute in languageAttributes)
             {
-                sb.Append(languageAttribute).AppendLine();
+                _ = sb.Append(languageAttribute).AppendLine();
             }
             _ = sb.Append($@"private static readonly EZLocalization loc = EZLocalization.ForCatalogUnder(""{TestArtifactRootFolder}"", ""{LocaleSynchronizationKey}"");");
             return sb.ToString();
@@ -252,28 +381,60 @@ namespace EZUtils.Localization.Tests.Integration
 
 //a convenient place to write test action code with intellisense
 //just parts of code into GenerateTestAction call
-// namespace EZUtils.Localization.Tests.Integration
-// {
-//     using System.Collections.Generic;
-//     using System.Globalization;
-//     using EZUtils.Localization;
-//     using static Localization;
+//namespace EZUtils.Localization.Tests.Integration
+//{
+//    using System.Collections.Generic;
+//    using System.Globalization;
+//    using EZUtils.Localization;
+//    using UnityEditor;
+//    using UnityEngine.UIElements;
+//    using static Localization;
 
-//     public partial class IntegrationTestAction
-//     {
-//         [GenerateLanguage("ja", "ja-inttest.po", Other = " @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")]
-//         [GenerateLanguage("ko", "ko-inttest.po", Other = " @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")]
-//         private static readonly EZLocalization loc = EZLocalization.ForCatalogUnder("Packages/com.timiz0r.ezutils.localization/Gen", "EZLocalizationExtractorIntegrationTests");
+//    public partial class IntegrationTestAction
+//    {
+//        [GenerateLanguage("ja", "ja-inttest.po", Other = " @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")]
+//        [GenerateLanguage("ko", "ko-inttest.po", Other = " @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")]
+//        private static readonly EZLocalization loc = EZLocalization.ForCatalogUnder("Packages/com.timiz0r.ezutils.localization/Gen", "EZLocalizationExtractorIntegrationTests");
+//
+//        private IReadOnlyList<string> ExecuteImpl()
+//        {
+//            List<string> result = new List<string>();
 
-//         private IReadOnlyList<string> ExecuteImpl()
-//         {
-//             List<string> result = new List<string>();
+//            //
+//            Label label = new Label(text: "loc:foo label");
+//            TextField textField = new TextField(label: "loc:foo textfield");
+//            IntegrationTestWindow window = IntegrationTestWindow.Create(label, textField);
+//            loc.TranslateElementTree(label);
+//            loc.TranslateElementTree(textField);
 
-//             //
-//             result.Add(loc.T("foo"));
-//             result.Add(loc.SelectLocaleOrNative(CultureInfo.GetCultureInfo("ja")) == Locale.English ? "isNative" : "isNotNative");
+//            result.Add(label.text);
+//            result.Add(textField.label);
 
-//             return result;
-//         }
-//     }
-// }
+//            _ = new GetTextCatalogBuilder()
+//                .ForPoFile(
+//                    "ja-integrationtest.po",
+//                    new Locale(
+//                        CultureInfo.GetCultureInfo("ja"),
+//                        new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")),
+//                    d => d
+//                        .AddEntry(e => e
+//                            .ConfigureId("foo label")
+//                            .ConfigureValue("ja:foo label"))
+//                        .AddEntry(e => e
+//                            .ConfigureId("foo textfield")
+//                            .ConfigureValue("ja:foo textfield")))
+//                    .WriteToDisk("{TestArtifactRootFolder}");
+
+//            //need to wait for reload and rerefresh to happen
+//            EditorApplication.delayCall += () =>
+//            EditorApplication.delayCall += () =>
+//            {
+//                result.Add(label.text);
+//                result.Add(textField.label);
+//                window.Close();
+//            };
+
+//            return result;
+//        }
+//    }
+//}
