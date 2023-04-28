@@ -1,6 +1,6 @@
 namespace EZUtils.Localization
 {
-    public readonly struct ExtractedString
+    internal readonly struct ExtractedString
     {
         public readonly string Value;
         public readonly string OriginalFormat;

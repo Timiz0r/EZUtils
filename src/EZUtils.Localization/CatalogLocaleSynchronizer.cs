@@ -20,7 +20,7 @@ namespace EZUtils.Localization
     //
     //in the event CatalogReference needs to reload a new GetTextCatalog, it reads CatalogLocaleSynchronizer.SelectedLocale
     //to do it.
-    public class CatalogLocaleSynchronizer
+    internal class CatalogLocaleSynchronizer
     {
         private static CultureInfo newlySelectedUnityEditorLanguage;
         private static readonly Dictionary<string, CatalogLocaleSynchronizer> synchronizers =

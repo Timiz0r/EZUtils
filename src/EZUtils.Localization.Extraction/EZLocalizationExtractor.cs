@@ -8,7 +8,7 @@ namespace EZUtils.Localization
     using UnityEditor;
 
     //TODO: cr and refactor
-    public class EZLocalizationExtractor
+    internal class EZLocalizationExtractor
     {
         private readonly GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
         private readonly IGetTextExtractionWorkRunner extractionWorkRunner = GetTextExtractionWorkRunner.Create();

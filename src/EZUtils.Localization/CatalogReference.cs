@@ -15,7 +15,7 @@ namespace EZUtils.Localization
     //hypothetically, this could be merged with the, at time of writing, bare EZLocaliaztion class.
     //this is not done because CatalogLocaleSynchronizer's SetLocale's touching of CatalogReference.Catalog is convenient.
     //we can keep hiding the underlying catalog in EZLocalization this way.
-    public class CatalogReference : IDisposable
+    internal class CatalogReference : IDisposable
     {
         private readonly List<(UnityEngine.Object obj, Action action)> retranslatableObjects =
             new List<(UnityEngine.Object obj, Action action)>();

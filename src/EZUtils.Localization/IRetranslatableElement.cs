@@ -1,6 +1,6 @@
 ﻿namespace EZUtils.Localization
 {
-    internal interface IRetranslatableElement
+    public interface IRetranslatableElement
     {
         void Retranslate();
     }

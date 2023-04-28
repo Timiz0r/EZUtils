@@ -5,7 +5,7 @@ namespace EZUtils.Localization
     using System.Linq;
     using Microsoft.CodeAnalysis;
 
-    public static class GenerateLanguageAttributeParser
+    internal static class GenerateLanguageAttributeParser
     {
         public static IReadOnlyList<(string poFilePath, Locale locale)> ParseTargets(IEnumerable<AttributeData> attributes)
         {

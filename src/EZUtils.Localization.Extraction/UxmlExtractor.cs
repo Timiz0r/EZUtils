@@ -8,7 +8,7 @@ namespace EZUtils.Localization
     using System.Text.RegularExpressions;
     using System.Xml;
 
-    public class UxmlExtractor
+    internal class UxmlExtractor
     {
         private readonly GetTextCatalogBuilder catalogBuilder;
 

@@ -8,7 +8,7 @@ namespace EZUtils.Localization
     using UnityEditor;
     using UnityEngine;
 
-    public class EZLocalizationAutomatedExtractor : AssetPostprocessor
+    internal class EZLocalizationAutomatedExtractor : AssetPostprocessor
     {
         [InitializeOnLoadMethod]
         private static void UnityInitialize() => EditorApplication.delayCall += DomainReloaded;

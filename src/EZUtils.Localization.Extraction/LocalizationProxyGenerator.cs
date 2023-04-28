@@ -9,7 +9,7 @@ namespace EZUtils.Localization
     using Microsoft.CodeAnalysis.CSharp;
     using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-    public static class LocalizationProxyGenerator
+    internal static class LocalizationProxyGenerator
     {
         public static void Generate(AssemblyDefinition assemblyDefinition)
         {

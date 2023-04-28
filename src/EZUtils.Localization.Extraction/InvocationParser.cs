@@ -10,7 +10,7 @@ namespace EZUtils.Localization
     using Microsoft.CodeAnalysis.CSharp.Syntax;
     using Microsoft.CodeAnalysis.Operations;
 
-    public class InvocationParser
+    internal class InvocationParser
     {
         private static readonly InvocationParser NonLocalized = new InvocationParser(Array.Empty<(string poFilePath, Locale locale)>())
         {
