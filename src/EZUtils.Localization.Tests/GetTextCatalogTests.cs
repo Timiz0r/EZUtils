@@ -258,5 +258,27 @@ namespace EZUtils.Localization.Tests
             decimal count = 0;
             Assert.That(catalog.T($"{count} foo", count, $"{count} foos"), Is.EqualTo("0 foos"));
         }
+
+        [Test]
+        public void T_ProvidesDifferentValues_WhenPluralAndNonPluralUseSameId()
+        {
+            GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
+            GetTextCatalog catalog = catalogBuilder
+                .ForPoFile("unittest-ja.po", jpWithZero, d => d
+                    .AddEntry(e => e
+                        .ConfigureId("{0} foo")
+                        .ConfigureAsPlural("{0} foos")
+                        .ConfigureAdditionalPluralValue("{0} foo"))
+                    .AddEntry(e => e
+                        .ConfigureId("{0} foo")
+                        .ConfigureValue("{0} foo")))
+                .GetCatalog(Locale.English);
+
+            catalog.SelectLocale(jpWithZero);
+
+            decimal count = 0;
+            Assert.That(catalog.T($"{count} foo", count, $"{count} foos"), Is.EqualTo("0 foos"));
+            Assert.That(catalog.T($"{count} foo"), Is.EqualTo("0 foo"));
+        }
     }
 }

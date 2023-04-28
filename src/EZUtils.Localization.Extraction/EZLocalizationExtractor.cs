@@ -4,12 +4,10 @@ namespace EZUtils.Localization
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Reflection;
     using Microsoft.CodeAnalysis;
     using UnityEditor;
 
-    //TODO: should we go with one instead of other for plural entries? at least note why we choose other
-    //TODO: use plural id after all. consider case where ids are same between plural and non-plural call
+    //TODO: merging entries assumes we always have references, which isn't always the case
     //TODO: integration testing
     //TODO: cr and refactor
     public class EZLocalizationExtractor

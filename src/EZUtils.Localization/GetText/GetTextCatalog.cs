@@ -153,7 +153,7 @@ namespace EZUtils.Localization
             Locale selectedLocale = GetSelectedLocale();
             PluralType pluralType = selectedLocale.PluralRules.Evaluate(count, out int index);
 
-            GetTextEntry entry = selectedDocument?.FindEntry(context: context, id: id.Format);
+            GetTextEntry entry = selectedDocument?.FindPluralEntry(context: context, id: id.Format, pluralId: other.Format);
 
             if (entry == null
                 //it's hard to know what to do if the counts dont match since we cant really know which one to pick
@@ -188,6 +188,8 @@ namespace EZUtils.Localization
                 }
                 if (targetFormattableString == null)
                 {
+                    //hypothetically, we could go with one or other, for determining formatting
+                    //basically arbitrarily choosing other
                     targetFormattableString = other;
                 }
 

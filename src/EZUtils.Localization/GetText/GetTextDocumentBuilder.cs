@@ -13,8 +13,8 @@ namespace EZUtils.Localization
         //we dont store the doc, since we can be more efficient by storing underlying entries
         //but if things get too complicated, we can go back to storing the doc
         private ImmutableList<GetTextEntry> underlyingEntries = ImmutableList<GetTextEntry>.Empty;
-        private ImmutableHashSet<(string context, string id)> foundEntries =
-            ImmutableHashSet<(string context, string id)>.Empty;
+        private ImmutableHashSet<(string context, string id, string pluralId)> foundEntries =
+            ImmutableHashSet<(string context, string id, string pluralId)>.Empty;
 
         public string Path { get; }
 
@@ -42,10 +42,10 @@ namespace EZUtils.Localization
             GetTextEntry builtEntry = builder.Create();
             bool foundFirstInstanceOfEntry = ImmutableInterlocked.Update(
                 ref foundEntries,
-                (hs, e) => hs.Add(e), (context: builtEntry.Context, id: builtEntry.Id));
+                (hs, e) => hs.Add(e), (context: builtEntry.Context, id: builtEntry.Id, pluralId: builtEntry.PluralId));
             ImmutableList<GetTextEntry> entriesBeingProcessed = underlyingEntries;
             int existingEntryIndex = entriesBeingProcessed.FindIndex(
-                e => e.Context == builtEntry.Context && e.Id == builtEntry.Id);
+                e => e.Context == builtEntry.Context && e.Id == builtEntry.Id && e.PluralId == builtEntry.PluralId);
 
             if (existingEntryIndex == -1)
             {
@@ -93,7 +93,7 @@ namespace EZUtils.Localization
             return ForEachEntry(e =>
                 (e.Context == null && e.Id.Length == 0) //header entry that wont have references
                     || e.Header.Flags.Contains("keep")
-                    || foundEntries.Contains((e.Context, e.Id))
+                    || foundEntries.Contains((e.Context, e.Id, e.PluralId))
                     //we no longer prune based on this because our code as now written cannot fully strip all references
                     //the first time we hit an entry, we do clear it, but then we also add it it
                     //the only way this happens is if a user does it, and we'll assume they did it for a good reason

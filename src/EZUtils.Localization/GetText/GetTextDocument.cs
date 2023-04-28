@@ -27,8 +27,6 @@ namespace EZUtils.Localization
             Header = new GetTextHeader(entries[0]);
         }
 
-        //in our implementation, we dont consider the plural id an actual id
-        //mainly because we dont have an explicit plural id because we accept multiple plural forms
         public GetTextEntry FindEntry(string id) => FindEntry(context: null, id: id);
         public GetTextEntry FindEntry(string context, string id)
             => FindEntry(context: context, id: id, out GetTextEntry entry) >= 0
@@ -40,7 +38,30 @@ namespace EZUtils.Localization
         {
             for (int i = 0; i < Entries.Count; i++)
             {
-                if (Entries[i].Context == context && Entries[i].Id == id)
+                if (Entries[i].Context == context && Entries[i].Id == id && Entries[i].PluralId == null)
+                {
+                    entry = Entries[i];
+                    return i;
+                }
+            }
+
+            entry = null;
+            return -1;
+        }
+
+        public GetTextEntry FindPluralEntry(string id, string pluralId)
+            => FindPluralEntry(context: null, id: id, pluralId: pluralId);
+        public GetTextEntry FindPluralEntry(string context, string id, string pluralId)
+            => FindPluralEntry(context: context, id: id, pluralId: pluralId, out GetTextEntry entry) >= 0
+                ? entry
+                : null;
+        public int FindPluralEntry(string id, string pluralId, out GetTextEntry entry)
+            => FindPluralEntry(context: null, id: id, pluralId: pluralId, out entry);
+        public int FindPluralEntry(string context, string id, string pluralId, out GetTextEntry entry)
+        {
+            for (int i = 0; i < Entries.Count; i++)
+            {
+                if (Entries[i].Context == context && Entries[i].Id == id && Entries[i].PluralId == pluralId)
                 {
                     entry = Entries[i];
                     return i;
