@@ -73,6 +73,13 @@ namespace EZUtils.Localization
             return -1;
         }
 
+        public static bool TryParse(string stringDocument, out GetTextDocument document)
+        {
+            using (StringReader sr = new StringReader(stringDocument))
+            {
+                return TryLoadFrom(sr, out document);
+            }
+        }
         public static GetTextDocument Parse(string document)
         {
             using (StringReader sr = new StringReader(document))
@@ -81,6 +88,13 @@ namespace EZUtils.Localization
             }
         }
 
+        public static bool TryLoadFrom(string path, out GetTextDocument document)
+        {
+            using (StreamReader sr = new StreamReader(path, System.Text.Encoding.UTF8))
+            {
+                return TryLoadFrom(sr, out document);
+            }
+        }
         public static GetTextDocument LoadFrom(string path)
         {
             using (StreamReader sr = new StreamReader(path, System.Text.Encoding.UTF8))
@@ -89,6 +103,19 @@ namespace EZUtils.Localization
             }
         }
 
+        public static bool TryLoadFrom(TextReader reader, out GetTextDocument document)
+        {
+            try
+            {
+                document = LoadFrom(reader);
+                return true;
+            }
+            catch
+            {
+                document = null;
+                return false;
+            }
+        }
         public static GetTextDocument LoadFrom(TextReader reader)
         {
             if (reader == null) throw new ArgumentNullException(nameof(reader));
@@ -129,11 +156,11 @@ namespace EZUtils.Localization
                 //is a string or a keyworded line after this point
 
                 //since the header cannot be obsolete, we inspect the actual line here
-                if (!haveHeader && actualLine.Keyword?.Keyword == "msgctxt") throw new InvalidOperationException(
+                if (!haveHeader && actualLine.Keyword?.Keyword == "msgctxt") throw new GetTextParseException(
                     "The first entry should be the header, and the header should not have a msgctxt.");
                 if (!haveHeader && actualLine.Keyword?.Keyword == "msgid")
                 {
-                    if (actualLine.StringValue.Raw.Length > 0) throw new InvalidOperationException(
+                    if (actualLine.StringValue.Raw.Length > 0) throw new GetTextParseException(
                         $"First entry must be header. Found: {actualLine.RawLine}");
                     haveHeader = true;
 
@@ -146,7 +173,7 @@ namespace EZUtils.Localization
                 string keyword = lineToInspect.Keyword?.Keyword;
                 if (keyword == "msgctxt")
                 {
-                    if (processingContextualEntry) throw new InvalidOperationException(
+                    if (processingContextualEntry) throw new GetTextParseException(
                         "Found two consecutive 'msgctxt' keyworded entries in a row without a 'msgid' between them.");
 
                     StartProcessingNextEntry(nextEntryContextual: true);
@@ -211,7 +238,7 @@ namespace EZUtils.Localization
                 if (!parsedIds.Add((
                     context: entry.Context,
                     id: entry.Id,
-                    pluralId: entry.PluralId))) throw new InvalidOperationException(
+                    pluralId: entry.PluralId))) throw new GetTextParseException(
                         $"Duplicate entry found. Context: '{entry.Context}', Id: '{entry.Id}', PluralId: '{entry.PluralId}'");
 
                 currentEntryLines.Clear();

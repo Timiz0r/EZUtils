@@ -6,6 +6,7 @@ namespace EZUtils.Localization
     using System.IO;
     using System.Linq;
     using UnityEditor;
+    using UnityEngine;
     using UnityEngine.UIElements;
     using Object = UnityEngine.Object;
 
@@ -70,7 +71,7 @@ namespace EZUtils.Localization
                     {
                         foreach (FileInfo file in directory.EnumerateFiles("*.po", SearchOption.TopDirectoryOnly))
                         {
-                            documents.Add(file.FullName, GetTextDocument.LoadFrom(file.FullName));
+                            LoadDocument(file.FullName);
                         }
                     }
 
@@ -195,7 +196,7 @@ namespace EZUtils.Localization
             }
             else if (e.ChangeType == WatcherChangeTypes.Created || e.ChangeType == WatcherChangeTypes.Changed)
             {
-                documents[e.FullPath] = GetTextDocument.LoadFrom(e.FullPath);
+                LoadDocument(e.FullPath);
             }
             else needNewCatalog = false;
 
@@ -204,6 +205,17 @@ namespace EZUtils.Localization
                 ReloadCatalog();
             }
         };
+
+        private void LoadDocument(string absolutePath)
+        {
+            try
+            {
+                documents.Add(absolutePath, GetTextDocument.LoadFrom(absolutePath));
+            }
+            catch (Exception e) when (ExceptionUtil.Record(() => Debug.LogException(e)))
+            {
+            }
+        }
 
         protected virtual void Dispose(bool disposing)
         {

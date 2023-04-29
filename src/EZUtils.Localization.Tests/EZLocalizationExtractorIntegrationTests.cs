@@ -6,6 +6,8 @@ namespace EZUtils.Localization.Tests.Integration
     using System.IO;
     using System.Reflection;
     using System.Text;
+    using System.Text.RegularExpressions;
+    using System.Threading;
     using NUnit.Framework;
     using UnityEditor;
     using UnityEngine.TestTools;
@@ -721,6 +723,104 @@ namespace EZUtils.Localization.Tests.Integration
                 "bar textfield",
                 "ja:foo label",
                 "ja:bar textfield",
+            }));
+        }
+
+        [UnityTest]
+        public IEnumerator EZLocalization_DoesNotThrow_WhenPoFilesAlreadyInvalid()
+        {
+            GenerateAssemblyAttribute();
+            Locale locale() => new Locale(
+                CultureInfo.GetCultureInfo("ja"),
+                new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"));
+            string languageAttribute = GenerateLocalizationAttribute("Gen/ja-integrationtest.po", locale());
+            GenerateTestAction(
+                code: $@"
+            //making a local so that extraction does not produce usable catalogs
+            EZLocalization loc = EZLocalization.ForCatalogUnder(""{TestAssemblyRootFolder}Gen"", ""EZLocalizationExtractorIntegrationTests"");
+            result.Add(loc.T(""foo""));
+            ");
+
+            //we have no other good way to produce bad files
+            //invalid due to lack of header
+            File.WriteAllText(Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po"), @"
+msgid ""foo""
+msgstr ""bar""
+");
+
+            AssetDatabase.Refresh();
+            //is presumably because unity cant read our po files
+            //this hits here and not other tests presumably because error log detection breaks after domain reload
+            //and all other cases don't write a po file until generated after domain reload
+            LogAssert.Expect(UnityEngine.LogType.Error, "File couldn't be read");
+            yield return new WaitForDomainReload();
+
+            IReadOnlyList<string> result = new IntegrationTestAction().Execute();
+            LogAssert.Expect(UnityEngine.LogType.Exception, new Regex("GetTextParseException"));
+
+            Assert.That(result, Is.EqualTo(new[]
+            {
+                "foo"
+            }));
+        }
+
+        [UnityTest]
+        public IEnumerator EZLocalization_DoesNotThrow_WhenPoFilesBecomeInvalid()
+        {
+            GenerateAssemblyAttribute();
+            Locale locale() => new Locale(
+                CultureInfo.GetCultureInfo("ja"),
+                new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"));
+            string languageAttribute = GenerateLocalizationAttribute("Gen/ja-integrationtest.po", locale());
+
+            string poFilePath = Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po");
+            GenerateTestAction(
+                code: $@"
+            //making a local so that extraction does not produce usable catalogs
+            EZLocalization loc = EZLocalization.ForCatalogUnder(""{TestAssemblyRootFolder}Gen"", ""EZLocalizationExtractorIntegrationTests"");
+
+            loc.SelectLocale(CultureInfo.GetCultureInfo(""ja""));
+            result.Add(loc.T(""foo""));
+
+            System.IO.File.WriteAllText(""{poFilePath.Replace("\\", "\\\\")}"", @""
+                msgid """"foo""""
+                msgstr """"bar""""
+                "");
+
+            //need to wait for reload and refresh to happen
+            //the sleep is to make sure the asynchronous FileSystemWatcher adds its delaycall first,
+            //to make testing more deterministic
+            System.Threading.Thread.Sleep(1000);
+            EditorApplication.delayCall += () =>
+            {{
+                result.Add(loc.T(""foo""));
+            }};
+            ");
+
+            _ = new GetTextCatalogBuilder()
+                .ForPoFile(poFilePath, locale(), d => d
+                    .AddEntry(e => e
+                        .ConfigureId("foo")
+                        .ConfigureValue("ja:foo")))
+                .WriteToDisk();
+
+            AssetDatabase.Refresh();
+            //is presumably because unity cant read our po files
+            //this hits here and not other tests presumably because error log detection breaks after domain reload
+            //and all other cases don't write a po file until generated after domain reload
+            LogAssert.Expect(UnityEngine.LogType.Error, "File couldn't be read");
+            yield return new WaitForDomainReload();
+
+            IReadOnlyList<string> result = new IntegrationTestAction().Execute();
+            LogAssert.Expect(UnityEngine.LogType.Exception, new Regex("GetTextParseException"));
+
+            //since the test action does delay calls waiting for reloads to happen, we need to wait all the same
+            yield return null;
+
+            Assert.That(result, Is.EqualTo(new[]
+            {
+                "ja:foo",
+                "ja:foo"
             }));
         }
 

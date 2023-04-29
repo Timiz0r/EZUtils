@@ -78,7 +78,7 @@ namespace EZUtils.Localization
                     isEqualityOperation = false;
                     index += 2;
                 }
-                else throw new InvalidOperationException($"Expected '=' or '!='. Was '{condition.Substring(index, 2)}'.");
+                else throw new GetTextParseException($"Expected '=' or '!='. Was '{condition.Substring(index, 2)}'.");
                 SkipSpaces();
 
                 Expression relation = ReadRangeListAndConstructRelation(expr, isEqualityOperation);
@@ -108,7 +108,7 @@ namespace EZUtils.Localization
                     //not supported and can only ever be zero
                     operandName == "c" ? Expression.Constant(0m) :
                     operandName == "e" ? (Expression)Expression.Constant(0m) :
-                    throw new InvalidOperationException($"Unknown operand '{operandName}'");
+                    throw new GetTextParseException($"Unknown operand '{operandName}'");
 
                 if (condition[index] == '%')
                 {
@@ -152,12 +152,12 @@ namespace EZUtils.Localization
 
             ConstantExpression ReadValue()
             {
-                if (index >= condition.Length) throw new InvalidOperationException("Expected digit. Got to end of condition.");
+                if (index >= condition.Length) throw new GetTextParseException("Expected digit. Got to end of condition.");
                 //we still start at 0 in order to check for digit
                 int count = 0;
 
                 while (index + count < condition.Length && char.IsDigit(condition, index + count)) count++;
-                if (count == 0) throw new InvalidOperationException($"Expected digit. Got '{condition[index]}'.");
+                if (count == 0) throw new GetTextParseException($"Expected digit. Got '{condition[index]}'.");
 
                 ConstantExpression valueExpression = Expression.Constant(decimal.Parse(condition.Substring(index, count), CultureInfo.InvariantCulture));
                 index += count;
@@ -184,7 +184,7 @@ namespace EZUtils.Localization
             foreach (decimal value in testSet)
             {
                 Operands operands = new Operands(value);
-                if (!parsedCondition(operands)) throw new InvalidOperationException($"Failed condition test on sample '{value}'.");
+                if (!parsedCondition(operands)) throw new GetTextParseException($"Failed condition test on sample '{value}'.");
             }
         }
 

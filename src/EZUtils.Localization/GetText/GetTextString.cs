@@ -57,7 +57,7 @@ namespace EZUtils.Localization
                                 ? Convert.ToChar(Convert.ToByte(octGroup.Value, 8)).ToString()
                                 : m.Groups["hex"] is Group hexGroup && hexGroup.Success
                                     ? Convert.ToChar(Convert.ToByte(hexGroup.Value, 16)).ToString()
-                                    : throw new InvalidOperationException($"Invalid escape sequence '{m.Value}'")
+                                    : throw new GetTextParseException($"Invalid escape sequence '{m.Value}'")
                         );
                     return basicEscape;
                 });
@@ -99,7 +99,7 @@ namespace EZUtils.Localization
                         m.Value == @"""" ? @"\""" :
                         char.IsControl(m.Value[0]) && Convert.ToByte(m.Value[0]).ToString("x2", CultureInfo.InvariantCulture) is string hexValue
                             ? $@"\x{hexValue}"
-                            : throw new InvalidOperationException($"Cannot handle character '{Convert.ToByte(m.Value[0]):x2}'.");
+                            : throw new GetTextParseException($"Cannot handle character '{Convert.ToByte(m.Value[0]):x2}'.");
 
                     return characterOfInterest;
                 });

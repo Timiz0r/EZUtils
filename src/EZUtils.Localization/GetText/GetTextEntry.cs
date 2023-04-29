@@ -70,14 +70,14 @@ namespace EZUtils.Localization
                 {
                     if (line.Keyword?.Index == null)
                     {
-                        if (keywordMap.ContainsKey(keyword)) throw new InvalidOperationException(
+                        if (keywordMap.ContainsKey(keyword)) throw new GetTextParseException(
                             $"Keyword '{keyword}' already appeared in the entry prior to line: {line.RawLine}");
                         currentKeyword = keywordMap[keyword] = new StringBuilder();
                     }
                     else if (line.Keyword?.Index is int index)
                     {
-                        if (keyword != "msgstr") throw new NotImplementedException($"Indexed lines are only supported for keyword 'msgstr'. Line: {line.RawLine}");
-                        if (pluralMap.ContainsKey(index)) throw new InvalidOperationException(
+                        if (keyword != "msgstr") throw new GetTextParseException($"Indexed lines are only supported for keyword 'msgstr'. Line: {line.RawLine}");
+                        if (pluralMap.ContainsKey(index)) throw new GetTextParseException(
                             $"Plural '{index}' already appeared in the entry prior to line: {line.RawLine}.");
                         currentKeyword = pluralMap[index] = new StringBuilder();
                     }
@@ -85,27 +85,27 @@ namespace EZUtils.Localization
 
                 if (line.StringValue?.Value is string value)
                 {
-                    if (currentKeyword == null) throw new InvalidOperationException(
+                    if (currentKeyword == null) throw new GetTextParseException(
                         $"Found a string-only line without a prior keyworded line: {line.RawLine}");
                     _ = currentKeyword.Append(value);
                 }
             }
 
             //we check this after the loop in case the entry starts with non-obsolete lines but has obsolete ones later
-            if (hasObsoleteLines && lines.Any(l => !l.IsCommentOrWhiteSpace)) throw new InvalidOperationException(
+            if (hasObsoleteLines && lines.Any(l => !l.IsCommentOrWhiteSpace)) throw new GetTextParseException(
                 "Entry has lines marked obsolete but has non-obsolete lines as well.");
 
             int expectedPluralCount = pluralMap.Count == 0 ? 0 : pluralMap.Keys.Max() + 1; //so if highest key is 2, expected count 3 (0, 1, 2)
-            if (pluralMap.Count != expectedPluralCount) throw new InvalidOperationException(
+            if (pluralMap.Count != expectedPluralCount) throw new GetTextParseException(
                 $"Expected a plural count of '{expectedPluralCount}' based on the highest found index, but only found '{pluralMap.Count}' plural entries.");
-            if (keywordMap.ContainsKey("msgid_plural") && pluralMap.Count == 0) throw new InvalidOperationException("Plural id provided, but no plurals found.");
-            if (pluralMap.Count > 0 && !keywordMap.ContainsKey("msgid_plural")) throw new InvalidOperationException("Plurals provided, but no plural id found.");
+            if (keywordMap.ContainsKey("msgid_plural") && pluralMap.Count == 0) throw new GetTextParseException("Plural id provided, but no plurals found.");
+            if (pluralMap.Count > 0 && !keywordMap.ContainsKey("msgid_plural")) throw new GetTextParseException("Plurals provided, but no plural id found.");
 
             //dont have to throw on unknown keywords, but it indicates possible user error that should be flagged, like a typo
             string[] unknownKeywords = keywordMap.Keys
                 .Where(k => !supportedKeywords.Contains(k))
                 .ToArray();
-            if (unknownKeywords.Length > 0) throw new InvalidOperationException($"Found unsupported keywords in entry: {string.Join(", ", unknownKeywords)}");
+            if (unknownKeywords.Length > 0) throw new GetTextParseException($"Found unsupported keywords in entry: {string.Join(", ", unknownKeywords)}");
 
             GetTextEntry entry = new GetTextEntry(
                 lines: lines,

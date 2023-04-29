@@ -43,7 +43,7 @@ namespace EZUtils.Localization
                     country: languageMatch.Groups["country"].Value,
                     variant: languageMatch.Groups["variant"].Value)
                 //is basically the most important field
-                : throw new InvalidOperationException($"Language field not found.");
+                : throw new GetTextParseException($"Language field not found.");
 
             PluralRules pluralRules = new PluralRules(
                 zero: GetPluralRule("Zero"),
@@ -164,7 +164,7 @@ namespace EZUtils.Localization
                 variant = variants
                     .SingleOrDefault(v => v.getTextVariant.Equals(variant, StringComparison.OrdinalIgnoreCase))
                     .cultureInfoVariant
-                    ?? throw new InvalidOperationException($"Unsupported variant '{variant}'.");
+                    ?? throw new GetTextParseException($"Unsupported variant '{variant}'.");
                 code = $"{code}-{variant}";
             }
             if (!string.IsNullOrEmpty(country))

@@ -1,6 +1,7 @@
 {
     "name": "EZUtils.Localization",
     "references": [
+        "EZUtils.Common"
     ],
     "includePlatforms": [
         "Editor"
