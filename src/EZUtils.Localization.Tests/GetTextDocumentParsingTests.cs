@@ -1,15 +1,13 @@
 namespace EZUtils.Localization.Tests
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Xml.Linq;
     using EZUtils.Localization;
     using NUnit.Framework;
 
     public class GetTextDocumentParsingTests
     {
-        private static readonly string genericHeader = @"
+        private const string genericHeader = @"
 msgid """"
 msgstr ""Language: ja\n""
 ";
@@ -21,7 +19,7 @@ msgstr ""Language: ja\n""
 msgid ""foo""
 msgstr ""bar""";
 
-            Assert.That(() => GetTextDocument.Parse(document), Throws.InvalidOperationException);
+            Assert.That(() => GetTextDocument.Parse(document), Throws.Exception.TypeOf<GetTextParseException>());
         }
 
         [Test]
@@ -74,7 +72,7 @@ msgctxt """"
 msgid """"
 msgstr ""bar""";
 
-            Assert.That(() => GetTextDocument.Parse(document), Throws.InvalidOperationException);
+            Assert.That(() => GetTextDocument.Parse(document), Throws.Exception.TypeOf<GetTextParseException>());
         }
 
         [Test]
@@ -87,7 +85,7 @@ msgstr ""bar""
 msgid ""foo""
 msgstr ""baz""";
 
-            Assert.That(() => GetTextDocument.Parse(document), Throws.InvalidOperationException);
+            Assert.That(() => GetTextDocument.Parse(document), Throws.Exception.TypeOf<GetTextParseException>());
 
             document = genericHeader + @"
 msgctxt ""apple""
@@ -98,7 +96,7 @@ msgctxt ""apple""
 msgid ""foo""
 msgstr ""baz""";
 
-            Assert.That(() => GetTextDocument.Parse(document), Throws.InvalidOperationException);
+            Assert.That(() => GetTextDocument.Parse(document), Throws.Exception.TypeOf<GetTextParseException>());
         }
 
         [Test]
@@ -111,7 +109,7 @@ msgctxt ""orange""
 msgid ""foo""
 msgstr ""bar""";
 
-            Assert.That(() => GetTextDocument.Parse(document), Throws.InvalidOperationException);
+            Assert.That(() => GetTextDocument.Parse(document), Throws.Exception.TypeOf<GetTextParseException>());
         }
 
         [Test]
@@ -226,8 +224,10 @@ msgstr ""baz""";
             GetTextDocument getTextDocument = GetTextDocument.Parse(document);
 
             AssertNonHeaderEntries(getTextDocument, 2);
+#pragma warning disable CA1826 //Do not use Enumerable methods on indexable collections. Instead use the collection directly.; just tests yo
             Assert.That(getTextDocument.Entries[1].Lines.Last().Comment, Is.EqualTo("another comment at end"));
             Assert.That(getTextDocument.Entries[2].Lines.First().Keyword.Keyword, Is.EqualTo("msgid"));
+#pragma warning restore CA1826
         }
 
         [Test]
@@ -248,9 +248,11 @@ msgstr ""baz""";
             GetTextDocument getTextDocument = GetTextDocument.Parse(document);
 
             AssertNonHeaderEntries(getTextDocument, 2);
+#pragma warning disable CA1826 //Do not use Enumerable methods on indexable collections. Instead use the collection directly.; just tests yo
             Assert.That(getTextDocument.Entries[1].Lines.Last().Comment, Is.EqualTo("another comment at end"));
             Assert.That(getTextDocument.Entries[2].Lines.First().IsWhiteSpace, Is.True);
             Assert.That(getTextDocument.Entries[2].Lines.Skip(1).First().Comment, Is.EqualTo("comment at start"));
+#pragma warning restore CA1826
         }
 
         [Test]

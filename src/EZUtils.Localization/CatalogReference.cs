@@ -71,7 +71,13 @@ namespace EZUtils.Localization
                     {
                         foreach (FileInfo file in directory.EnumerateFiles("*.po", SearchOption.TopDirectoryOnly))
                         {
-                            LoadDocument(file.FullName);
+                            try
+                            {
+                                documents.Add(file.FullName, GetTextDocument.LoadFrom(file.FullName));
+                            }
+                            catch (Exception ex) when (ExceptionUtil.Record(() => Debug.LogException(ex)))
+                            {
+                            }
                         }
                     }
 
@@ -196,7 +202,13 @@ namespace EZUtils.Localization
             }
             else if (e.ChangeType == WatcherChangeTypes.Created || e.ChangeType == WatcherChangeTypes.Changed)
             {
-                LoadDocument(e.FullPath);
+                try
+                {
+                    documents[e.FullPath] = GetTextDocument.LoadFrom(e.FullPath);
+                }
+                catch (Exception ex) when (ExceptionUtil.Record(() => Debug.LogException(ex)))
+                {
+                }
             }
             else needNewCatalog = false;
 
@@ -205,17 +217,6 @@ namespace EZUtils.Localization
                 ReloadCatalog();
             }
         };
-
-        private void LoadDocument(string absolutePath)
-        {
-            try
-            {
-                documents.Add(absolutePath, GetTextDocument.LoadFrom(absolutePath));
-            }
-            catch (Exception e) when (ExceptionUtil.Record(() => Debug.LogException(e)))
-            {
-            }
-        }
 
         protected virtual void Dispose(bool disposing)
         {
