@@ -38,10 +38,16 @@ namespace EZUtils.Localization
 
         public void SelectLocale(Locale locale) => catalogReference.SelectLocale(locale);
         public Locale SelectLocale(CultureInfo cultureInfo) => catalogReference.SelectLocale(cultureInfo);
+
+        public bool TrySelectLocale(Locale locale) => catalogReference.TrySelectLocale(locale);
+        public bool TrySelectLocale(CultureInfo cultureInfo, out Locale correspondingLocale)
+            => catalogReference.TrySelectLocale(cultureInfo, out correspondingLocale);
+        public bool TrySelectLocale(CultureInfo cultureInfo) => TrySelectLocale(cultureInfo, out _);
+
         public Locale SelectLocaleOrNative(params Locale[] locales)
-            => _ = catalogReference.SelectLocaleOrNative(locales);
+            => catalogReference.SelectLocaleOrNative(locales);
         public Locale SelectLocaleOrNative(params CultureInfo[] cultureInfos)
-            => _ = catalogReference.SelectLocaleOrNative(cultureInfos);
+            => catalogReference.SelectLocaleOrNative(cultureInfos);
         public Locale SelectLocaleOrNative() => SelectLocaleOrNative(Array.Empty<Locale>());
 
         //while we support custom retranslation via IRetranslatable, the most recommended way to support retranslation

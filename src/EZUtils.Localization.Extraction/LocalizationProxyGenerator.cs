@@ -142,7 +142,9 @@ namespace EZUtils.Localization
                         SyntaxFactory.NameColon(
                             SyntaxFactory.IdentifierName(p.Identifier.ValueText),
                             SyntaxFactory.Token(SyntaxKind.ColonToken).WithTrailingTrivia(SyntaxFactory.Space)),
-                        default,
+                        p.Modifiers.Any(st => st.IsKind(SyntaxKind.OutKeyword)) //NOTE: could also add ref as necessary
+                            ? SyntaxFactory.Token(SyntaxKind.OutKeyword).WithTrailingTrivia(SyntaxFactory.Space)
+                            : default,
                         SyntaxFactory.IdentifierName(p.Identifier.ValueText)))
                     .ToArray();
                 ArgumentListSyntax argumentList = arguments.Length == 0

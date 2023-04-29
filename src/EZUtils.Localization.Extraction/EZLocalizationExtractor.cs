@@ -7,18 +7,15 @@ namespace EZUtils.Localization
     using Microsoft.CodeAnalysis;
     using UnityEditor;
 
-    //TODO: copy new TrySelectLocales over to required types
     //TODO: integration test survival of invalid po file
     //  presumably T will end up throwing due to poor parsing. dont want that to happen. since this would be in unityland via catalogreference, we can log it!
     //  also test how reloads will work. also want to nullify and log. or keep current doc?
-    //TODO: integration test obsoletion
-    //  also consider how hard we want to try to keep the doc hidden in the  catalog. probably still want to, and we'll read the doc to inspect it.
     //TODO: integration test for uxml extraction
     //TODO: cr and refactor
     internal class EZLocalizationExtractor
     {
         private readonly GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
-        private readonly IGetTextExtractionWorkRunner extractionWorkRunner = GetTextExtractionWorkRunner.Create();
+        private readonly IGetTextExtractionWorkRunner extractionWorkRunner = GetTextExtractionWorkRunner.CreateSynchronous();
         private readonly List<(string path, string root)> uxmlPathsToExtract = new List<(string, string)>();
 
         public void ExtractFrom(AssemblyDefinition assemblyDefinition)

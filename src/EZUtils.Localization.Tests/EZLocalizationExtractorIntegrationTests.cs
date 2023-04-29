@@ -15,24 +15,25 @@ namespace EZUtils.Localization.Tests.Integration
     //  via local functions instead of normal locals. in general, avoid accessing locals after a domain reload!
     public class EZLocalizationExtractorIntegrationTests
     {
-        private const string TestArtifactRootFolder = "Packages/com.timiz0r.ezutils.localization.tests/IntegrationTestAssembly/Gen";
+        private const string TestAssemblyRootFolder = "Packages/com.timiz0r.ezutils.localization.tests/IntegrationTestAssembly/";
         private const string LocaleSynchronizationKey = "EZLocalizationExtractorIntegrationTests";
 
         [TearDown]
         public void TearDown()
         {
-            _ = AssetDatabase.DeleteAsset(TestArtifactRootFolder);
+            _ = AssetDatabase.DeleteAsset(TestAssemblyRootFolder + "Gen");
             //a leaky implementation detail to be aware of
             EditorPrefs.DeleteKey("EZUtils.Localization.SelectedLocale." + LocaleSynchronizationKey);
         }
+
         [SetUp]
-        public void SetUp() => _ = Directory.CreateDirectory(TestArtifactRootFolder);
+        public void SetUp() => _ = Directory.CreateDirectory(TestAssemblyRootFolder + "Gen");
 
         [UnityTest]
         public IEnumerator AutomatedExtraction_DoesAbsolutelyNothing_IfNoAssemblyAttribute()
         {
             string languageAttribute = GenerateLocalizationAttribute(
-                "IntegrationTestGen/ja-integrationtest.po",
+                "Gen/ja-integrationtest.po",
                 new Locale(CultureInfo.GetCultureInfo("ja"),
                     new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")));
             GenerateEmptyProxyType(languageAttribute);
@@ -48,7 +49,7 @@ namespace EZUtils.Localization.Tests.Integration
             IReadOnlyList<string> result = new IntegrationTestAction().Execute();
 
             Assert.That(
-                File.Exists(Path.Combine(TestArtifactRootFolder, "ja-integrationtest.po")),
+                File.Exists(Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po")),
                 Is.False);
             Assert.That(typeof(Localization).GetMethods(), Has.None.Matches<MethodInfo>(m => m.Name == "T"));
             Assert.That(result, Is.EqualTo(new[] { "foo", "isNative" }));
@@ -78,7 +79,7 @@ namespace EZUtils.Localization.Tests.Integration
             AssetDatabase.Refresh();
             yield return new WaitForDomainReload();
 
-            string poFilePath = Path.Combine(TestArtifactRootFolder, "ja-integrationtest.po");
+            string poFilePath = Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po");
             Assert.That(File.Exists(poFilePath), Is.True);
             _ = new GetTextCatalogBuilder()
                 .ForPoFile(poFilePath, locale(), d => d
@@ -130,7 +131,7 @@ namespace EZUtils.Localization.Tests.Integration
             AssetDatabase.Refresh();
             yield return new WaitForDomainReload();
 
-            string poFilePath = Path.Combine(TestArtifactRootFolder, "ja-integrationtest.po");
+            string poFilePath = Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po");
             Assert.That(File.Exists(poFilePath), Is.True);
             _ = new GetTextCatalogBuilder()
                 .ForPoFile(poFilePath, locale(), d => d
@@ -191,17 +192,17 @@ namespace EZUtils.Localization.Tests.Integration
             yield return new WaitForDomainReload();
 
             Assert.That(
-                File.Exists(Path.Combine(TestArtifactRootFolder, "ja-integrationtest.po")),
+                File.Exists(Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po")),
                 Is.True);
             _ = new GetTextCatalogBuilder()
-                .ForPoFile("ja-integrationtest.po", locale(), d => d
+                .ForPoFile("Gen/ja-integrationtest.po", locale(), d => d
                     .AddEntry(e => e
                         .ConfigureId("foo label")
                         .ConfigureValue("ja:foo label"))
                     .AddEntry(e => e
                         .ConfigureId("foo textfield")
                         .ConfigureValue("ja:foo textfield")))
-                .WriteToDisk(TestArtifactRootFolder);
+                .WriteToDisk(TestAssemblyRootFolder);
 
             IReadOnlyList<string> result = new IntegrationTestAction().Execute();
 
@@ -244,7 +245,7 @@ namespace EZUtils.Localization.Tests.Integration
             //will assume the underlying file already exists, since our other tests verify that much
             _ = new GetTextCatalogBuilder()
                 .ForPoFile(
-                    ""ja-integrationtest.po"",
+                    ""Gen/ja-integrationtest.po"",
                     new Locale(
                         CultureInfo.GetCultureInfo(""ja""),
                         new PluralRules(other: ""@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"")),
@@ -255,7 +256,7 @@ namespace EZUtils.Localization.Tests.Integration
                         .AddEntry(e => e
                             .ConfigureId(""foo textfield"")
                             .ConfigureValue(""ja:foo textfield"")))
-                    .WriteToDisk(""{TestArtifactRootFolder}"");
+                    .WriteToDisk(""{TestAssemblyRootFolder}"");
 
             //need to wait for reload and refresh to happen
             //the sleep is to make sure the asynchronous FileSystemWatcher adds its delaycall first,
@@ -297,7 +298,7 @@ namespace EZUtils.Localization.Tests.Integration
             GenerateTestAction(
                 localizationFieldDeclaration: GenerateLocalizationFieldDeclaration(languageAttribute),
                 code: $@"
-            EZLocalization loc2 = EZLocalization.ForCatalogUnder(""{TestArtifactRootFolder}"", ""EZLocalizationExtractorIntegrationTests"");
+            EZLocalization loc2 = EZLocalization.ForCatalogUnder(""{TestAssemblyRootFolder}Gen"", ""EZLocalizationExtractorIntegrationTests"");
             result.Add(loc.T(""foo""));
             result.Add(loc2.T(""foo""));
 
@@ -310,7 +311,7 @@ namespace EZUtils.Localization.Tests.Integration
             AssetDatabase.Refresh();
             yield return new WaitForDomainReload();
 
-            string poFilePath = Path.Combine(TestArtifactRootFolder, "ja-integrationtest.po");
+            string poFilePath = Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po");
             Assert.That(File.Exists(poFilePath), Is.True);
             _ = new GetTextCatalogBuilder()
                 .ForPoFile(poFilePath, locale(), d => d
@@ -341,7 +342,7 @@ namespace EZUtils.Localization.Tests.Integration
             GenerateTestAction(
                 localizationFieldDeclaration: GenerateLocalizationFieldDeclaration(languageAttribute),
                 code: $@"
-            EZLocalization loc2 = EZLocalization.ForCatalogUnder(""{TestArtifactRootFolder}"", ""foo"");
+            EZLocalization loc2 = EZLocalization.ForCatalogUnder(""{TestAssemblyRootFolder}Gen"", ""foo"");
             result.Add(loc.T(""foo""));
             result.Add(loc2.T(""foo""));
 
@@ -354,7 +355,7 @@ namespace EZUtils.Localization.Tests.Integration
             AssetDatabase.Refresh();
             yield return new WaitForDomainReload();
 
-            string poFilePath = Path.Combine(TestArtifactRootFolder, "ja-integrationtest.po");
+            string poFilePath = Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po");
             Assert.That(File.Exists(poFilePath), Is.True);
             _ = new GetTextCatalogBuilder()
                 .ForPoFile(poFilePath, locale(), d => d
@@ -385,7 +386,7 @@ namespace EZUtils.Localization.Tests.Integration
             GenerateTestAction(
                 localizationFieldDeclaration: GenerateLocalizationFieldDeclaration(languageAttribute),
                 code: $@"
-            EZLocalization loc2 = EZLocalization.ForCatalogUnder(""{TestArtifactRootFolder}/othercatalog"", ""EZLocalizationExtractorIntegrationTests"");
+            EZLocalization loc2 = EZLocalization.ForCatalogUnder(""{TestAssemblyRootFolder}Gen/othercatalog"", ""EZLocalizationExtractorIntegrationTests"");
             result.Add(loc.T(""foo""));
             result.Add(loc2.T(""foo""));
 
@@ -411,7 +412,7 @@ namespace EZUtils.Localization.Tests.Integration
             AssetDatabase.Refresh();
             yield return new WaitForDomainReload();
 
-            string poFilePath = Path.Combine(TestArtifactRootFolder, "ja-integrationtest.po");
+            string poFilePath = Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po");
             Assert.That(File.Exists(poFilePath), Is.True);
             _ = new GetTextCatalogBuilder()
                 .ForPoFile(poFilePath, locale(), d => d
@@ -419,7 +420,7 @@ namespace EZUtils.Localization.Tests.Integration
                         .ConfigureId("foo")
                         .ConfigureValue("ja:foo")))
                 .ForPoFile(
-                    Path.Combine(TestArtifactRootFolder, "othercatalog", "ko-integrationtest.po"),
+                    Path.Combine(TestAssemblyRootFolder, "Gen", "othercatalog", "ko-integrationtest.po"),
                     new Locale(
                         CultureInfo.GetCultureInfo("ko"),
                         new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")),
@@ -462,21 +463,19 @@ namespace EZUtils.Localization.Tests.Integration
             //this loc call needs to be here for extraction to happen
             result.Add(loc.T(""foo""));
 
-            EZLocalization loc2 = EZLocalization.ForCatalogUnder(""{TestArtifactRootFolder}"", ""EZLocalizationExtractorIntegrationTests"");
+            EZLocalization loc2 = EZLocalization.ForCatalogUnder(""{TestAssemblyRootFolder}Gen"", ""EZLocalizationExtractorIntegrationTests"");
             result.Add(loc2.T(""foo""));
 
             loc.SelectLocale(Locale.English);
 
-            loc2 = EZLocalization.ForCatalogUnder(""{TestArtifactRootFolder}"", ""EZLocalizationExtractorIntegrationTests"");
+            loc2 = EZLocalization.ForCatalogUnder(""{TestAssemblyRootFolder}Gen"", ""EZLocalizationExtractorIntegrationTests"");
             result.Add(loc2.T(""foo""));
-
-            return result;
             ");
 
             AssetDatabase.Refresh();
             yield return new WaitForDomainReload();
 
-            string poFilePath = Path.Combine(TestArtifactRootFolder, "ja-integrationtest.po");
+            string poFilePath = Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po");
             Assert.That(File.Exists(poFilePath), Is.True);
             _ = new GetTextCatalogBuilder()
                 .ForPoFile(poFilePath, locale(), d => d
@@ -495,13 +494,104 @@ namespace EZUtils.Localization.Tests.Integration
             }));
         }
 
+        [UnityTest]
+        public IEnumerator AutomatedExtraction_PrunesEntries_WhenRemovedFromCode()
+        {
+            GenerateAssemblyAttribute();
+            Locale locale() => new Locale(
+                CultureInfo.GetCultureInfo("ja"),
+                new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"));
+            string languageAttribute() => GenerateLocalizationAttribute("Gen/ja-integrationtest.po", locale());
+
+            GenerateTestAction(
+                localizationFieldDeclaration: GenerateLocalizationFieldDeclaration(languageAttribute()),
+                code: $@"
+            result.Add(loc.T(""foo""));
+            result.Add(loc.T(""bar""));
+            ");
+            AssetDatabase.Refresh();
+            yield return new WaitForDomainReload();
+
+            GenerateTestAction(
+                localizationFieldDeclaration: GenerateLocalizationFieldDeclaration(languageAttribute()),
+                code: $@"
+            //result.Add(loc.T(""foo""));
+            result.Add(loc.T(""bar""));
+            ");
+            AssetDatabase.Refresh();
+            yield return new WaitForDomainReload();
+
+            string poFilePath = Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po");
+            GetTextDocument document = GetTextDocument.LoadFrom(poFilePath);
+
+            Assert.That(document.Entries.Count, Is.EqualTo(3));
+            Assert.That(document.Entries[1].Id, Is.EqualTo("foo"));
+            Assert.That(document.Entries[1].IsObsolete, Is.True);
+            Assert.That(document.Entries[2].Id, Is.EqualTo("bar"));
+            Assert.That(document.Entries[2].IsObsolete, Is.False);
+
+            GenerateTestAction(
+                localizationFieldDeclaration: GenerateLocalizationFieldDeclaration(languageAttribute()),
+                code: $@"
+            //result.Add(loc.T(""foo""));
+            //result.Add(loc.T(""bar""));
+            ");
+            AssetDatabase.Refresh();
+            yield return new WaitForDomainReload();
+
+            poFilePath = Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po");
+            document = GetTextDocument.LoadFrom(poFilePath);
+
+            Assert.That(document.Entries.Count, Is.EqualTo(3));
+            Assert.That(document.Entries[1].Id, Is.EqualTo("foo"));
+            Assert.That(document.Entries[1].IsObsolete, Is.True);
+            Assert.That(document.Entries[2].Id, Is.EqualTo("bar"));
+            Assert.That(document.Entries[2].IsObsolete, Is.True);
+        }
+
+        [UnityTest]
+        public IEnumerator AutomatedExtraction_DoesNotPruneEntries_WhenRemovedFromCodeButMarkedAsKeep()
+        {
+            GenerateAssemblyAttribute();
+            Locale locale() => new Locale(
+                CultureInfo.GetCultureInfo("ja"),
+                new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"));
+            string languageAttribute = GenerateLocalizationAttribute("Gen/ja-integrationtest.po", locale());
+            GenerateEmptyProxyType(languageAttribute);
+
+            string poFilePath() => Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po");
+            _ = new GetTextCatalogBuilder()
+                .ForPoFile(poFilePath(), locale(), d => d
+                    .AddEntry(e => e
+                        .AddEmptyLine()
+                        .AddComment(", keep")
+                        .ConfigureId("foo")
+                        .ConfigureValue("ja:foo")))
+                .WriteToDisk();
+
+            //we dont have action code, since we don't need it
+            //a domain reload will happen from the generated proxy type
+            AssetDatabase.Refresh();
+            //is presumably because unity cant read our po files
+            //this hits here and not other tests presumably because error log detection breaks after domain reload
+            //and all other cases don't write a po file until generated after domain reload
+            LogAssert.Expect(UnityEngine.LogType.Error, "File couldn't be read");
+            yield return new WaitForDomainReload();
+
+            GetTextDocument document = GetTextDocument.LoadFrom(poFilePath());
+
+            Assert.That(document.Entries.Count, Is.EqualTo(2));
+            Assert.That(document.Entries[1].Id, Is.EqualTo("foo"));
+            Assert.That(document.Entries[1].IsObsolete, Is.False);
+        }
+
         private static void GenerateAssemblyAttribute()
         => File.WriteAllText(
-            Path.Combine(TestArtifactRootFolder, "Assembly.cs"),
+            Path.Combine(TestAssemblyRootFolder, "Gen", "Assembly.cs"),
             "[assembly: EZUtils.Localization.LocalizedAssembly]");
 
         private static void GenerateEmptyProxyType(params string[] languageAttributes)
-            => File.WriteAllText(Path.Combine(TestArtifactRootFolder, "Localization.cs"), $@"
+            => File.WriteAllText(Path.Combine(TestAssemblyRootFolder, "Gen", "Localization.cs"), $@"
 namespace EZUtils.Localization.Tests.Integration
 {{
     using EZUtils.Localization;
@@ -518,7 +608,7 @@ namespace EZUtils.Localization.Tests.Integration
         private static void GenerateTestAction(string code)
             => GenerateTestAction(string.Empty, code);
         private static void GenerateTestAction(string localizationFieldDeclaration, string code)
-            => File.WriteAllText(Path.Combine(TestArtifactRootFolder, "IntegrationTestAction.cs"), $@"
+            => File.WriteAllText(Path.Combine(TestAssemblyRootFolder, "Gen", "IntegrationTestAction.cs"), $@"
 namespace EZUtils.Localization.Tests.Integration
 {{
     using EZUtils.Localization;
@@ -576,7 +666,7 @@ namespace EZUtils.Localization.Tests.Integration
             {
                 _ = sb.Append(languageAttribute).AppendLine();
             }
-            _ = sb.Append($@"private static readonly EZLocalization loc = EZLocalization.ForCatalogUnder(""{TestArtifactRootFolder}"", ""{LocaleSynchronizationKey}"");");
+            _ = sb.Append($@"private static readonly EZLocalization loc = EZLocalization.ForCatalogUnder(""{TestAssemblyRootFolder}Gen"", ""{LocaleSynchronizationKey}"");");
             return sb.ToString();
         }
     }

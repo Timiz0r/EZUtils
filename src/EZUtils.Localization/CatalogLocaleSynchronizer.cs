@@ -3,9 +3,7 @@ namespace EZUtils.Localization
     using System;
     using System.Collections.Generic;
     using System.Globalization;
-    using System.Reflection;
     using UnityEditor;
-    using UnityEngine;
 
     //NOTE:
     //this is tightly coupled to catalogreference, kept separate for organization
@@ -17,14 +15,19 @@ namespace EZUtils.Localization
     //
     //of course, CatalogLocaleSynchronizer.SetLocale can't just call CatalogReference.SetLocale for infinite recursion
     //reasons, hence calling the underlying GetTextCatalog.SetLocale.
+    //to delve further, if CatalogReference.Catalog is called first, there is no problem because code is carefuly organized
+    //to avoid the cycle. CatalogReference.SelectLocale is a bit tricky, so, over there, we first ensure the catalog
+    //is initialized.
     //
     //in the event CatalogReference needs to reload a new GetTextCatalog, it reads CatalogLocaleSynchronizer.SelectedLocale
     //to do it.
+    //
+    //previous designs had these classes combined, where a CatalogDatabase maintains instances based on sync key and catalog path.
+    //this design wasn't sufficient because we want two entirely different catalogs to be able to synchronize to the same locale.
     internal class CatalogLocaleSynchronizer
     {
         private static readonly Dictionary<string, CatalogLocaleSynchronizer> synchronizers =
             new Dictionary<string, CatalogLocaleSynchronizer>();
-        private static CultureInfo newlySelectedUnityEditorLanguage;
 
         private readonly string selectedLocaleEditorPrefKey;
         private readonly List<CatalogReference> subscribers = new List<CatalogReference>();
@@ -56,7 +59,7 @@ namespace EZUtils.Localization
                     : null;
                 //this line twice because, here, the next SelectLocaleOrNative needs a subscriber
                 value.subscribers.Add(catalogReference);
-                _ = value.SelectLocaleOrNative(newlySelectedUnityEditorLanguage, storedLocale);
+                _ = value.SelectLocaleOrNative(UnityLanguageTracking.NewlySelectedUnityEditorLanguage, storedLocale);
             }
             else
             {
@@ -73,9 +76,8 @@ namespace EZUtils.Localization
             {
                 _ = reference.Catalog.TrySelectLocale(locale);
             }
-            EditorPrefs.SetString(selectedLocaleEditorPrefKey, locale.CultureInfo.Name);
+            EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
         }
-
         public Locale SelectLocale(CultureInfo cultureInfo)
         {
             bool foundLocale = false;
@@ -87,9 +89,40 @@ namespace EZUtils.Localization
                     SelectedLocale = correspondingLocale;
                 }
             }
-            EditorPrefs.SetString(selectedLocaleEditorPrefKey, cultureInfo.Name);
+            EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
             return SelectedLocale;
         }
+
+        public bool TrySelectLocale(Locale locale)
+        {
+            bool foundLocale = false;
+            foreach (CatalogReference reference in subscribers)
+            {
+                if (reference.Catalog.TrySelectLocale(locale) && !foundLocale)
+                {
+                    foundLocale = true;
+                    SelectedLocale = locale;
+                }
+            }
+            EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
+            return foundLocale;
+        }
+        public bool TrySelectLocale(CultureInfo cultureInfo, out Locale correspondingLocale)
+        {
+            bool foundLocale = false;
+            foreach (CatalogReference reference in subscribers)
+            {
+                if (reference.Catalog.TrySelectLocale(cultureInfo, out Locale currentReferenceLocale) && !foundLocale)
+                {
+                    foundLocale = true;
+                    SelectedLocale = currentReferenceLocale;
+                }
+            }
+            EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
+            correspondingLocale = foundLocale ? SelectedLocale : null;
+            return foundLocale;
+        }
+        public bool TrySelectLocale(CultureInfo cultureInfo) => TrySelectLocale(cultureInfo, out _);
 
         public Locale SelectLocaleOrNative(params Locale[] locales)
         {
@@ -107,7 +140,6 @@ namespace EZUtils.Localization
             EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
             return SelectedLocale;
         }
-
         public Locale SelectLocaleOrNative(params CultureInfo[] cultureInfos)
         {
             bool foundLocale = false;
@@ -126,32 +158,5 @@ namespace EZUtils.Localization
         }
         //needed to disambiguate between locale vs cultureinfo params arrays
         public Locale SelectLocaleOrNative() => SelectLocaleOrNative(Array.Empty<Locale>());
-
-        //when the language is changed, we get a domain reload
-        //so tracking language changes requires persisting it somewhere and looking it up, all from a cctor
-        [InitializeOnLoadMethod]
-#pragma warning disable IDE0051 //Private member is unused; unity message
-        private static void UnityInitialize()
-#pragma warning restore IDE0051
-        {
-            Type localizationDatabaseType = Type.GetType("UnityEditor.LocalizationDatabase, UnityEditor");
-
-            const string editorLanguageKey = "EZUtils.Localization.TrackedUnityEditorLanguage";
-            string previouslySetEditorLanguage = EditorPrefs.GetString(editorLanguageKey);
-
-            PropertyInfo editorlanguageProperty = localizationDatabaseType.GetProperty(
-                "currentEditorLanguage", BindingFlags.Public | BindingFlags.Static);
-            SystemLanguage currentEditorLanguage = (SystemLanguage)editorlanguageProperty.GetValue(null);
-
-            if (previouslySetEditorLanguage != currentEditorLanguage.ToString())
-            {
-                EditorPrefs.SetString(editorLanguageKey, currentEditorLanguage.ToString());
-                MethodInfo getCultureMethod = localizationDatabaseType.GetMethod(
-                    "GetCulture", BindingFlags.Public | BindingFlags.Static);
-                newlySelectedUnityEditorLanguage = CultureInfo.GetCultureInfo(
-                    (string)getCultureMethod.Invoke(null, new object[] { currentEditorLanguage }));
-            }
-            else newlySelectedUnityEditorLanguage = null;
-        }
     }
 }

@@ -115,6 +115,9 @@ namespace EZUtils.Localization
             return this;
         }
 
+        //NOTE: a minor issue is that, when an entry has its last reference in code removed, we don't remove that last
+        //entry reference, since MergeEntries is never called on it. since, if the entry ever gets added back,
+        //the old reference in the entry gets removed, this isn't a big enough deal to try to fix.
         public GetTextDocumentBuilder Prune()
         {
             return ForEachEntry(e =>
