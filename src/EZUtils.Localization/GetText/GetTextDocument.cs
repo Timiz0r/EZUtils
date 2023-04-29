@@ -226,6 +226,8 @@ namespace EZUtils.Localization
 
         public void Save(string path)
         {
+            _ = Directory.CreateDirectory(Path.GetDirectoryName(path));
+
             using (StreamWriter sw = new StreamWriter(File.OpenWrite(path), System.Text.Encoding.UTF8))
             {
                 foreach (GetTextEntry entry in Entries)

@@ -22,24 +22,45 @@ namespace EZUtils.Localization
 
         public bool Supports(Locale locale) => supportedLocales.Contains(locale);
 
-        public void SelectLocale(Locale locale) => selectedDocument =
-            nativeLocale == locale
-                ? null
-                : documents.SingleOrDefault(d => d.Header.Locale == locale)
-                    ?? throw new ArgumentOutOfRangeException(
-                        nameof(locale),
-                        $"This catalog does not support the locale '{locale?.CultureInfo.ToString() ?? string.Empty}'. " +
-                        $"Supported locales: {string.Join(", ", supportedLocales.Select(l => l.CultureInfo))}");
-        public Locale SelectLocale(CultureInfo cultureInfo)
+        public void SelectLocale(Locale locale)
         {
-            Locale correspondingLocale = supportedLocales.SingleOrDefault(l => l.CultureInfo == cultureInfo)
-                ?? throw new ArgumentOutOfRangeException(
+            if (!TrySelectLocale(locale)) throw new ArgumentOutOfRangeException(
+                nameof(locale),
+                $"This catalog does not support the locale '{locale?.CultureInfo.ToString() ?? string.Empty}'. " +
+                $"Supported locales: {string.Join(", ", supportedLocales.Select(l => l.CultureInfo))}");
+        }
+        public Locale SelectLocale(CultureInfo cultureInfo)
+            => TrySelectLocale(cultureInfo, out Locale correspondingLocale)
+                ? correspondingLocale
+                : throw new ArgumentOutOfRangeException(
                     nameof(cultureInfo),
                     $"This catalog does not support the culture '{cultureInfo}'. " +
                     $"Supported locales: {string.Join(", ", supportedLocales.Select(l => l.CultureInfo))}");
-            SelectLocale(correspondingLocale);
-            return correspondingLocale;
+
+        public bool TrySelectLocale(Locale locale)
+        {
+            if (locale == nativeLocale)
+            {
+                selectedDocument = null;
+                return true;
+            }
+
+            if (documents.SingleOrDefault(d => d.Header.Locale == locale) is GetTextDocument matchingDocument)
+            {
+                selectedDocument = matchingDocument;
+                return true;
+            }
+
+            return false;
         }
+        public bool TrySelectLocale(CultureInfo cultureInfo, out Locale correspondingLocale)
+        {
+            correspondingLocale = supportedLocales.SingleOrDefault(l => l.CultureInfo == cultureInfo);
+
+            return correspondingLocale != null && TrySelectLocale(correspondingLocale);
+        }
+        public bool TrySelectLocale(CultureInfo cultureInfo) => TrySelectLocale(cultureInfo, out _);
+
         //NOTE: we could also add a method to choose, for instance, en if we pass in en-us, or vice-versa.
         //but not important at time of writing
         public Locale SelectLocaleOrNative(params Locale[] locales)

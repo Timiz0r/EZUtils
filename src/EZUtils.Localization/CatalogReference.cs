@@ -74,7 +74,7 @@ namespace EZUtils.Localization
                         }
                     }
 
-                    catalog = new GetTextCatalog(documents.Values.ToArray(), NativeLocale);
+                    ReloadCatalog();
                     fsw.EnableRaisingEvents = true;
                 }
 
@@ -109,12 +109,19 @@ namespace EZUtils.Localization
 
         public void SelectLocale(Locale locale)
         {
+            //there's a bit of a circular reference issue that happens when this method is called before Catalog is initialized
+            //since catalog initialization depends on getting the initial locale from the synchronizer
+            //TODO: retry combining synchronization and catalog references, which should sort this out
+            _ = Catalog;
+
             catalogLocaleSynchronizer.Value.SelectLocale(locale);
             Retranslate();
         }
 
         public Locale SelectLocale(CultureInfo cultureInfo)
         {
+            _ = Catalog;
+
             Locale locale = catalogLocaleSynchronizer.Value.SelectLocale(cultureInfo);
             Retranslate();
             return locale;
@@ -122,6 +129,8 @@ namespace EZUtils.Localization
 
         public Locale SelectLocaleOrNative(Locale[] locales)
         {
+            _ = Catalog;
+
             Locale locale = catalogLocaleSynchronizer.Value.SelectLocaleOrNative(locales);
             Retranslate();
             return locale;
@@ -129,6 +138,8 @@ namespace EZUtils.Localization
 
         public Locale SelectLocaleOrNative(CultureInfo[] cultureInfos)
         {
+            _ = Catalog;
+
             Locale locale = catalogLocaleSynchronizer.Value.SelectLocaleOrNative(cultureInfos);
             Retranslate();
             return locale;

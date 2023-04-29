@@ -7,7 +7,7 @@ namespace EZUtils.Localization
     using Microsoft.CodeAnalysis;
     using UnityEditor;
 
-    //TODO: integration test locale synchronization
+    //TODO: copy new TrySelectLocales over to required types
     //TODO: integration test survival of invalid po file
     //  presumably T will end up throwing due to poor parsing. dont want that to happen. since this would be in unityland via catalogreference, we can log it!
     //  also test how reloads will work. also want to nullify and log. or keep current doc?

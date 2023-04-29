@@ -45,6 +45,11 @@ namespace EZUtils.Localization
                 //we don't allow localization methods to be localized themselves, so these arent candidates for localization
                 return NonLocalized;
             }
+            else if (invocationOperation.Instance is ILocalReferenceOperation)
+            {
+                //locals cant have attributes
+                return NonLocalized;
+            }
             else throw new InvalidOperationException(
                 $"Unable to extract any attributes in order to find catalog generation attributes.");
 
