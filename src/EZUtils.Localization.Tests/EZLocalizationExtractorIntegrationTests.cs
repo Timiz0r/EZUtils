@@ -7,7 +7,6 @@ namespace EZUtils.Localization.Tests.Integration
     using System.Reflection;
     using System.Text;
     using System.Text.RegularExpressions;
-    using System.Threading;
     using NUnit.Framework;
     using UnityEditor;
     using UnityEngine.TestTools;
@@ -730,10 +729,6 @@ namespace EZUtils.Localization.Tests.Integration
         public IEnumerator EZLocalization_DoesNotThrow_WhenPoFilesAlreadyInvalid()
         {
             GenerateAssemblyAttribute();
-            Locale locale() => new Locale(
-                CultureInfo.GetCultureInfo("ja"),
-                new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"));
-            string languageAttribute = GenerateLocalizationAttribute("Gen/ja-integrationtest.po", locale());
             GenerateTestAction(
                 code: $@"
             //making a local so that extraction does not produce usable catalogs

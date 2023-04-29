@@ -253,7 +253,7 @@ namespace EZUtils.Localization.Tests
         private static void AssertHasEntry(GetTextDocument document, string context, string id) => Assert.That(
             document.Entries, Has.Exactly(1).Matches<GetTextEntry>(e => e.Context == context && e.Id == id));
 
-        private static readonly string BasicLocDefinition = @"
+        private const string BasicLocDefinition = @"
             [GenerateLanguage(""ja"", ""unittest-ja.po"", Other = "" @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"")]
             private static readonly GetTextCatalog loc;";
         private static GetTextCatalogBuilder Extract(string locDefinition, string code)

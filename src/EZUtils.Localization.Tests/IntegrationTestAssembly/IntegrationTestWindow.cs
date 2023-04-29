@@ -3,7 +3,7 @@ namespace EZUtils.Localization.Tests.Integration
     using UnityEditor;
     using UnityEngine.UIElements;
 
-    public class IntegrationTestWindow : EditorWindow
+    internal class IntegrationTestWindow : EditorWindow
     {
         public static IntegrationTestWindow Create(params VisualElement[] elements)
         {

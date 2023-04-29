@@ -1,0 +1,4 @@
+[*.cs]
+#naming conventions of test methods will break this
+dotnet_diagnostic.IDE1006.severity = silent
+dotnet_diagnostic.CA1707.severity = silent

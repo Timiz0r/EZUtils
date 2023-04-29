@@ -110,7 +110,8 @@ namespace EZUtils.Localization
                 document = LoadFrom(reader);
                 return true;
             }
-            catch
+            //we'll still throw on other exceptions, which are likely not intended and we want to bubble up
+            catch (GetTextParseException)
             {
                 document = null;
                 return false;
