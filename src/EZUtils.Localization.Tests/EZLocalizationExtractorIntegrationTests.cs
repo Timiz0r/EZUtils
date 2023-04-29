@@ -585,6 +585,145 @@ namespace EZUtils.Localization.Tests.Integration
             Assert.That(document.Entries[1].IsObsolete, Is.False);
         }
 
+        [UnityTest]
+        public IEnumerator AutoExtraction_ExtractsUxml_WhenNoGenerateLanguageElementFound()
+        {
+            GenerateAssemblyAttribute();
+            Locale locale() => new Locale(
+                CultureInfo.GetCultureInfo("ja"),
+                new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"));
+            string languageAttribute = GenerateLocalizationAttribute("Gen/ja-integrationtest.po", locale());
+
+            File.WriteAllText(Path.Combine(TestAssemblyRootFolder, "Gen", "UI.uxml"),
+@"<?xml version=""1.0"" encoding=""utf-8""?>
+<UXML
+  xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
+  xmlns=""UnityEngine.UIElements""
+  xmlns:editor=""UnityEditor.UIElements""
+  xsi:schemaLocation=""
+    UnityEngine.UIElements ../../UIElementsSchema/UnityEngine.UIElements.fixed.xsd
+    UnityEditor.UIElements ../../UIElementsSchema/UnityEditor.UIElements.xsd"">
+  <VisualElement>
+    <Label text=""loc:foo label"" />
+    <TextField label=""loc:bar textfield"" />
+  </VisualElement>
+</UXML>");
+
+            GenerateTestAction(
+                localizationFieldDeclaration: GenerateLocalizationFieldDeclaration(languageAttribute),
+                code: $@"
+            IntegrationTestWindow window = IntegrationTestWindow.Create();
+            VisualTreeAsset visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(""{TestAssemblyRootFolder}/Gen/UI.uxml"");
+            visualTreeAsset.CloneTree(window.rootVisualElement);
+            loc.TranslateElementTree(window.rootVisualElement);
+
+            result.Add(window.rootVisualElement.Q<Label>().text);
+            result.Add(window.rootVisualElement.Q<TextField>().label);
+
+            loc.SelectLocale(CultureInfo.GetCultureInfo(""ja""));
+
+            result.Add(window.rootVisualElement.Q<Label>().text);
+            result.Add(window.rootVisualElement.Q<TextField>().label);
+
+            window.Close();
+            ");
+
+            AssetDatabase.Refresh();
+            yield return new WaitForDomainReload();
+
+            string poFilePath = Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po");
+            Assert.That(File.Exists(poFilePath), Is.True);
+            _ = new GetTextCatalogBuilder()
+                .ForPoFile(poFilePath, locale(), d => d
+                    .OverwriteEntry(e => e
+                        .ConfigureId("foo label")
+                        .ConfigureValue("ja:foo label"))
+                    .OverwriteEntry(e => e
+                        .ConfigureId("bar textfield")
+                        .ConfigureValue("ja:bar textfield")))
+                .WriteToDisk();
+
+            IReadOnlyList<string> result = new IntegrationTestAction().Execute();
+
+            Assert.That(result, Is.EqualTo(new[]
+            {
+                "foo label",
+                "bar textfield",
+                "ja:foo label",
+                "ja:bar textfield",
+            }));
+        }
+
+        [UnityTest]
+        public IEnumerator AutoExtraction_ExtractsUxml_WhenGenerateLanguageElementFound()
+        {
+            GenerateAssemblyAttribute();
+            Locale locale() => new Locale(
+                CultureInfo.GetCultureInfo("ja"),
+                new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"));
+            string languageAttribute = GenerateLocalizationAttribute("Gen/ja-integrationtest.po", locale());
+
+            File.WriteAllText(Path.Combine(TestAssemblyRootFolder, "Gen", "UI.uxml"),
+@"<?xml version=""1.0"" encoding=""utf-8""?>
+<UXML
+  xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance""
+  xmlns=""UnityEngine.UIElements""
+  xmlns:editor=""UnityEditor.UIElements""
+  xmlns:loc=""EZUtils.Localization.UIElements"">
+  <VisualElement>
+    <loc:GenerateLanguage poFilePath=""Gen/ja-integrationtest.po"" cultureInfoCode=""ja"" other=""@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"" />
+    <Label text=""loc:foo label"" />
+    <TextField label=""loc:bar textfield"" />
+  </VisualElement>
+</UXML>");
+
+            GenerateTestAction(
+                code: $@"
+            //making a local so that we can verify we're not pulling from a [GenerateLanguage]
+            EZLocalization loc = EZLocalization.ForCatalogUnder(""{TestAssemblyRootFolder}Gen"", ""EZLocalizationExtractorIntegrationTests"");
+
+            IntegrationTestWindow window = IntegrationTestWindow.Create();
+            VisualTreeAsset visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(""{TestAssemblyRootFolder}/Gen/UI.uxml"");
+            visualTreeAsset.CloneTree(window.rootVisualElement);
+            loc.TranslateElementTree(window.rootVisualElement);
+
+            result.Add(window.rootVisualElement.Q<Label>().text);
+            result.Add(window.rootVisualElement.Q<TextField>().label);
+
+            loc.SelectLocale(CultureInfo.GetCultureInfo(""ja""));
+
+            result.Add(window.rootVisualElement.Q<Label>().text);
+            result.Add(window.rootVisualElement.Q<TextField>().label);
+
+            window.Close();
+            ");
+
+            AssetDatabase.Refresh();
+            yield return new WaitForDomainReload();
+
+            string poFilePath = Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po");
+            Assert.That(File.Exists(poFilePath), Is.True);
+            _ = new GetTextCatalogBuilder()
+                .ForPoFile(poFilePath, locale(), d => d
+                    .OverwriteEntry(e => e
+                        .ConfigureId("foo label")
+                        .ConfigureValue("ja:foo label"))
+                    .OverwriteEntry(e => e
+                        .ConfigureId("bar textfield")
+                        .ConfigureValue("ja:bar textfield")))
+                .WriteToDisk();
+
+            IReadOnlyList<string> result = new IntegrationTestAction().Execute();
+
+            Assert.That(result, Is.EqualTo(new[]
+            {
+                "foo label",
+                "bar textfield",
+                "ja:foo label",
+                "ja:bar textfield",
+            }));
+        }
+
         private static void GenerateAssemblyAttribute()
         => File.WriteAllText(
             Path.Combine(TestAssemblyRootFolder, "Gen", "Assembly.cs"),
@@ -679,7 +818,9 @@ namespace EZUtils.Localization.Tests.Integration
 //    using System.Collections.Generic;
 //    using System.Globalization;
 //    using EZUtils.Localization;
+//    using NUnit.Framework.Interfaces;
 //    using UnityEditor;
+//    using UnityEditor.UIElements;
 //    using UnityEngine.UIElements;
 //    using static Localization;
 
@@ -696,13 +837,15 @@ namespace EZUtils.Localization.Tests.Integration
 //            //
 //            loc.SelectLocale(CultureInfo.GetCultureInfo("ja"));
 
-//            EZLocalization loc2 = EZLocalization.ForCatalogUnder("Packages/com.timiz0r.ezutils.localization.tests/IntegrationTestAssembly/Gen", "EZLocalizationExtractorIntegrationTests");
-//            result.Add(loc2.T("foo"));
+//            IntegrationTestWindow window = IntegrationTestWindow.Create();
+//            VisualTreeAsset visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("/UI.uxml");
+//            visualTreeAsset.CloneTree(window.rootVisualElement);
+//            loc.TranslateElementTree(window.rootVisualElement);
 
-//            loc.SelectLocale(Locale.English);
+//            result.Add(window.rootVisualElement.Q<Label>().text);
+//            result.Add(window.rootVisualElement.Q<FloatField>().text);
 
-//            loc2 = EZLocalization.ForCatalogUnder("Packages/com.timiz0r.ezutils.localization.tests/IntegrationTestAssembly/Gen", "EZLocalizationExtractorIntegrationTests");
-//            result.Add(loc2.T("foo"));
+//            window.Close();
 
 //            return result;
 //        }

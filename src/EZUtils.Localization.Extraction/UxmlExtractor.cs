@@ -32,7 +32,7 @@ namespace EZUtils.Localization
                 while (xml.Read())
                 {
                     //could theoretically check namespace
-                    if (xml.NodeType == XmlNodeType.Element && xml.Name == "GenerateLanguage")
+                    if (xml.NodeType == XmlNodeType.Element && xml.LocalName == "GenerateLanguage")
                     {
                         currentLanguage = ReadGenerateLanguageElement(out GenerateLanguageRecord oldLanguage);
                         if (oldLanguage != null)
