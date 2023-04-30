@@ -16,6 +16,6 @@
   },
   "dependencies": {
     "com.timiz0r.ezutils.localization": "0.0.1",
-    "com.timiz0r.ezutils.common":"1.0.3"
+    "com.timiz0r.ezutils.common": "1.0.3"
   }
 }

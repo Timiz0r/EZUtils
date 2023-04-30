@@ -31,6 +31,10 @@ jobs:
             path: ./src/EZUtils.WindowCloser
           - name: com.timiz0r.ezutils.editorenhancements
             path: ./src/EZUtils.EditorEnhancements
+          - name: com.timiz0r.ezutils.localization
+            path: ./src/EZUtils.Localization
+          - name: com.timiz0r.ezutils.localization.extraction
+            path: ./src/EZUtils.Localization.Extraction
     steps:
       - uses: actions/checkout@v3
         with:

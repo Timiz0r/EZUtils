@@ -15,5 +15,6 @@
       "url": "https://github.com/Timiz0r/EZUtils.git"
   },
   "dependencies": {
+    "com.timiz0r.ezutils.common": "1.0.3"
   }
 }
