@@ -162,6 +162,7 @@ namespace EZUtils.Localization
                             SyntaxFactory.Token(SyntaxKind.PublicKeyword).WithTriviaFrom(node.Modifiers[0]),
                             SyntaxFactory.Token(SyntaxKind.StaticKeyword).WithTrailingTrivia(SyntaxFactory.Space)))
                     .WithParameterList(node.ParameterList.WithTrailingTrivia(SyntaxFactory.Space))
+                    .WithBody(null)
                     .WithExpressionBody(
                         SyntaxFactory.ArrowExpressionClause(
                             SyntaxFactory.Token(SyntaxKind.EqualsGreaterThanToken).WithTrailingTrivia(SyntaxFactory.Space),
@@ -171,6 +172,7 @@ namespace EZUtils.Localization
                                     SyntaxFactory.IdentifierName(fieldName),
                                     SyntaxFactory.IdentifierName(node.Identifier.ValueText)),
                             argumentList)))
+                    .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
                     .WithTriviaFrom(node);
 
                 return base.VisitMethodDeclaration(newNode);

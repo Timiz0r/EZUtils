@@ -819,6 +819,84 @@ msgstr ""bar""
             }));
         }
 
+        //also covers the cases of working the first time around, of course
+        //TODO: would also be nice to simulate a click, but it's not exactly worth it atm
+        [UnityTest]
+        public IEnumerator ToolbarAddLocaleSelector_UpdatesMenuWithLocales_WhenNewLocalesAddedMidway()
+        {
+            string jaPoFilePath() => Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po");
+            string koPoFilePath() => Path.Combine(TestAssemblyRootFolder, "Gen", "ko-integrationtest.po");
+            Locale jaLocale() => new Locale(
+                CultureInfo.GetCultureInfo("ja"),
+                new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"));
+
+            _ = new GetTextCatalogBuilder()
+                .ForPoFile(jaPoFilePath(), jaLocale(), d => d
+                    .AddEntry(e => e
+                        .ConfigureId("foo")
+                        .ConfigureValue("ja:foo")))
+                .WriteToDisk();
+            GenerateTestAction(
+                code: $@"
+            EZLocalization loc = EZLocalization.ForCatalogUnder(""{TestAssemblyRootFolder}Gen"", ""{LocaleSynchronizationKey}"");
+
+            Toolbar toolbar = new Toolbar();
+            IntegrationTestWindow window = IntegrationTestWindow.Create(toolbar);
+            //NOTE: pretty crucial here is that we dont use loc before AddLocaleSelector
+            //because -- hint -- we necessarily delay initialize localization synchronization stuff
+            //we expect 1 for the native language, at least
+            EZUtils.Localization.UIElements.LocalizationUIExtensions.AddLocaleSelector(toolbar, ""{LocaleSynchronizationKey}"", Locale.English);
+
+            result.Add(toolbar.Q<EZUtils.UIElements.ToolbarMenu>().menu.MenuItems().Count.ToString());
+
+            //we're okay with lack of T calls causing the dropdown to not contain the language
+            //but if you're adding the control to change languages and not doing any localization, what's the point?
+            _ = loc.T(""foo"");
+            result.Add(toolbar.Q<EZUtils.UIElements.ToolbarMenu>().menu.MenuItems().Count.ToString());
+
+            _ = new GetTextCatalogBuilder()
+                .ForPoFile(
+                    ""{koPoFilePath().Replace("\\", "\\\\")}"",
+                    new Locale(
+                        CultureInfo.GetCultureInfo(""ko""),
+                        new PluralRules(other: ""@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"")) ,
+                    d => d
+                    .AddEntry(e => e
+                        .ConfigureId(""foo"")
+                        .ConfigureValue(""ko:foo"")))
+                .WriteToDisk();
+
+            //need to wait for reload and refresh to happen
+            //the sleep is to make sure the asynchronous FileSystemWatcher adds its delaycall first,
+            //to make testing more deterministic
+            System.Threading.Thread.Sleep(1000);
+            EditorApplication.delayCall += () =>
+            {{
+                result.Add(toolbar.Q<EZUtils.UIElements.ToolbarMenu>().menu.MenuItems().Count.ToString());
+                window.Close();
+            }};
+            ");
+
+            AssetDatabase.Refresh();
+            //is presumably because unity cant read our po files
+            //this hits here and not other tests presumably because error log detection breaks after domain reload
+            //and all other cases don't write a po file until generated after domain reload
+            LogAssert.Expect(UnityEngine.LogType.Error, "File couldn't be read");
+            yield return new WaitForDomainReload();
+
+            IReadOnlyList<string> result = new IntegrationTestAction().Execute();
+
+            //since the test action does delay calls waiting for reloads to happen, we need to wait all the same
+            yield return null;
+
+            Assert.That(result, Is.EqualTo(new[]
+            {
+                "1", //en
+                "2", //plus jp
+                "3", //plus ko
+            }));
+        }
+
         private static void GenerateAssemblyAttribute()
         => File.WriteAllText(
             Path.Combine(TestAssemblyRootFolder, "Gen", "Assembly.cs"),
@@ -849,6 +927,7 @@ namespace EZUtils.Localization.Tests.Integration
     using System.Globalization;
     using System.Collections.Generic;
     using UnityEditor;
+    using UnityEditor.UIElements;
     using UnityEngine.UIElements;
     using static Localization;
 

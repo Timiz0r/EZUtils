@@ -3,27 +3,10 @@ namespace EZUtils.Localization
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.Linq;
+    using EZUtils.Localization.UIElements;
     using UnityEditor;
 
-    //NOTE:
-    //this is tightly coupled to catalogreference, kept separate for organization
-    //but this tight-coupling makes for intricate behavior, particularly because multiple catalog references get
-    //synchronized to the same synchronizer
-    //
-    //CatalogLocaleSynchronizer.SetLocale is called by CatalogReference (via EZLocalization). its intended purpose
-    //is to propagate a locale change from one EZLocalization/CatalogReference instance to others, for the same key.
-    //
-    //of course, CatalogLocaleSynchronizer.SetLocale can't just call CatalogReference.SetLocale for infinite recursion
-    //reasons, hence calling the underlying GetTextCatalog.SetLocale.
-    //to delve further, if CatalogReference.Catalog is called first, there is no problem because code is carefuly organized
-    //to avoid the cycle. CatalogReference.SelectLocale is a bit tricky, so, over there, we first ensure the catalog
-    //is initialized.
-    //
-    //in the event CatalogReference needs to reload a new GetTextCatalog, it reads CatalogLocaleSynchronizer.SelectedLocale
-    //to do it.
-    //
-    //previous designs had these classes combined, where a CatalogDatabase maintains instances based on sync key and catalog path.
-    //this design wasn't sufficient because we want two entirely different catalogs to be able to synchronize to the same locale.
     internal class CatalogLocaleSynchronizer
     {
         private static readonly Dictionary<string, CatalogLocaleSynchronizer> synchronizers =
@@ -34,39 +17,43 @@ namespace EZUtils.Localization
 
         public Locale SelectedLocale { get; private set; }
 
+        public IReadOnlyList<Locale> SupportedLocales => subscribers
+            .SelectMany(cr => cr.SupportedLocales)
+            //if a subscriber hasn't been added yet, we still want at least the initial locale to show up
+            .Append(SelectedLocale)
+            .Distinct()
+            .ToArray();
+
+        public LocaleSelectionUI UI { get; }
+
+
         private CatalogLocaleSynchronizer(string localeSynchronizationKey, Locale initialLocale)
         {
             selectedLocaleEditorPrefKey = $"EZUtils.Localization.SelectedLocale.{localeSynchronizationKey}";
-            //for the very first time we initialize this class, there's no stored language
-            //so Register's SelectLocaleOrNative passes two nulls
-            //our SelectLocaleOrNative does not set a SelectedLocale if the catalog's SelectLocaleOrNative uses native
-            //without this, we would try store store a null SelectedLocale and NRE
-            //of course, we could instead store nothing until the first user SelectLocale,
-            //but getting a setting more immediately seems nicer
             SelectedLocale = initialLocale;
+            UI = new LocaleSelectionUI(this);
         }
 
-        public static CatalogLocaleSynchronizer Register(string localeSynchronizationKey, CatalogReference catalogReference)
-        {
-            if (!synchronizers.TryGetValue(localeSynchronizationKey, out CatalogLocaleSynchronizer value))
-            {
-                synchronizers[localeSynchronizationKey] = value = new CatalogLocaleSynchronizer(
-                    localeSynchronizationKey, catalogReference.NativeLocale);
+        public static CatalogLocaleSynchronizer Get(string localeSynchronizationKey, Locale initialLocale)
+            => synchronizers.TryGetValue(localeSynchronizationKey, out CatalogLocaleSynchronizer value)
+                ? value
+                : synchronizers[localeSynchronizationKey] = new CatalogLocaleSynchronizer(localeSynchronizationKey, initialLocale);
 
-                string prefValue = EditorPrefs.GetString(value.selectedLocaleEditorPrefKey);
+        public void Register(CatalogReference catalogReference)
+        {
+            subscribers.Add(catalogReference);
+
+            //we take first registration as a signal that it's safe to use editorprefs, which can't be used in cctor land
+            //EZLocalization only calls this when it's safe
+            if (subscribers.Count == 1)
+            {
+                string prefValue = EditorPrefs.GetString(selectedLocaleEditorPrefKey);
                 CultureInfo storedLocale = !string.IsNullOrEmpty(prefValue)
                     ? CultureInfo.GetCultureInfo(prefValue)
                     : null;
-                //this line twice because, here, the next SelectLocaleOrNative needs a subscriber
-                value.subscribers.Add(catalogReference);
-                _ = value.SelectLocaleOrNative(UnityLanguageTracking.NewlySelectedUnityEditorLanguage, storedLocale);
-            }
-            else
-            {
-                value.subscribers.Add(catalogReference);
-            }
 
-            return value;
+                _ = SelectLocaleOrNative(UnityLanguageTracking.NewlySelectedUnityEditorLanguage, storedLocale);
+            }
         }
 
         public void SelectLocale(Locale locale)
@@ -77,6 +64,7 @@ namespace EZUtils.Localization
                 _ = reference.Catalog.TrySelectLocale(locale);
             }
             EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
+            UI.ReportChange();
         }
         public Locale SelectLocale(CultureInfo cultureInfo)
         {
@@ -90,6 +78,7 @@ namespace EZUtils.Localization
                 }
             }
             EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
+            UI.ReportChange();
             return SelectedLocale;
         }
 
@@ -105,6 +94,7 @@ namespace EZUtils.Localization
                 }
             }
             EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
+            UI.ReportChange();
             return foundLocale;
         }
         public bool TrySelectLocale(CultureInfo cultureInfo, out Locale correspondingLocale)
@@ -119,6 +109,7 @@ namespace EZUtils.Localization
                 }
             }
             EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
+            UI.ReportChange();
             correspondingLocale = foundLocale ? SelectedLocale : null;
             return foundLocale;
         }
@@ -138,6 +129,7 @@ namespace EZUtils.Localization
                 }
             }
             EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
+            UI.ReportChange();
             return SelectedLocale;
         }
         public Locale SelectLocaleOrNative(params CultureInfo[] cultureInfos)
@@ -154,6 +146,7 @@ namespace EZUtils.Localization
                 }
             }
             EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
+            UI.ReportChange();
             return SelectedLocale;
         }
         //needed to disambiguate between locale vs cultureinfo params arrays

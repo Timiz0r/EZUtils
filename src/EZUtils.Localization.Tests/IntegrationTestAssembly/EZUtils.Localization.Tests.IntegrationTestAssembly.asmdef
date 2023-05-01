@@ -1,6 +1,7 @@
 {
     "name": "EZUtils.Localization.Tests.IntegrationTestAssembly",
     "references": [
+        "EZUtils.Common",
         "EZUtils.Localization"
     ],
     "includePlatforms": [

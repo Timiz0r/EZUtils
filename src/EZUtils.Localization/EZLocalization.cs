@@ -2,19 +2,25 @@ namespace EZUtils.Localization
 {
     using System;
     using System.Globalization;
-    using System.IO;
     using System.Reflection;
     using UnityEditor;
     using UnityEngine.UIElements;
 
     //ports-and-adapters-wise, EZLocalization is a driver adapter connecting unity editor to a catalog
-    public class EZLocalization
+    public class EZLocalization : IDisposable
     {
-        private readonly CatalogReference catalogReference;
+        private readonly string root;
+        private readonly Locale nativeLocale;
+        private readonly CatalogLocaleSynchronizer synchronizer;
 
-        private EZLocalization(CatalogReference catalogReference)
+        private CatalogReference catalogReference;
+        private bool disposedValue;
+
+        private EZLocalization(string root, Locale nativeLocale, CatalogLocaleSynchronizer synchronizer)
         {
-            this.catalogReference = catalogReference;
+            this.root = root;
+            this.nativeLocale = nativeLocale;
+            this.synchronizer = synchronizer;
         }
 
         public static EZLocalization ForCatalogUnder(string root, string localeSynchronizationKey)
@@ -22,33 +28,70 @@ namespace EZUtils.Localization
 
         public static EZLocalization ForCatalogUnder(string root, string localeSynchronizationKey, Locale nativeLocale)
         {
-            root = root?.Trim(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar });
-            //as a unityland class, we expect an assert or package dir. if a user provides "/" and we stript it
-            //we still consider that invalid and want to through (with an albeit slightly inaccurate exception)
-            if (string.IsNullOrEmpty(root)) throw new ArgumentNullException(nameof(root));
-
-            CatalogReference catalog = new CatalogReference(
-                root: root,
-                nativeLocale: nativeLocale,
-                localeSynchronizationKey: localeSynchronizationKey);
-            EZLocalization result = new EZLocalization(catalog);
+            CatalogLocaleSynchronizer synchronizer = CatalogLocaleSynchronizer.Get(localeSynchronizationKey, nativeLocale);
+            EZLocalization result = new EZLocalization(root, nativeLocale, synchronizer);
 
             return result;
         }
 
-        public void SelectLocale(Locale locale) => catalogReference.SelectLocale(locale);
-        public Locale SelectLocale(CultureInfo cultureInfo) => catalogReference.SelectLocale(cultureInfo);
+        //in general, we can't use either of these in static contexts/invoked from cctors
+        //since we usually instantiate EZLocalization in cctors, we need to delay
+        private void Initialize()
+        {
+            if (catalogReference != null) return;
 
-        public bool TrySelectLocale(Locale locale) => catalogReference.TrySelectLocale(locale);
+            catalogReference = new CatalogReference(root, nativeLocale, synchronizer);
+            synchronizer.Register(catalogReference);
+            catalogReference.Initialize();
+        }
+
+        public void SelectLocale(Locale locale)
+        {
+            Initialize();
+            catalogReference.SelectLocale(locale);
+        }
+
+        public Locale SelectLocale(CultureInfo cultureInfo)
+        {
+            Initialize();
+            return catalogReference.SelectLocale(cultureInfo);
+        }
+
+        public bool TrySelectLocale(Locale locale)
+        {
+            Initialize();
+            return catalogReference.TrySelectLocale(locale);
+        }
+
         public bool TrySelectLocale(CultureInfo cultureInfo, out Locale correspondingLocale)
-            => catalogReference.TrySelectLocale(cultureInfo, out correspondingLocale);
-        public bool TrySelectLocale(CultureInfo cultureInfo) => TrySelectLocale(cultureInfo, out _);
+        {
+            Initialize();
+            return catalogReference.TrySelectLocale(cultureInfo, out correspondingLocale);
+        }
+
+        public bool TrySelectLocale(CultureInfo cultureInfo)
+        {
+            Initialize();
+            return TrySelectLocale(cultureInfo, out _);
+        }
 
         public Locale SelectLocaleOrNative(params Locale[] locales)
-            => catalogReference.SelectLocaleOrNative(locales);
+        {
+            Initialize();
+            return catalogReference.SelectLocaleOrNative(locales);
+        }
+
         public Locale SelectLocaleOrNative(params CultureInfo[] cultureInfos)
-            => catalogReference.SelectLocaleOrNative(cultureInfos);
-        public Locale SelectLocaleOrNative() => SelectLocaleOrNative(Array.Empty<Locale>());
+        {
+            Initialize();
+            return catalogReference.SelectLocaleOrNative(cultureInfos);
+        }
+
+        public Locale SelectLocaleOrNative()
+        {
+            Initialize();
+            return SelectLocaleOrNative(Array.Empty<Locale>());
+        }
 
         //while we support custom retranslation via IRetranslatable, the most recommended way to support retranslation
         //for elements created in-code is to call EZLocalization.TranslateElementTree for the newly created element.
@@ -62,8 +105,10 @@ namespace EZUtils.Localization
         //and which one each maps to depends on native locale
         //and will need to escape : with ::, ofc only if a localplural: prefix
         public void TranslateElementTree(VisualElement rootElement)
+        {
+            Initialize();
             //descendents includes element, as well
-            => rootElement.Query().Descendents<VisualElement>().ForEach(element =>
+            rootElement.Query().Descendents<VisualElement>().ForEach(element =>
             {
                 if (element is IRetranslatableElement retranslatable)
                 {
@@ -87,20 +132,45 @@ namespace EZUtils.Localization
                     catalogReference.TrackRetranslatable(element, () => labelProperty.SetValue(element, T(lbOriginalValue)));
                 }
             });
+        }
+
+        /// <remarks>Window title translations should be added in CreateGUI due to Unity restrictions.</remarks>
         [LocalizationMethod]
         public void TranslateWindowTitle(
             EditorWindow window,
             [LocalizationParameter(LocalizationParameter.Id)] string titleText)
-            => catalogReference.TrackRetranslatable(window, () => window.titleContent.text = T(titleText));
+        {
+            Initialize();
+            catalogReference.TrackRetranslatable(window, () => window.titleContent.text = T(titleText));
+        }
 
         [LocalizationMethod]
-        public string T(RawString id) => catalogReference.Catalog.T(id);
+        public string T(RawString id)
+        {
+            Initialize();
+            return catalogReference.Catalog.T(id);
+        }
+
         [LocalizationMethod]
-        public string T(FormattableString id) => catalogReference.Catalog.T(id);
+        public string T(FormattableString id)
+        {
+            Initialize();
+            return catalogReference.Catalog.T(id);
+        }
+
         [LocalizationMethod]
-        public string T(string context, RawString id) => catalogReference.Catalog.T(context, id);
+        public string T(string context, RawString id)
+        {
+            Initialize();
+            return catalogReference.Catalog.T(context, id);
+        }
+
         [LocalizationMethod]
-        public string T(string context, FormattableString id) => catalogReference.Catalog.T(context, id);
+        public string T(string context, FormattableString id)
+        {
+            Initialize();
+            return catalogReference.Catalog.T(context, id);
+        }
 
         [LocalizationMethod]
         public string T(
@@ -115,54 +185,69 @@ namespace EZUtils.Localization
                 two: default,
                 few: default,
                 many: default);
+
         [LocalizationMethod]
         public string T(
-            string context,
-            FormattableString id,
-            decimal count,
-            FormattableString other) => catalogReference.Catalog.T(
-                context: context,
-                id: id,
-                count: count,
-                other: other,
-                zero: default,
-                two: default,
-                few: default,
-                many: default);
+                    string context,
+                    FormattableString id,
+                    decimal count,
+                    FormattableString other)
+        {
+            Initialize();
+            return catalogReference.Catalog.T(
+                        context: context,
+                        id: id,
+                        count: count,
+                        other: other,
+                        zero: default,
+                        two: default,
+                        few: default,
+                        many: default);
+        }
+
         [LocalizationMethod]
         public string T(
-            FormattableString id,
-            decimal count,
-            FormattableString other,
-            FormattableString zero = default,
-            FormattableString two = default,
-            FormattableString few = default,
-            FormattableString many = default) => catalogReference.Catalog.T(
-                id: id,
-                count: count,
-                other: other,
-                zero: zero,
-                two: two,
-                few: few,
-                many: many);
+                    FormattableString id,
+                    decimal count,
+                    FormattableString other,
+                    FormattableString zero = default,
+                    FormattableString two = default,
+                    FormattableString few = default,
+                    FormattableString many = default)
+        {
+            Initialize();
+            return catalogReference.Catalog.T(
+                        id: id,
+                        count: count,
+                        other: other,
+                        zero: zero,
+                        two: two,
+                        few: few,
+                        many: many);
+        }
+
         [LocalizationMethod]
         public string T(
-            string context,
-            FormattableString id,
-            decimal count,
-            FormattableString other,
-            FormattableString zero = default,
-            FormattableString two = default,
-            FormattableString few = default,
-            FormattableString many = default) => catalogReference.Catalog.T(
-                context: context,
-                id: id,
-                count: count,
-                other: other,
-                zero: zero,
-                two: two,
-                few: few,
-                many: many);
+                    string context,
+                    FormattableString id,
+                    decimal count,
+                    FormattableString other,
+                    FormattableString zero = default,
+                    FormattableString two = default,
+                    FormattableString few = default,
+                    FormattableString many = default)
+        {
+            Initialize();
+            return catalogReference.Catalog.T(
+                        context: context,
+                        id: id,
+                        count: count,
+                        other: other,
+                        zero: zero,
+                        two: two,
+                        few: few,
+                        many: many);
+        }
 
         private static bool InheritsFromGenericType(Type typeToInspect, Type genericTypeDefinition)
         {
@@ -173,6 +258,22 @@ namespace EZUtils.Localization
                 && genericType == genericTypeDefinition) return true;
 #pragma warning restore IDE0046 // Convert to conditional expression
             return InheritsFromGenericType(typeToInspect.BaseType, genericTypeDefinition);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                catalogReference.Dispose();
+
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }
