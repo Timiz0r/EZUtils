@@ -250,6 +250,22 @@ namespace EZUtils.Localization.Tests
             Assert.That(document.Entries[1].Header.References.Count, Is.EqualTo(2));
         }
 
+        [Test]
+        public void DoesNotExtract_WhenConcatenationContainsFormattableString()
+        {
+            string code = @"
+                loc.T($""foo {111} "" + $""bar {222}"");
+                loc.T(""foo "" + $""bar {111}"");
+                loc.T($""foo {111} "" + ""bar"");
+                loc.T(""foo "" + ""bar"");";
+
+            GetTextCatalogBuilder catalogBuilder = Extract(BasicLocDefinition, code);
+            GetTextDocument document = catalogBuilder.GetDocuments()[0];
+
+            Assert.That(document.Entries.Count, Is.EqualTo(2));
+            AssertHasEntry(document, context: null, id: "foo bar");
+        }
+
         private static void AssertHasEntry(GetTextDocument document, string context, string id) => Assert.That(
             document.Entries, Has.Exactly(1).Matches<GetTextEntry>(e => e.Context == context && e.Id == id));
 
