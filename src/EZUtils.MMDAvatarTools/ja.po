@@ -4,166 +4,166 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=3; plural=(n==0 ? 0 : n%10==1 && n%100!=11 ? 1 : 2);\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
 "X-PluralRules-One: \n"
 "X-PluralRules-Other: \n"
 "X-Crowdin-Project: ezutils\n"
 "X-Crowdin-Project-ID: 583151\n"
-"X-Crowdin-Language: ja2\n"
+"X-Crowdin-Language: ja\n"
 "X-Crowdin-File: /main/src/EZUtils.MMDAvatarTools/template.pot\n"
 "X-Crowdin-File-ID: 15\n"
 "Project-Id-Version: ezutils\n"
-"Language-Team: japanese-withzero\n"
-"PO-Revision-Date: 2023-05-02 15:48\n"
+"Language-Team: Japanese\n"
+"PO-Revision-Date: 2023-05-02 16:54\n"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:63
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:77
 msgid "States containing humanoid animations"
-msgstr ""
+msgstr "ヒューマノイドのアニメーションがあるステート"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:49
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:65
 msgid "States with Write Defaults on"
-msgstr ""
+msgstr "Write Defaultsがオフになっているステート"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:52
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:65
 msgid "Confirm that the main mesh of the avatar is actually called 'Body'. Be aware that, if there is no MMD-compatible mesh, the avatar may simply not be meant to be MMD-compatible."
-msgstr ""
+msgstr "アバターのメインメッシュが本当にBodyのメッシュということを確認してください。また、MMD対応のメッシュが存在しない場合、このアバターがもともとMMD対応ができてない可能性があります。"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:25
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:29
 msgid "No FX layer found"
-msgstr ""
+msgstr "No FX layer found"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:28
 msgid "Start animation"
-msgstr ""
+msgstr "アニメーション再生"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:29
 msgid "If the below meshes must be used, merge them with the Body mesh."
-msgstr ""
+msgstr "どうしても使用したい場合、Bodyメッシュに以下に表示されているメッシュをマージしてください。"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:27
 msgid "Non-body meshes will not be animated."
-msgstr ""
+msgstr "Bodyではないメッシュは表情が変化しません。"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:158
 msgid "FX layer animation layer 2 may not be gesture-style"
-msgstr ""
+msgstr "FXレイヤーの第2レイヤーがジェスチャー様ではない可能性があります"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:156
 msgid "FX layer animation layer 2 is gesture-style"
-msgstr ""
+msgstr "FXレイヤーの第2レイヤーがジェスチャー様"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:154
 msgid "FX layer animation layer 1 may not be gesture-style"
-msgstr ""
+msgstr "FXレイヤーの第1レイヤーがジェスチャー様ではない可能性があります"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:152
 msgid "FX layer animation layer 1 is gesture-style"
-msgstr ""
+msgstr "FXレイヤーの第1レイヤーがジェスチャー様"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:31
 msgid "Meshes containing MMD-compatible blendshapes"
-msgstr ""
+msgstr "MMD対応のブレンドシェープがあるメッシュ"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:112
 msgid "Too many traversals."
-msgstr ""
+msgstr "トラバーサルが多すぎます。"
 
 # id format: There are no states in the FX layer's animation layer {layerIndex}.
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:92
 msgid "There are no states in the FX layer's animation layer {0}."
-msgstr ""
+msgstr "FXレイヤーの第{0}レイヤーにはステートが存在しません。"
 
 # id format: The FX layer's animation layer {layerIndex}
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:91
 msgid "The FX layer's animation layer {0}"
-msgstr ""
+msgstr "FXレイヤーの第{layerIndex}レイヤー"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/AnimatorStateRendererLayerElement.uxml:15
 msgid "Open"
-msgstr ""
+msgstr "開く"
 
 # id format: If they are problematic, consider making layer {layerIndex} an empty layer.
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:89
 msgid "If they are problematic, consider making layer {0} an empty layer."
-msgstr ""
+msgstr "問題になる場合、FXレイヤーの第{0}レイヤーの場所に空のレイヤーを入れてください。"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:88
 msgid "Confirm that the below states, even when turned off, will not cause any problems."
-msgstr ""
+msgstr "以下に表示されているステートがオフになっても問題ないことを、確認してください。"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:85
 msgid "MMD worlds will turn off the FX layer's first and second layers. If there are important, non-gesture animations in these layers, strange behaviors may occur."
-msgstr ""
+msgstr "MMDワールドはFXレイヤーの第1と第2レイヤーをオフにしますので、ジェスチャー様なアニメーション以外があっていたら、異変が起こる可能性があります。"
 
 # id format: The FX layer's animation layer {layerIndex} appears to be gesture-style.
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:101
 msgid "The FX layer's animation layer {0} appears to be gesture-style."
-msgstr ""
+msgstr "FXレイヤーの第{0}レイヤーがジェスチャー様になっているようです。"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:29
 msgid "Stop animation"
-msgstr ""
+msgstr "アニメーション停止"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:32
 msgid "There are no meshes containing MMD-compatible blendshapes."
-msgstr ""
+msgstr "MMD対応のブレンドシェープのあるメッシュが存在しません。"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:43
 msgid "Non-Body meshes have no MMD-compatible blendshapes"
-msgstr ""
+msgstr "Bodyではないメッシュには、MMD対応のブレンドシェープはありません"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:26
 msgid "Animation"
-msgstr ""
+msgstr "アニメーション"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:22
 msgid "Not currently in play mode"
-msgstr ""
+msgstr "再生モードには入っていません"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:20
 msgid "Test in play mode"
-msgstr ""
+msgstr "再生モードで試す"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:16
 msgid "Avatar"
-msgstr ""
+msgstr "アバター"
 
 # id format: Unable to find layer '{layerName}' in controller '{animatorController}'. Layers available: {string.Join(", ", animatorController.layers.Select(l => l.name))}.
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/AnimatorStateRenderer.cs:69
 msgid "Unable to find layer '{0}' in controller '{1}'. Layers available: {2}."
-msgstr ""
+msgstr "コントローラー「{1}」のレイヤー「{0}」が見つかりません。入っているレイヤーは{2}"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:94
 msgid "FX layer states have Write Defaults possibly off"
-msgstr ""
+msgstr "FXレイヤーのWrite Defaultsがオフになっている可能性があります"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:40
 msgid "There are non-Body meshes with MMD-compatible blendshapes"
-msgstr ""
+msgstr "Bodyではないメッシュには、MMD対応のブレンドシェープがあります"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:92
 msgid "FX layer states have Write Defaults off"
-msgstr ""
+msgstr "FXレイヤーのWrite Defaultsがオフ"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:90
 msgid "FX layer states have Write Defaults on"
-msgstr ""
+msgstr "FXレイヤーのWrite Defaultsがオン"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:60
 msgid "Turn on Write Defaults for the below states.Be sure to verify that the animations work fine with Write Defaults on by testing them in play mode or in MMD worlds."
-msgstr ""
+msgstr "以下に表示されているステートのWrite Defaultsをオンにしてください。ただし、再生モードやMMDワールドで、アバターやアニメーションがWrite Defaultsの対応ができていることを確認してください。"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:58
 msgid "The FX layer has states with write defaults off. If they are not turned on, facial expressions will likely not change."
-msgstr ""
+msgstr "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。オンにしないと、表情が変化しない可能性が高くなります。"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:35
 msgid "Reanalyze"
-msgstr ""
+msgstr "再解析"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:43
 msgid "To ensure these animations continue to work, instead of using 'VRC Animator Layer Control' or 'VRC Playable Layer Control', prefer turning Write Defaults on. Be sure to verify that the animations work fine with Write Defaults on by testing them in play mode or in MMD worlds."
