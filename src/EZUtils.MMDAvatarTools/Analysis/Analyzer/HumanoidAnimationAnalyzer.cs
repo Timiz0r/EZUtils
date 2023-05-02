@@ -59,7 +59,7 @@ namespace EZUtils.MMDAvatarTools
                     "As long the layer containing the animation is turned off, MMD animations will play normally. " +
                     "If not turned off, MMD animations will not play."),
                     instructions:
-                        T("Check the instructions for the abatar. Usually, there is a toggle, if not done automatically."),
+                        T("Check the instructions for the avatar. Usually, there is a toggle, if not done automatically."),
                     detailRenderer: new AnimatorStateRenderer(
                         title: T("States containing humanoid animations"),
                         emptyMessage: "", //we don't output in this case, anyway

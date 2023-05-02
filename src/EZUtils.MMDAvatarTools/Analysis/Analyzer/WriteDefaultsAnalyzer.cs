@@ -39,7 +39,7 @@ namespace EZUtils.MMDAvatarTools
                     "However, the avatar has a 'VRC Animator Layer Control' or 'VRC Playable Layer Control' " +
                     "that will either turn off the containing animation layer or the entire FX layer. " +
                     "If such states are turned off, facial expressions can change; " +
-                    "however, the animations of these states, even when played beforehand, will not work." +
+                    "however, the animations of these states, even when played beforehand, will not work. " +
                     "Furthermore, if not turned off, facial animations likely won't change."),
                     instructions: T(
                         "To ensure these animations continue to work, instead of using 'VRC Animator Layer Control' or 'VRC Playable Layer Control', " +

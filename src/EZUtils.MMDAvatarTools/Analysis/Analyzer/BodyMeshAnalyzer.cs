@@ -61,7 +61,7 @@ namespace EZUtils.MMDAvatarTools
                 Result.NotSkinnedMeshRenderer,
                 AnalysisResultLevel.Error,
                 new GeneralRenderer(
-                    T("A mesh named 'Body' was found, but, instead of being a 'Skinned Mesh Renderer', it is a 'Mesh Renderer'." +
+                    T("A mesh named 'Body' was found, but, instead of being a 'Skinned Mesh Renderer', it is a 'Mesh Renderer'. " +
                     "It is not possible to change facial expressions if the mesh is a 'Mesh Renderer'."),
                     instructions: T(
                         "Confirm that the main mesh of the avatar is actually called 'Body'. " +
@@ -78,7 +78,7 @@ namespace EZUtils.MMDAvatarTools
                     "In the event the mesh of the avatar is in another object, " +
                     "note that it must be named 'Body' for facial expressions to change."),
                     instructions: T(
-                        "There is a possibility the 'Skinned Mesh Renderer' component was deleted accidentally." +
+                        "There is a possibility the 'Skinned Mesh Renderer' component was deleted accidentally. " +
                         "Confirm what the 'Body' object should be in the original prefab (such as the '.fbx' file). " +
                         "Otherwise, the main mesh may be in another object altogether."),
                     detailRenderer: existingMmdMeshes
