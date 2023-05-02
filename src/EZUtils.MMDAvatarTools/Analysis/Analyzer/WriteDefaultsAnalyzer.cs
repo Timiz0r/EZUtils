@@ -5,6 +5,7 @@ namespace EZUtils.MMDAvatarTools
     using UnityEditor.Animations;
     using UnityEngine;
     using VRC.SDK3.Avatars.Components;
+    using static Localization;
 
     public class WriteDefaultsAnalyzer : IAnalyzer
     {
@@ -34,19 +35,19 @@ namespace EZUtils.MMDAvatarTools
                 Result.WriteDefaultsPotentiallyDisabled,
                 AnalysisResultLevel.Warning,
                 new GeneralRenderer(
-                    "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。" +
-                    "しかし、FXレイヤーまたは中のアニメーションレイヤーをオフにする" +
-                    "「VRC Animator Layer Control」や「VRC Playable Layer Control」があります。" +
-                    "このステートがオフにされる場合、表情が変化できますが、" +
-                    "FXレイヤーの他のアニメーションが直前に起動しても無効化にされます。" +
-                    "そしてオフにされない場合、表情が変化しない可能性が高くなります。",
-                    instructions:
-                        "他のアニメーションを使用したい場合、「VRC Animator Layer Control」や「VRC Playable Layer Control」を" +
-                        "使わずにWrite Defaultsをオンにしてください。" +
-                        "ただし、再生モードやMMDワールドで、アバターやアニメーションがWrite Defaultsの対応ができていることを" +
-                        "確認してください。",
+                    T("The FX layer has states with write defaults off. " +
+                    "However, the avatar has a 'VRC Animator Layer Control' or 'VRC Playable Layer Control' " +
+                    "that will either turn off the containing animation layer or the entire FX layer. " +
+                    "If such states are turned off, facial expressions can change; " +
+                    "however, the animations of these states, even when played beforehand, will not work." +
+                    "Furthermore, if not turned off, facial animations likely won't change."),
+                    instructions: T(
+                        "To ensure these animations continue to work, instead of using 'VRC Animator Layer Control' or 'VRC Playable Layer Control', " +
+                        "prefer turning Write Defaults on. " +
+                        "Be sure to verify that the animations work fine with Write Defaults on by testing them " +
+                        "in play mode or in MMD worlds."),
                     detailRenderer: new AnimatorStateRenderer(
-                        title: "Write Defaultsがオフになっているステート",
+                        title: T("States with Write Defaults on"),
                         emptyMessage: "", //we dont output in this case anyway
                         animatorController: playableLayerInformation.FX.UnderlyingController,
                         states: possiblyDisabledStates))
@@ -55,14 +56,14 @@ namespace EZUtils.MMDAvatarTools
                 Result.WriteDefaultsDisabled,
                 AnalysisResultLevel.Error,
                 new GeneralRenderer(
-                    "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。" +
-                    "オンにしないと、表情が変化しない可能性が高くなります。",
-                    instructions:
-                        "以下に表示されているステートのWrite Defaultsをオンにしてください。" +
-                        "ただし、再生モードやMMDワールドで、アバターやアニメーションがWrite Defaultsの対応ができていることを" +
-                        "確認してください。",
+                    T("The FX layer has states with write defaults off. " +
+                    "If they are not turned on, facial expressions will likely not change."),
+                    instructions: T(
+                        "Turn on Write Defaults for the below states." +
+                        "Be sure to verify that the animations work fine with Write Defaults on by testing them " +
+                        "in play mode or in MMD worlds."),
                     detailRenderer: new AnimatorStateRenderer(
-                        title: "Write Defaultsがオフになっているステート",
+                        title: T("States with Write Defaults on"),
                         emptyMessage: "", //we dont output in this case anyway
                         animatorController: playableLayerInformation.FX.UnderlyingController,
                         states: definitelyDisabledStates))));
@@ -87,11 +88,11 @@ namespace EZUtils.MMDAvatarTools
         public static class Result
         {
             public static readonly AnalysisResultIdentifier WriteDefaultsEnabled =
-                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>("FXレイヤーのWrite Defaultsがオン");
+                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>(T("FX layer states have Write Defaults on"));
             public static readonly AnalysisResultIdentifier WriteDefaultsDisabled =
-                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>("FXレイヤーのWrite Defaultsがオフ");
+                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>(T("FX layer states have Write Defaults off"));
             public static readonly AnalysisResultIdentifier WriteDefaultsPotentiallyDisabled =
-                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>("FXレイヤーのWrite Defaultsがオフになっている可能性があります");
+                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>(T("FX layer states have Write Defaults possibly off"));
         }
     }
 }

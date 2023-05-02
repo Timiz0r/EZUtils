@@ -7,6 +7,7 @@ namespace EZUtils.MMDAvatarTools
     using UnityEditor.Animations;
     using UnityEngine;
     using UnityEngine.UIElements;
+    using static Localization;
 
     public class AnimatorStateRenderer : IAnalysisResultRenderer
     {
@@ -48,6 +49,7 @@ namespace EZUtils.MMDAvatarTools
             {
                 VisualElement layerContainer = layerElement.CommonUIClone();
                 statesContainer.Add(layerContainer);
+                TranslateElementTree(layerContainer);
 
                 layerContainer.Q<Label>(className: "analyzer-result-details-state-layer-name").text = group.Key;
                 layerContainer.Q<Button>().clicked += () => FocusAnimatorControllerLayer(group.Key);
@@ -65,7 +67,7 @@ namespace EZUtils.MMDAvatarTools
             int layerIndex = Array.FindIndex(animatorController.layers, l => l.name == layerName);
             if (layerIndex < 0)
             {
-                Debug.LogError($"Unable to find layer '{layerName}' in controller '{animatorController}'. Layers available: {string.Join(", ", animatorController.layers.Select(l => l.name))}.");
+                Debug.LogError(T($"Unable to find layer '{layerName}' in controller '{animatorController}'. Layers available: {string.Join(", ", animatorController.layers.Select(l => l.name))}."));
                 return;
             }
 

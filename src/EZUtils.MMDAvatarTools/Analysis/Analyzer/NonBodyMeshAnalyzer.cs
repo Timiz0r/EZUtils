@@ -5,6 +5,7 @@ namespace EZUtils.MMDAvatarTools
     using System.Linq;
     using UnityEngine;
     using VRC.SDK3.Avatars.Components;
+    using static Localization;
 
     public class NonBodyMeshAnalyzer : IAnalyzer
     {
@@ -24,12 +25,12 @@ namespace EZUtils.MMDAvatarTools
                     Result.ContainsMMDBlendShapes,
                     AnalysisResultLevel.Warning,
                     new GeneralRenderer(
-                        "Bodyではないメッシュは表情が変化しません。",
+                        T("Non-body meshes will not be animated."),
                         instructions:
-                            "どうしても使用したい場合、Bodyメッシュに以下に表示されているメッシュをマージしてください。",
+                            T("If the below meshes must be used, merge them with the Body mesh."),
                         detailRenderer: ObjectSelectionRenderer.Create(
-                            listTitle: "MMD対応のブレンドシェープがあるメッシュ",
-                            emptyMessage: "MMD対応のブレンドシェープのあるメッシュが存在しません。",
+                            listTitle: T("Meshes containing MMD-compatible blendshapes"),
+                            emptyMessage: T("There are no meshes containing MMD-compatible blendshapes."),
                             objects: nonBodyMeshesWithMmdBlendShapes)));
         }
 
@@ -37,10 +38,10 @@ namespace EZUtils.MMDAvatarTools
         {
             public static readonly AnalysisResultIdentifier ContainsMMDBlendShapes =
                 AnalysisResultIdentifier.Create<NonBodyMeshAnalyzer>(
-                    "Bodyではないメッシュには、MMD対応のブレンドシェープがあります");
+                    T("There are non-Body meshes with MMD-compatible blendshapes"));
             public static readonly AnalysisResultIdentifier ClearOfMMDBlendShapes =
                 AnalysisResultIdentifier.Create<NonBodyMeshAnalyzer>(
-                    "Bodyではないメッシュには、MMD対応のブレンドシェープはありません");
+                    T("Non-Body meshes have no MMD-compatible blendshapes"));
         }
     }
 }

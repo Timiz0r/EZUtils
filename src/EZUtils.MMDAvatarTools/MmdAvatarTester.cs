@@ -4,6 +4,7 @@ namespace EZUtils.MMDAvatarTools
     using UnityEditor.Animations;
     using UnityEngine;
     using VRC.SDK3.Avatars.Components;
+    using static Localization;
 
     public class MmdAvatarTester
     {
@@ -12,7 +13,7 @@ namespace EZUtils.MMDAvatarTools
         public void Start(VRCAvatarDescriptor avatar, AnimationClip animation)
         {
             if (avatarPlayableAnimator != null) throw new InvalidOperationException(
-                "Attempted to start while already started.");
+                T("Attempted to start while already started."));
 
             avatarPlayableAnimator = AvatarPlayableAnimator.Attach(avatar);
             avatarPlayableAnimator.Start();
