@@ -111,9 +111,10 @@ namespace EZUtils.Localization
                 fieldName = field.Declaration.Variables[0].Identifier.ValueText;
 
                 ClassDeclarationSyntax newNode = node
-                    .WithModifiers(originalClassDeclaration.Modifiers)
                     .WithAttributeLists(originalClassDeclaration.AttributeLists)
+                    .WithModifiers(originalClassDeclaration.Modifiers)
                     .WithIdentifier(originalClassDeclaration.Identifier)
+                    .WithBaseList(null)
                     .WithMembers(node.Members.Insert(0, field))
                     .WithTriviaFrom(node);
                 return base.VisitClassDeclaration(newNode);
