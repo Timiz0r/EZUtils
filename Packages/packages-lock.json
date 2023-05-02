@@ -19,7 +19,7 @@
       "depth": 0,
       "source": "local",
       "dependencies": {
-        "com.timiz0r.ezutils.common": "1.0.3"
+        "com.timiz0r.ezutils.common": "1.0.4"
       }
     },
     "com.timiz0r.ezutils.localization.extraction": {
@@ -27,8 +27,8 @@
       "depth": 0,
       "source": "local",
       "dependencies": {
-        "com.timiz0r.ezutils.localization": "0.0.1",
-        "com.timiz0r.ezutils.common": "1.0.3"
+        "com.timiz0r.ezutils.localization": "1.0.0",
+        "com.timiz0r.ezutils.common": "1.0.4"
       }
     },
     "com.timiz0r.ezutils.localization.tests": {
@@ -42,7 +42,8 @@
       "depth": 0,
       "source": "local",
       "dependencies": {
-        "com.timiz0r.ezutils.common": "1.0.2"
+        "com.timiz0r.ezutils.common": "1.0.4",
+        "com.timiz0r.ezutils.localization": "1.0.0"
       }
     },
     "com.timiz0r.ezutils.mmdavatartools.tests": {
