@@ -22,6 +22,7 @@ namespace EZUtils.UIElements
         public ToolbarMenu()
         {
             this.AddManipulator(new Clickable(() => this.ShowMenu()));
+            AddToClassList("unity-toolbar-menu");
             generateVisualContent = null;
 
             StyleSheet styleSheet = AssetDatabase.LoadAssetAtPath<StyleSheet>(
@@ -45,6 +46,9 @@ namespace EZUtils.UIElements
 
                 _ = this
                     .Query<TextElement>(className: "toolbar-menu-label")
+                    .ForEach(te => te.text = value);
+                _ = this
+                    .Query<TextElement>(className: "unity-toolbar-menu__text")
                     .ForEach(te => te.text = value);
             }
         }

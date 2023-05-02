@@ -1,8 +1,3 @@
-ToolbarMenu {
-    padding: 2px 4px 0px 4px;
-    flex-direction: row;
-}
-
 .toolbar-menu-arrow {
     background-image: url("ToolbarMenuArrow.psd");
     align-self: center;
