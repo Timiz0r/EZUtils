@@ -48,25 +48,25 @@ namespace EZUtils.Localization
         public void SelectLocale(Locale locale)
         {
             Initialize();
-            catalogReference.SelectLocale(locale);
+            synchronizer.SelectLocale(locale);
         }
 
         public Locale SelectLocale(CultureInfo cultureInfo)
         {
             Initialize();
-            return catalogReference.SelectLocale(cultureInfo);
+            return synchronizer.SelectLocale(cultureInfo);
         }
 
         public bool TrySelectLocale(Locale locale)
         {
             Initialize();
-            return catalogReference.TrySelectLocale(locale);
+            return synchronizer.TrySelectLocale(locale);
         }
 
         public bool TrySelectLocale(CultureInfo cultureInfo, out Locale correspondingLocale)
         {
             Initialize();
-            return catalogReference.TrySelectLocale(cultureInfo, out correspondingLocale);
+            return synchronizer.TrySelectLocale(cultureInfo, out correspondingLocale);
         }
 
         public bool TrySelectLocale(CultureInfo cultureInfo)
@@ -78,20 +78,16 @@ namespace EZUtils.Localization
         public Locale SelectLocaleOrNative(params Locale[] locales)
         {
             Initialize();
-            return catalogReference.SelectLocaleOrNative(locales);
+            return synchronizer.SelectLocaleOrNative(locales);
         }
 
         public Locale SelectLocaleOrNative(params CultureInfo[] cultureInfos)
         {
             Initialize();
-            return catalogReference.SelectLocaleOrNative(cultureInfos);
+            return synchronizer.SelectLocaleOrNative(cultureInfos);
         }
 
-        public Locale SelectLocaleOrNative()
-        {
-            Initialize();
-            return SelectLocaleOrNative(Array.Empty<Locale>());
-        }
+        public Locale SelectLocaleOrNative() => SelectLocaleOrNative(Array.Empty<Locale>());
 
         //while we support custom retranslation via IRetranslatable, the most recommended way to support retranslation
         //for elements created in-code is to call EZLocalization.TranslateElementTree for the newly created element.

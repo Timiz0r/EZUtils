@@ -24,20 +24,20 @@ namespace EZUtils.Localization
         private readonly Dictionary<string, GetTextDocument> documents = new Dictionary<string, GetTextDocument>();
 
         private readonly string root;
-        private readonly CatalogLocaleSynchronizer catalogLocaleSynchronizer;
+        private bool initialized = false;
         private bool disposedValue;
 
         public Locale NativeLocale { get; }
+        public Locale IntendedLocale { get; private set; }
+        public Locale CurrentLocale { get; private set; }
         public IReadOnlyList<Locale> SupportedLocales => Catalog.SupportedLocales;
         public GetTextCatalog Catalog { get; private set; }
 
         public CatalogReference(
             string root,
-            Locale nativeLocale,
-            CatalogLocaleSynchronizer catalogLocaleSynchronizer)
+            Locale nativeLocale)
         {
             this.root = root;
-            this.catalogLocaleSynchronizer = catalogLocaleSynchronizer;
             NativeLocale = nativeLocale;
             Catalog = new GetTextCatalog(Array.Empty<GetTextDocument>(), nativeLocale);
 
@@ -55,6 +55,8 @@ namespace EZUtils.Localization
 
         public void Initialize()
         {
+            if (initialized) return;
+
             //this has an initialization method mainly because, as an implementation detail of EZLocalization,
             //ReloadCatalog's usage of the synchronizer must only happen after the synchronizer is given
             //an instance of this.
@@ -74,6 +76,8 @@ namespace EZUtils.Localization
             }
             ReloadCatalog();
             fsw.EnableRaisingEvents = true;
+
+            initialized = true;
         }
 
         public void Retranslate()
@@ -106,48 +110,23 @@ namespace EZUtils.Localization
             catalogLocaleSynchronizer.SelectLocale(locale);
             Retranslate();
         }
-        public Locale SelectLocale(CultureInfo cultureInfo)
+        //the locale synchronizer will generally deal with the catalog directly,
+        //but, the reference still needs to be informed in case po files change
+        public void RecordCurrentLocale(Locale currentLocale)
         {
-            Locale locale = catalogLocaleSynchronizer.SelectLocale(cultureInfo);
+            CurrentLocale = currentLocale;
             Retranslate();
-            return locale;
         }
 
-        public bool TrySelectLocale(Locale locale)
-        {
-            bool result = catalogLocaleSynchronizer.TrySelectLocale(locale);
-            Retranslate();
-            return result;
-        }
-        public bool TrySelectLocale(CultureInfo cultureInfo, out Locale correspondingLocale)
-        {
-            bool result = catalogLocaleSynchronizer.TrySelectLocale(cultureInfo, out correspondingLocale);
-            Retranslate();
-            return result;
-        }
-        public bool TrySelectLocale(CultureInfo cultureInfo) => TrySelectLocale(cultureInfo, out _);
-
-        public Locale SelectLocaleOrNative(Locale[] locales)
-        {
-            Locale locale = catalogLocaleSynchronizer.SelectLocaleOrNative(locales);
-            Retranslate();
-            return locale;
-        }
-        public Locale SelectLocaleOrNative(CultureInfo[] cultureInfos)
-        {
-            Locale locale = catalogLocaleSynchronizer.SelectLocaleOrNative(cultureInfos);
-            Retranslate();
-            return locale;
-        }
-        public Locale SelectLocaleOrNative() => SelectLocaleOrNative(Array.Empty<Locale>());
+        public void RecordIntendedLocale(Locale intendedLocale) => IntendedLocale = intendedLocale;
 
         private void ReloadCatalog()
         {
             Catalog = new GetTextCatalog(documents.Values.ToArray(), NativeLocale);
-            //we dont call our methods because, if the synchronized locale isnt in this catalog, we dont want to
-            //proparate a change just based on this. we want a deliberate user action to change it.
-            _ = Catalog.SelectLocaleOrNative(catalogLocaleSynchronizer.SelectedLocale);
-            catalogLocaleSynchronizer.UI.ReportChange();
+            //if the synchronizer picked a locale we don't support, we still want to try it on reloads
+            //in case the necessary document was added
+            _ = Catalog.SelectLocaleOrNative(IntendedLocale, CurrentLocale);
+            UIElements.LocaleSelectionUI.ReportChange();
         }
 
         //NOTE: fsw is not thread-safe by default in two ways:

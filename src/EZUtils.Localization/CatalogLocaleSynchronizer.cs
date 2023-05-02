@@ -42,6 +42,7 @@ namespace EZUtils.Localization
         public void Register(CatalogReference catalogReference)
         {
             subscribers.Add(catalogReference);
+            catalogReference.RecordIntendedLocale(SelectedLocale);
 
             //we take first registration as a signal that it's safe to use editorprefs, which can't be used in cctor land
             //EZLocalization only calls this when it's safe
@@ -56,29 +57,45 @@ namespace EZUtils.Localization
             }
         }
 
+        private void FinishLocaleSelection()
+        {
+            foreach (CatalogReference reference in subscribers)
+            {
+                reference.RecordIntendedLocale(SelectedLocale);
+            }
+
+            EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
+            UI.RegenerateMenu();
+        }
+
         public void SelectLocale(Locale locale)
         {
             SelectedLocale = locale;
             foreach (CatalogReference reference in subscribers)
             {
-                _ = reference.Catalog.TrySelectLocale(locale);
+                if (reference.Catalog.TrySelectLocale(locale))
+                {
+                    reference.RecordCurrentLocale(locale);
+                }
             }
-            EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
-            UI.ReportChange();
+            FinishLocaleSelection();
         }
         public Locale SelectLocale(CultureInfo cultureInfo)
         {
             bool foundLocale = false;
             foreach (CatalogReference reference in subscribers)
             {
-                if (reference.Catalog.TrySelectLocale(cultureInfo, out Locale correspondingLocale) && !foundLocale)
+                if (reference.Catalog.TrySelectLocale(cultureInfo, out Locale correspondingLocale))
                 {
-                    foundLocale = true;
-                    SelectedLocale = correspondingLocale;
+                    if (!foundLocale)
+                    {
+                        foundLocale = true;
+                        SelectedLocale = correspondingLocale;
+                    }
+                    reference.RecordCurrentLocale(correspondingLocale);
                 }
             }
-            EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
-            UI.ReportChange();
+            FinishLocaleSelection();
             return SelectedLocale;
         }
 
@@ -87,14 +104,17 @@ namespace EZUtils.Localization
             bool foundLocale = false;
             foreach (CatalogReference reference in subscribers)
             {
-                if (reference.Catalog.TrySelectLocale(locale) && !foundLocale)
+                if (reference.Catalog.TrySelectLocale(locale))
                 {
-                    foundLocale = true;
-                    SelectedLocale = locale;
+                    if (!foundLocale)
+                    {
+                        foundLocale = true;
+                        SelectedLocale = locale;
+                    }
+                    reference.RecordCurrentLocale(locale);
                 }
             }
-            EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
-            UI.ReportChange();
+            FinishLocaleSelection();
             return foundLocale;
         }
         public bool TrySelectLocale(CultureInfo cultureInfo, out Locale correspondingLocale)
@@ -102,14 +122,17 @@ namespace EZUtils.Localization
             bool foundLocale = false;
             foreach (CatalogReference reference in subscribers)
             {
-                if (reference.Catalog.TrySelectLocale(cultureInfo, out Locale currentReferenceLocale) && !foundLocale)
+                if (reference.Catalog.TrySelectLocale(cultureInfo, out Locale currentReferenceLocale))
                 {
-                    foundLocale = true;
-                    SelectedLocale = currentReferenceLocale;
+                    if (!foundLocale)
+                    {
+                        foundLocale = true;
+                        SelectedLocale = currentReferenceLocale;
+                    }
+                    reference.RecordCurrentLocale(currentReferenceLocale);
                 }
             }
-            EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
-            UI.ReportChange();
+            FinishLocaleSelection();
             correspondingLocale = foundLocale ? SelectedLocale : null;
             return foundLocale;
         }
@@ -121,15 +144,17 @@ namespace EZUtils.Localization
             foreach (CatalogReference reference in subscribers)
             {
                 if (reference.Catalog.SelectLocaleOrNative(locales) is Locale selectedLocale
-                    && !foundLocale
                     && Array.IndexOf(locales, selectedLocale) > -1) //aka is not native
                 {
-                    foundLocale = true;
-                    SelectedLocale = selectedLocale;
+                    if (!foundLocale)
+                    {
+                        foundLocale = true;
+                        SelectedLocale = selectedLocale;
+                    }
+                    reference.RecordCurrentLocale(selectedLocale);
                 }
             }
-            EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
-            UI.ReportChange();
+            FinishLocaleSelection();
             return SelectedLocale;
         }
         public Locale SelectLocaleOrNative(params CultureInfo[] cultureInfos)
@@ -138,15 +163,17 @@ namespace EZUtils.Localization
             foreach (CatalogReference reference in subscribers)
             {
                 if (reference.Catalog.SelectLocaleOrNative(cultureInfos) is Locale selectedLocale
-                    && !foundLocale
                     && Array.Exists(cultureInfos, c => c == selectedLocale.CultureInfo)) //aka is not native
                 {
-                    foundLocale = true;
-                    SelectedLocale = selectedLocale;
+                    if (!foundLocale)
+                    {
+                        foundLocale = true;
+                        SelectedLocale = selectedLocale;
+                    }
+                    reference.RecordCurrentLocale(selectedLocale);
                 }
             }
-            EditorPrefs.SetString(selectedLocaleEditorPrefKey, SelectedLocale.CultureInfo.Name);
-            UI.ReportChange();
+            FinishLocaleSelection();
             return SelectedLocale;
         }
         //needed to disambiguate between locale vs cultureinfo params arrays
