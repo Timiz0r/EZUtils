@@ -289,6 +289,84 @@ namespace EZUtils.Localization.Tests.Integration
         }
 
         [UnityTest]
+        public IEnumerator EZLocalization_AutoRetranslatesMenus()
+        {
+            GenerateAssemblyAttribute();
+            Locale locale() => new Locale(
+                CultureInfo.GetCultureInfo("ja"),
+                new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"));
+            string languageAttribute = GenerateLocalizationAttribute("Gen/ja-integrationtest.po", locale());
+            GenerateEmptyProxyType(languageAttribute);
+
+            AssetDatabase.Refresh();
+            yield return new WaitForDomainReload();
+
+
+            File.WriteAllText(Path.Combine(TestAssemblyRootFolder, "Gen", "GenerateMenus.cs"), @"
+namespace EZUtils.Localization.Tests.Integration
+{
+    using EZUtils.Localization;
+    using System.Globalization;
+    using System.Collections.Generic;
+    using UnityEditor;
+    using UnityEditor.UIElements;
+    using UnityEngine.UIElements;
+    using static Localization;
+
+    public static class CreateMenus
+    {
+        [InitializeOnLoadMethod]
+        private static void UnityInitialize() => AddMenu(""IntegrationTest/Menu"", priority: 0, () => { });
+    }
+}");
+
+            GenerateTestAction(
+                localizationFieldDeclaration: string.Empty,
+                code: @"
+            string GetResult()
+            {
+                string[] subItems = (string[])typeof(Menu).GetMethod(
+                    ""ExtractSubmenus"", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)
+                    .Invoke(null, new object[] { ""IntegrationTest"" });
+                return string.Join("", "", subItems);
+            }
+
+            result.Add(GetResult());
+
+            SelectLocale(CultureInfo.GetCultureInfo(""ja""));
+
+            result.Add(GetResult());
+
+            SelectLocale(Locale.English);
+
+            result.Add(GetResult());
+            ");
+
+            AssetDatabase.Refresh();
+            yield return new WaitForDomainReload();
+
+            string poFilePath = Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest.po");
+            Assert.That(File.Exists(poFilePath), Is.True);
+            _ = new GetTextCatalogBuilder()
+                .ForPoFile(poFilePath, locale(), d => d
+                    .OverwriteEntry(e => e
+                        .ConfigureId("IntegrationTest/Menu")
+                        .ConfigureValue("IntegrationTest/ja:Menu")))
+                .WriteToDisk();
+            //the initialization that adds menus causes the first load of the catalog to happen before we write our changes
+            yield return WaitForCatalogReload();
+
+            IReadOnlyList<string> result = new IntegrationTestAction().Execute();
+
+            Assert.That(result, Is.EqualTo(new[]
+            {
+                "IntegrationTest/Menu",
+                "IntegrationTest/ja:Menu",
+                "IntegrationTest/Menu",
+            }));
+        }
+
+        [UnityTest]
         public IEnumerator SetLocale_SynchronizesAcrossMultipleInstance()
         {
             GenerateAssemblyAttribute();
@@ -895,6 +973,15 @@ msgstr ""bar""
                 "2", //plus jp
                 "3", //plus ko
             }));
+        }
+
+        //this only needs to be done for cases where EZLocalization is used before we overwrite our po files
+        private static object WaitForCatalogReload()
+        {
+            //far from ideal, as it's a potential source of flakiness
+            //but at least it's an integration test
+            System.Threading.Thread.Sleep(1000);
+            return null; //to be yield returned
         }
 
         private static void GenerateAssemblyAttribute()

@@ -16,13 +16,13 @@ namespace EZUtils.Localization
             new List<(Object obj, Action action)>();
         private readonly List<(VisualElement element, Action action)> retranslatableElements =
             new List<(VisualElement element, Action action)>();
+        private readonly List<IRetranslatable> genericRetranslatables = new List<IRetranslatable>();
 
         //not sure if it's better to watch all subdirs from the project root, or to have one watcher per provided root
         //am guessing this will be better, since all of the temp folders and whatnot are pretty large
         private readonly FileSystemWatcher fsw;
         //key is full path to make the initial load and fsw paths the same, in the easiest way possible
         private readonly Dictionary<string, GetTextDocument> documents = new Dictionary<string, GetTextDocument>();
-
         private readonly string root;
         private bool initialized = false;
         private bool disposedValue;
@@ -93,6 +93,12 @@ namespace EZUtils.Localization
             {
                 action();
             }
+
+            _ = genericRetranslatables.RemoveAll(r => r.IsFinished);
+            foreach (IRetranslatable retranslatable in genericRetranslatables)
+            {
+                retranslatable.Retranslate();
+            }
         }
         public void TrackRetranslatable(Object obj, Action action)
         {
@@ -105,10 +111,10 @@ namespace EZUtils.Localization
             action();
         }
 
-        public void SelectLocale(Locale locale)
+        public void TrackRetranslatable(IRetranslatable retranslatable)
         {
-            catalogLocaleSynchronizer.SelectLocale(locale);
-            Retranslate();
+            genericRetranslatables.Add(retranslatable);
+            retranslatable.Retranslate();
         }
         //the locale synchronizer will generally deal with the catalog directly,
         //but, the reference still needs to be informed in case po files change

@@ -12,6 +12,7 @@ namespace EZUtils.Localization
         private readonly string root;
         private readonly Locale nativeLocale;
         private readonly CatalogLocaleSynchronizer synchronizer;
+        private readonly LocalizedMenuContainer localizedMenuContainer;
 
         private CatalogReference catalogReference;
         private bool disposedValue;
@@ -21,6 +22,12 @@ namespace EZUtils.Localization
             this.root = root;
             this.nativeLocale = nativeLocale;
             this.synchronizer = synchronizer;
+            localizedMenuContainer = new LocalizedMenuContainer(this);
+
+            //at time of writing, the only reason to force initialization is for menus
+            //we could instead limit to adding this to the first invocation of AddMenu,
+            //but this perhaps vilates the principal of least surprise the least
+            EditorApplication.delayCall += Initialize;
         }
 
         public static EZLocalization ForCatalogUnder(string root, string localeSynchronizationKey)
@@ -34,15 +41,16 @@ namespace EZUtils.Localization
             return result;
         }
 
-        //in general, we can't use either of these in static contexts/invoked from cctors
+        //in general, we can't use catalog reference or synchronizer in static contexts/invoked from cctors
         //since we usually instantiate EZLocalization in cctors, we need to delay
         private void Initialize()
         {
             if (catalogReference != null) return;
 
-            catalogReference = new CatalogReference(root, nativeLocale, synchronizer);
+            catalogReference = new CatalogReference(root, nativeLocale);
             synchronizer.Register(catalogReference);
             catalogReference.Initialize();
+            catalogReference.TrackRetranslatable(localizedMenuContainer);
         }
 
         public void SelectLocale(Locale locale)
@@ -106,10 +114,10 @@ namespace EZUtils.Localization
             //descendents includes element, as well
             rootElement.Query().Descendents<VisualElement>().ForEach(element =>
             {
-                if (element is IRetranslatableElement retranslatable)
+                if (element is IRetranslatable retranslatable)
                 {
                     //making this first so that we can override default behavior if necessary
-                    retranslatable.Retranslate();
+                    catalogReference.TrackRetranslatable(retranslatable);
                 }
                 else if (element is TextElement textElement
                     && textElement.text is string teOriginalValue
@@ -139,6 +147,12 @@ namespace EZUtils.Localization
             Initialize();
             catalogReference.TrackRetranslatable(window, () => window.titleContent.text = T(titleText));
         }
+        [LocalizationMethod]
+        public void AddMenu([LocalizationParameter(LocalizationParameter.Id)] string name, int priority, Action action)
+            //LocalizedMenuContainer supports adding menus before initialization is done
+            //and initialization add them later
+            //so no need to Initialize here
+            => localizedMenuContainer.AddMenu(name, priority, action);
 
         [LocalizationMethod]
         public string T(RawString id)
