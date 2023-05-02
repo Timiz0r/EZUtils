@@ -6,6 +6,7 @@ namespace EZUtils.MMDAvatarTools
     using System.Collections.Generic;
     using System.Linq;
     using VRC.SDK3.Avatars.Components;
+    using static Localization;
 
     public class MmdAvatarAnalyzer
     {
@@ -42,7 +43,7 @@ namespace EZUtils.MMDAvatarTools
                     ExceptionUtil.Record(() => results.Add(
                         new AnalysisResult(
                             new AnalysisResultIdentifier(
-                                $"「{analyzer.GetType().Name}」にエラーが発生しました。",
+                                T($"An error has occurred in '{analyzer.GetType().Name}'."),
                                 $"AnalyzerException.{analyzer.GetType().Name}"),
                             AnalysisResultLevel.AnalyzerError,
                             new GeneralRenderer(e.ToString())))))

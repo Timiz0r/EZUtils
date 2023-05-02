@@ -18,7 +18,10 @@ namespace EZUtils.Localization
             this.nativeLocale = nativeLocale;
 
             supportedLocales = new HashSet<Locale>(documents.Select(d => d.Header.Locale).Append(nativeLocale));
+            SupportedLocales = supportedLocales.ToArray();
         }
+
+        public IReadOnlyList<Locale> SupportedLocales { get; }
 
         public bool Supports(Locale locale) => supportedLocales.Contains(locale);
 

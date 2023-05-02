@@ -10,47 +10,42 @@ namespace EZUtils.Localization
     using UnityEngine.UIElements;
     using Object = UnityEngine.Object;
 
-    //previously, we had a dictionary of these so that instances' locales could be synced
-    //with the introduction of localeSynchronizationKey and the synchronizer, that dictionary has effectively moved to
-    //the synchronizer.
-    //
-    //hypothetically, this could be merged with the, at time of writing, bare EZLocaliaztion class.
-    //this is not done because CatalogLocaleSynchronizer's SetLocale's touching of CatalogReference.Catalog is convenient.
-    //we can keep hiding the underlying catalog in EZLocalization this way.
     internal class CatalogReference : IDisposable
     {
         private readonly List<(Object obj, Action action)> retranslatableObjects =
             new List<(Object obj, Action action)>();
         private readonly List<(VisualElement element, Action action)> retranslatableElements =
             new List<(VisualElement element, Action action)>();
+        private readonly List<IRetranslatable> genericRetranslatables = new List<IRetranslatable>();
 
         //not sure if it's better to watch all subdirs from the project root, or to have one watcher per provided root
         //am guessing this will be better, since all of the temp folders and whatnot are pretty large
         private readonly FileSystemWatcher fsw;
         //key is full path to make the initial load and fsw paths the same, in the easiest way possible
         private readonly Dictionary<string, GetTextDocument> documents = new Dictionary<string, GetTextDocument>();
-
         private readonly string root;
-        private GetTextCatalog catalog;
-        //catalogLocaleSynchronizer does a getstring which needs to be called as late as possible to avoid throws,
-        //particularly when opening an editorwindow
-        private readonly Lazy<CatalogLocaleSynchronizer> catalogLocaleSynchronizer;
-
+        private bool initialized = false;
         private bool disposedValue;
 
-        public CatalogReference(string root, Locale nativeLocale, string localeSynchronizationKey)
+        public Locale NativeLocale { get; }
+        public Locale IntendedLocale { get; private set; }
+        public Locale CurrentLocale { get; private set; }
+        public IReadOnlyList<Locale> SupportedLocales => Catalog.SupportedLocales;
+        public GetTextCatalog Catalog { get; private set; }
+
+        public CatalogReference(
+            string root,
+            Locale nativeLocale)
         {
             this.root = root;
             NativeLocale = nativeLocale;
-            catalogLocaleSynchronizer = new Lazy<CatalogLocaleSynchronizer>(
-                () => CatalogLocaleSynchronizer.Register(localeSynchronizationKey, this),
-                System.Threading.LazyThreadSafetyMode.None);
+            Catalog = new GetTextCatalog(Array.Empty<GetTextDocument>(), nativeLocale);
 
             fsw = new FileSystemWatcher()
             {
                 Path = root,
                 Filter = "*.po",
-                IncludeSubdirectories = false
+                IncludeSubdirectories = false,
             };
             fsw.Changed += PoFileChanged;
             fsw.Created += PoFileChanged;
@@ -58,35 +53,31 @@ namespace EZUtils.Localization
             fsw.Renamed += PoFileRenamed;
         }
 
-        public Locale NativeLocale { get; }
-
-        public GetTextCatalog Catalog
+        public void Initialize()
         {
-            get
+            if (initialized) return;
+
+            //this has an initialization method mainly because, as an implementation detail of EZLocalization,
+            //ReloadCatalog's usage of the synchronizer must only happen after the synchronizer is given
+            //an instance of this.
+            DirectoryInfo directory = new DirectoryInfo(root);
+            if (directory.Exists)
             {
-                if (catalog == null)
+                foreach (FileInfo file in directory.EnumerateFiles("*.po", SearchOption.TopDirectoryOnly))
                 {
-                    DirectoryInfo directory = new DirectoryInfo(root);
-                    if (directory.Exists)
+                    try
                     {
-                        foreach (FileInfo file in directory.EnumerateFiles("*.po", SearchOption.TopDirectoryOnly))
-                        {
-                            try
-                            {
-                                documents.Add(file.FullName, GetTextDocument.LoadFrom(file.FullName));
-                            }
-                            catch (Exception ex) when (ExceptionUtil.Record(() => Debug.LogException(ex)))
-                            {
-                            }
-                        }
+                        documents.Add(file.FullName, GetTextDocument.LoadFrom(file.FullName));
                     }
-
-                    ReloadCatalog();
-                    fsw.EnableRaisingEvents = true;
+                    catch (Exception ex) when (ExceptionUtil.Record(() => Debug.LogException(ex)))
+                    {
+                    }
                 }
-
-                return catalog;
             }
+            ReloadCatalog();
+            fsw.EnableRaisingEvents = true;
+
+            initialized = true;
         }
 
         public void Retranslate()
@@ -102,6 +93,12 @@ namespace EZUtils.Localization
             {
                 action();
             }
+
+            _ = genericRetranslatables.RemoveAll(r => r.IsFinished);
+            foreach (IRetranslatable retranslatable in genericRetranslatables)
+            {
+                retranslatable.Retranslate();
+            }
         }
         public void TrackRetranslatable(Object obj, Action action)
         {
@@ -114,70 +111,28 @@ namespace EZUtils.Localization
             action();
         }
 
-        public void SelectLocale(Locale locale)
+        public void TrackRetranslatable(IRetranslatable retranslatable)
         {
-            _ = Catalog;
-
-            catalogLocaleSynchronizer.Value.SelectLocale(locale);
+            genericRetranslatables.Add(retranslatable);
+            retranslatable.Retranslate();
+        }
+        //the locale synchronizer will generally deal with the catalog directly,
+        //but, the reference still needs to be informed in case po files change
+        public void RecordCurrentLocale(Locale currentLocale)
+        {
+            CurrentLocale = currentLocale;
             Retranslate();
         }
-        public Locale SelectLocale(CultureInfo cultureInfo)
-        {
-            EnsureCatalogInitialized();
 
-            Locale locale = catalogLocaleSynchronizer.Value.SelectLocale(cultureInfo);
-            Retranslate();
-            return locale;
-        }
-
-        public bool TrySelectLocale(Locale locale)
-        {
-            EnsureCatalogInitialized();
-
-            bool result = catalogLocaleSynchronizer.Value.TrySelectLocale(locale);
-            Retranslate();
-            return result;
-        }
-        public bool TrySelectLocale(CultureInfo cultureInfo, out Locale correspondingLocale)
-        {
-            EnsureCatalogInitialized();
-
-            bool result = catalogLocaleSynchronizer.Value.TrySelectLocale(cultureInfo, out correspondingLocale);
-            Retranslate();
-            return result;
-        }
-        public bool TrySelectLocale(CultureInfo cultureInfo) => TrySelectLocale(cultureInfo, out _);
-
-        public Locale SelectLocaleOrNative(Locale[] locales)
-        {
-            EnsureCatalogInitialized();
-
-            Locale locale = catalogLocaleSynchronizer.Value.SelectLocaleOrNative(locales);
-            Retranslate();
-            return locale;
-        }
-        public Locale SelectLocaleOrNative(CultureInfo[] cultureInfos)
-        {
-            EnsureCatalogInitialized();
-
-            Locale locale = catalogLocaleSynchronizer.Value.SelectLocaleOrNative(cultureInfos);
-            Retranslate();
-            return locale;
-        }
-        public Locale SelectLocaleOrNative() => SelectLocaleOrNative(Array.Empty<Locale>());
-
-        //there's a bit of a circular reference issue that happens whenn
-        //catalogLocaleSynchronizer is called before Catalog is initialized,
-        //since catalog initialization depends on getting the initial locale from the synchronizer
-        private void EnsureCatalogInitialized() => _ = Catalog;
+        public void RecordIntendedLocale(Locale intendedLocale) => IntendedLocale = intendedLocale;
 
         private void ReloadCatalog()
         {
-            catalog = new GetTextCatalog(documents.Values.ToArray(), NativeLocale);
-            //we dont call our methods because, if the synchronized locale isnt in this catalog, we dont want to
-            //proparate a change just based on this. we want a deliberate user action to change it.
-            _ = catalog.SelectLocaleOrNative(catalogLocaleSynchronizer.Value.SelectedLocale);
-            Retranslate();
+            Catalog = new GetTextCatalog(documents.Values.ToArray(), NativeLocale);
+            //if the synchronizer picked a locale we don't support, we still want to try it on reloads
+            //in case the necessary document was added
+            _ = Catalog.SelectLocaleOrNative(IntendedLocale, CurrentLocale);
+            UIElements.LocaleSelectionUI.ReportChange();
         }
 
         //NOTE: fsw is not thread-safe by default in two ways:
@@ -215,6 +170,7 @@ namespace EZUtils.Localization
             if (needNewCatalog)
             {
                 ReloadCatalog();
+                Retranslate();
             }
         };
 

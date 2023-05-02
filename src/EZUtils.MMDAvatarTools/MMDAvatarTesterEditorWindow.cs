@@ -3,12 +3,19 @@ namespace EZUtils.MMDAvatarTools
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using EZUtils.Localization.UIElements;
     using UnityEditor;
     using UnityEditor.UIElements;
     using UnityEngine;
     using UnityEngine.UIElements;
     using VRC.SDK3.Avatars.Components;
 
+    using static Localization;
+
+    //TODO: translate refactor! consider crowdin scenario. dont anticipate needing zero, so just use default ja.
+    //TODO: push to main but dont yet do version increase for this package
+    //TODO: get crowdin up and running
+    //TODO: translate
     public class MmdAvatarTesterEditorWindow : EditorWindow
     {
         private readonly UIValidator testerValidation = new UIValidator();
@@ -18,8 +25,10 @@ namespace EZUtils.MMDAvatarTools
         private TypedObjectField<VRCAvatarDescriptor> targetAvatar;
         private VisualTreeAsset analysisResultUxml;
 
-        [MenuItem("EZUtils/MMD avatar tester", isValidateFunction: false, priority: 0)]
-        public static void PackageManager()
+        [InitializeOnLoadMethod]
+        private static void UnityInitialize() => AddMenu("EZUtils/MMD avatar tester", priority: 0, CreateWindow);
+
+        public static void CreateWindow()
         {
             MmdAvatarTesterEditorWindow window = GetWindow<MmdAvatarTesterEditorWindow>("MMD Tester");
             window.Show();
@@ -27,9 +36,14 @@ namespace EZUtils.MMDAvatarTools
 
         public void CreateGUI()
         {
+            TranslateWindowTitle(this, "MMD Tester");
+
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 "Packages/com.timiz0r.EZUtils.MMDAvatarTools/MmdAvatarTesterEditorWindow.uxml");
             visualTree.CommonUIClone(rootVisualElement);
+            TranslateElementTree(rootVisualElement);
+
+            rootVisualElement.Q<Toolbar>().AddLocaleSelector();
 
             //not allowed to go in cctor, so here is as good as any other place
             if (analysisResultUxml == null)

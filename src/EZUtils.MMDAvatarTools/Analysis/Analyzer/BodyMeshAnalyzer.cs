@@ -6,6 +6,7 @@ namespace EZUtils.MMDAvatarTools
     using System.Linq;
     using UnityEngine;
     using VRC.SDK3.Avatars.Components;
+    using static Localization;
 
     public class BodyMeshAnalyzer : IAnalyzer
     {
@@ -13,8 +14,8 @@ namespace EZUtils.MMDAvatarTools
         {
             Transform body = avatar.transform.Find("Body");
             ObjectSelectionRenderer existingMmdMeshes = ObjectSelectionRenderer.Create(
-                listTitle: "MMD対応メッシュ",
-                emptyMessage: "MMD対応のメッシュがこのアバターに存在しません。",
+                listTitle: T("MMD-compatible mesh"),
+                emptyMessage: T("There are no MMD-compatible meshes on this avatar."),
                 objects: avatar
                     //while the nonbodymesh analyzer includes inactive, we don't here because we're trying to detect the main
                     //meshes, which are likely always on.
@@ -27,10 +28,10 @@ namespace EZUtils.MMDAvatarTools
                 Result.NoBody,
                 AnalysisResultLevel.Error,
                 new GeneralRenderer(
-                    "Bodyというメッシュが存在しないと、表情は変化することができません。",
-                    instructions:
-                        "アバターのメインメッシュ名がBodyということを確認してください。" +
-                        "また、MMD対応のメッシュが存在しない場合、このアバターがもともとMMD対応ができてない可能性があります。",
+                    T("If there are no meshes named 'Body', it is not possible to change facial expressions."),
+                    instructions: T(
+                        "Ensure the main mesh of the avatar is called 'Body'. " +
+                        "Be aware that, if there is no such mesh, the avatar may simply not be meant to be MMD-compatible."),
                     detailRenderer: existingMmdMeshes
                 ));
             if (body.TryGetComponent(out SkinnedMeshRenderer bodyMesh))
@@ -40,17 +41,18 @@ namespace EZUtils.MMDAvatarTools
                         Result.MmdBodyMeshFound,
                         AnalysisResultLevel.Pass,
                         new GeneralRenderer(
-                            "MMD対応のBodyというメッシュが発見できました。表情は普通に変化することができます。",
+                            T("An MMD-compatible mesh called 'Body' was found. Facial expressions should work fine."),
                             detailRenderer: existingMmdMeshes
                         ))
                     : AnalysisResult.Create(
                         Result.BodyHasNoMmdBlendShapes,
                         AnalysisResultLevel.Error, //users probably want their face to move, so an error seems more appropriate
                         new GeneralRenderer(
-                            "Bodyというメッシュがありますが、ブレンドシェープが存在しません。存在しないと表情が変化することができません。",
-                            instructions:
-                                "アバターのメインメッシュが本当にBodyのメッシュということを確認してください。" +
-                                "また、MMD対応のメッシュが存在しない場合、このアバターがもともとMMD対応ができてない可能性があります。",
+                            T("A mesh called 'Body' was found, but there are no MMD-compatible blendshapes. " +
+                            "Without MMD-compatible blendshapes, facial expressions will not change."),
+                            instructions: T(
+                                "Confirm that the main mesh of the avatar is actually called 'Body'. " +
+                                "Be aware that, if there is no MMD-compatible mesh, the avatar may simply not be meant to be MMD-compatible."),
                             detailRenderer: existingMmdMeshes
                         ));
             }
@@ -59,11 +61,11 @@ namespace EZUtils.MMDAvatarTools
                 Result.NotSkinnedMeshRenderer,
                 AnalysisResultLevel.Error,
                 new GeneralRenderer(
-                    "Bodyというメッシュが存在しますが、Skinned Mesh Rendererではなくて、Mesh Rendererになっています。" +
-                    "Mesh Renderでのメッシュは表情が変化することができません。",
-                    instructions:
-                        "アバターのメインメッシュが本当にBodyのメッシュということを確認してください。" +
-                        "また、MMD対応のメッシュが存在しない場合、このアバターがもともとMMD対応ができてない可能性があります。",
+                    T("A mesh named 'Body' was found, but, instead of being a 'Skinned Mesh Renderer', it is a 'Mesh Renderer'." +
+                    "It is not possible to change facial expressions if the mesh is a 'Mesh Renderer'."),
+                    instructions: T(
+                        "Confirm that the main mesh of the avatar is actually called 'Body'. " +
+                        "Be aware that, if there is no MMD-compatible mesh, the avatar may simply not be meant to be MMD-compatible."),
                     detailRenderer: existingMmdMeshes
                 ));
 
@@ -72,12 +74,13 @@ namespace EZUtils.MMDAvatarTools
                 Result.NoRendererInBody,
                 AnalysisResultLevel.Error,
                 new GeneralRenderer(
-                    "Bodyというゲームオブジェクトがありますが、Rendererが存在していません。" +
-                    "もしかして、他のメッシュが本体のメッシュになっているのでしょうか。" +
-                    "そのメッシュの名前がBodyにならないと、表情が変化することができません。",
-                    instructions:
-                        "BodyというゲームオブジェクトのSkinned Mesh Rendererが消された可能性があります。" +
-                        "オリジナルプレハブ（FBXなど）を確認してください。",
+                    T("An object named 'Body' was found, but it has no renderer. " +
+                    "In the event the mesh of the avatar is in another object, " +
+                    "note that it must be named 'Body' for facial expressions to change."),
+                    instructions: T(
+                        "There is a possibility the 'Skinned Mesh Renderer' component was deleted accidentally." +
+                        "Confirm what the 'Body' object should be in the original prefab (such as the '.fbx' file). " +
+                        "Otherwise, the main mesh may be in another object altogether."),
                     detailRenderer: existingMmdMeshes
                 ));
         }
@@ -85,15 +88,15 @@ namespace EZUtils.MMDAvatarTools
         public static class Result
         {
             public static readonly AnalysisResultIdentifier MmdBodyMeshFound =
-                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("MMD対応のBodyというメッシュを発見");
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>(T("MMD-compatible mesh found"));
             public static readonly AnalysisResultIdentifier NoBody =
-                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("Bodyというゲームオブジェクトが未発見");
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>(T("Object named 'Body' not found"));
             public static readonly AnalysisResultIdentifier NotSkinnedMeshRenderer =
-                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("BodyというメッシュはSkinned Mesh Rendererではありません");
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>(T("Mesh named 'Body' is not a 'Skinned Mesh Renderer'"));
             public static readonly AnalysisResultIdentifier NoRendererInBody =
-                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("BodyというゲームオブジェクトにはRendererがありません");
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>(T("Object named 'Body' has no renderer"));
             public static readonly AnalysisResultIdentifier BodyHasNoMmdBlendShapes =
-                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("BodyというメッシュにはMMD対応のブレンドシェープがありません");
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>(T("Mesh named 'Body' has no MMD-compatible blendshapes"));
         }
     }
 }

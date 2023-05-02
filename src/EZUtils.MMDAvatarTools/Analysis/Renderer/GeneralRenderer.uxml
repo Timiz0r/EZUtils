@@ -8,13 +8,12 @@
       UnityEditor.UIElements ../../../../UIElementsSchema/UnityEditor.UIElements.xsd"
 >
   <VisualElement>
-    <Style src="AnimatorStateRendererLayerElement.uss" />
+    <Style src="GeneralRenderer.uss" />
 
-    <VisualElement class="analyzer-result-details-state-layer">
-      <Label class="analyzer-result-details-state-layer-name" />
-      <Button text="loc:Open" />
-    </VisualElement>
+    <Label class="results-details-title" text="loc:Explanation" />
+    <TextElement name="explanation" class="analyzer-result-details-description" />
 
-    <VisualElement class="analyzer-result-details-state-list" />
+    <Label class="results-details-title" text="loc:How to fix" />
+    <TextElement name="fix" class="analyzer-result-details-description" />
   </VisualElement>
 </UXML>

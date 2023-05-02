@@ -3,32 +3,36 @@
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xmlns="UnityEngine.UIElements"
   xmlns:editor="UnityEditor.UIElements"
+  xmlns:ez="EZUtils.UIElements"
   xsi:schemaLocation="
     UnityEngine.UIElements ../../UIElementsSchema/UnityEngine.UIElements.fixed.xsd
-    UnityEditor.UIElements ../../UIElementsSchema/UnityEditor.UIElements.xsd">
+    UnityEditor.UIElements ../../UIElementsSchema/UnityEditor.UIElements.xsd
+    EZUtils.UIElements ../../UIElementsSchema/EZUtils.UIElements.xsd">
   <VisualElement style="padding: 2px">
     <Style src="MmdAvatarTesterEditorWindow.uss" />
 
-    <Label text="アバター" />
+    <editor:Toolbar />
+
+    <Label text="loc:Avatar" />
     <editor:ObjectField name="targetAvatar" />
 
     <VisualElement class="section tester">
-      <Label class="section-title" text="再生モードで試す" />
+      <Label class="section-title" text="loc:Test in play mode" />
       <VisualElement class="show-edit-mode">
-        <Label text="再生モードに入っていません" />
+        <Label text="loc:Not currently in play mode" />
       </VisualElement>
 
       <VisualElement class="show-play-mode">
-        <Label text="アニメーション" />
+        <Label text="loc:Animation" />
         <editor:ObjectField name="targetAnimation" />
-        <Button class="show-not-running" name="start" text="アニメーション再生" />
-        <Button class="show-running" name="stop" text="アニメーション停止" />
+        <Button class="show-not-running" name="start" text="loc:Start animation" />
+        <Button class="show-running" name="stop" text="loc:Stop animation" />
       </VisualElement>
     </VisualElement>
 
     <VisualElement class="section analyzer">
-      <Label class="section-title" text="アバター解析" />
-      <Button name="analyze" text="再解析" />
+      <Label class="section-title" text="loc:Avatar analysis" />
+      <Button name="analyze" text="loc:Reanalyze" />
       <ScrollView class="analyzer-result-container" />
     </VisualElement>
   </VisualElement>

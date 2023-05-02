@@ -111,9 +111,10 @@ namespace EZUtils.Localization
                 fieldName = field.Declaration.Variables[0].Identifier.ValueText;
 
                 ClassDeclarationSyntax newNode = node
-                    .WithModifiers(originalClassDeclaration.Modifiers)
                     .WithAttributeLists(originalClassDeclaration.AttributeLists)
+                    .WithModifiers(originalClassDeclaration.Modifiers)
                     .WithIdentifier(originalClassDeclaration.Identifier)
+                    .WithBaseList(null)
                     .WithMembers(node.Members.Insert(0, field))
                     .WithTriviaFrom(node);
                 return base.VisitClassDeclaration(newNode);
@@ -162,6 +163,7 @@ namespace EZUtils.Localization
                             SyntaxFactory.Token(SyntaxKind.PublicKeyword).WithTriviaFrom(node.Modifiers[0]),
                             SyntaxFactory.Token(SyntaxKind.StaticKeyword).WithTrailingTrivia(SyntaxFactory.Space)))
                     .WithParameterList(node.ParameterList.WithTrailingTrivia(SyntaxFactory.Space))
+                    .WithBody(null)
                     .WithExpressionBody(
                         SyntaxFactory.ArrowExpressionClause(
                             SyntaxFactory.Token(SyntaxKind.EqualsGreaterThanToken).WithTrailingTrivia(SyntaxFactory.Space),
@@ -171,6 +173,7 @@ namespace EZUtils.Localization
                                     SyntaxFactory.IdentifierName(fieldName),
                                     SyntaxFactory.IdentifierName(node.Identifier.ValueText)),
                             argumentList)))
+                    .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
                     .WithTriviaFrom(node);
 
                 return base.VisitMethodDeclaration(newNode);

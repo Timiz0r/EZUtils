@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UXML
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns="UnityEngine.UIElements"
+  xmlns:editor="UnityEditor.UIElements"
+  xmlns:ez="EZUtils.UIElements"
+  xsi:schemaLocation="
+    UnityEngine.UIElements ../../../UIElementsSchema/UnityEngine.UIElements.fixed.xsd
+    UnityEditor.UIElements ../../../UIElementsSchema/UnityEditor.UIElements.xsd
+    EZUtils.UIElements ../../../UIElementsSchema/EZUtils.UIElements.xsd">
+  <ez:ToolbarMenu text="Language">
+    <TextElement class="toolbar-menu-label" />
+    <VisualElement class="toolbar-menu-arrow" />
+  </ez:ToolbarMenu>
+</UXML>

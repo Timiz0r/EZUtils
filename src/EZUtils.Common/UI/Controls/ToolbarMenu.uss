@@ -1,0 +1,11 @@
+.toolbar-menu-arrow {
+    background-image: url("ToolbarMenuArrow.psd");
+    align-self: center;
+    width: 12px;
+    height: 12px;
+    margin-left: 2px;
+}
+
+.toolbar-menu-label {
+    -unity-text-align: middle-left;
+}

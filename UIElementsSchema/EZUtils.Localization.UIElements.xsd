@@ -25,7 +25,6 @@
         <xs:attribute default="" name="few" type="xs:string" use="optional" />
         <xs:attribute default="" name="many" type="xs:string" use="optional" />
         <xs:attribute default="" name="other" type="xs:string" use="optional" />
-        <xs:attribute default="" name="useSpecialZero" type="xs:string" use="optional" />
         <xs:anyAttribute processContents="lax" />
       </xs:restriction>
     </xs:complexContent>

@@ -175,9 +175,13 @@ namespace EZUtils.Localization
                 && TryGetString(binaryOperation.LeftOperand, out ExtractedString leftOperandString)
                 && TryGetString(binaryOperation.RightOperand, out ExtractedString rightOperandString))
             {
-                result = new ExtractedString(
-                    value: string.Concat(leftOperandString.Value, rightOperandString.Value),
-                    originalFormat: string.Concat(leftOperandString.OriginalFormat, rightOperandString.OriginalFormat));
+                if (leftOperandString.OriginalFormat != null || rightOperandString.OriginalFormat != null)
+                {
+                    result = default;
+                    return false;
+                }
+
+                result = new ExtractedString(string.Concat(leftOperandString.Value, rightOperandString.Value));
                 return true;
             }
 

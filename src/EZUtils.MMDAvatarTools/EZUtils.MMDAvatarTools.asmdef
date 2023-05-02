@@ -3,6 +3,7 @@
     "references": [
         "VRC.SDK3A",
         "EZUtils.Common",
+        "EZUtils.Localization",
         "EZUtils.MMDAvatarTools.Components"
     ],
     "includePlatforms": [

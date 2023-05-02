@@ -5,6 +5,7 @@ namespace EZUtils.MMDAvatarTools
     using System.Linq;
     using UnityEngine;
     using VRC.SDK3.Avatars.Components;
+    using static Localization;
 
     public class HumanoidAnimationAnalyzer : IAnalyzer
     {
@@ -14,7 +15,7 @@ namespace EZUtils.MMDAvatarTools
             if (playableLayerInformation.FX.ConfiguredMask == null) return AnalysisResult.Create(
                 Result.NoActiveHumanoidAnimationsFound,
                 AnalysisResultLevel.Pass,
-                new GeneralRenderer("ヒューマノイドのアニメーションがあっても、FXレイヤーのディフォルトのアバターマスクに無効化されてます。"));
+                new GeneralRenderer(T("Even if there was a humanoid animation, the default avatar mask would disable it.")));
 
             AvatarMaskBodyPart[] activeBodyParts = Enum.GetValues(typeof(AvatarMaskBodyPart))
                 .Cast<AvatarMaskBodyPart>()
@@ -25,7 +26,7 @@ namespace EZUtils.MMDAvatarTools
             if (activeBodyParts.Length == 0) return AnalysisResult.Create(
                 Result.NoActiveHumanoidAnimationsFound,
                 AnalysisResultLevel.Pass,
-                new GeneralRenderer("ヒューマノイドのアニメーションがあっても、設定されてるアバターマスクに無効化されてます。"));
+                new GeneralRenderer(T("Even if there was a humanoid animation, the configured avatar mask would disable it.")));
 
             //no matter what's in the mask, or in a specific layer's mask, if a layer has a single humanoid animation
             //curve of any sort, then it'll cause the body to not move according to the mmd motion.
@@ -40,8 +41,8 @@ namespace EZUtils.MMDAvatarTools
                 Result.NoActiveHumanoidAnimationsFound,
                 AnalysisResultLevel.Pass,
                 new GeneralRenderer(
-                    "設定されてるアバターマスクにはボディ部分がくわえています。" +
-                    "それでも、ヒューマノイドのアニメーションがありません。"));
+                    T("The configured avatar mask has body parts added. " +
+                    "However, because there are no humanoid animations.")));
 
             List<AnalysisResult> results = new List<AnalysisResult>();
             const bool PossiblyDisabled = true;
@@ -52,14 +53,15 @@ namespace EZUtils.MMDAvatarTools
                 Result.PossiblyActiveHumanoidAnimationsFound,
                 AnalysisResultLevel.Warning,
                 new GeneralRenderer(
-                    "FXレイヤーに使われてるヒューマノイドのアニメーションがあります。" +
-                    "しかし、FXレイヤーまたは中のアニメーションレイヤーをオフにする" +
-                    "「VRC Animator Layer Control」や「VRC Playable Layer Control」があります。" +
-                    "このアニメーションを持っているレイヤーがオフにされる場合、MMDのアニメーションが再生します。" +
-                    "そしてオフにされない場合、MMDのアニメーションが再生しません。",
-                    instructions: "アバターの説明書にこれの使用方法を確認してください。普通はトグルまたは自動になります。",
+                    T("There is a humanoid animation in use by the FX layer. " +
+                    "However, the avatar has a 'VRC Animator Layer Control' or 'VRC Playable Layer Control' " +
+                    "that will either turn off the containing animation layer or the entire FX layer. " +
+                    "As long the layer containing the animation is turned off, MMD animations will play normally. " +
+                    "If not turned off, MMD animations will not play."),
+                    instructions:
+                        T("Check the instructions for the abatar. Usually, there is a toggle, if not done automatically."),
                     detailRenderer: new AnimatorStateRenderer(
-                        title: "ヒューマノイドのアニメーションがあるステート",
+                        title: T("States containing humanoid animations"),
                         emptyMessage: "", //we don't output in this case, anyway
                         animatorController: playableLayerInformation.FX.UnderlyingController,
                         states: possiblyActiveStates))
@@ -68,12 +70,12 @@ namespace EZUtils.MMDAvatarTools
                 Result.ActiveHumanoidAnimationsFound,
                 AnalysisResultLevel.Error,
                 new GeneralRenderer(
-                    "FXレイヤーに使われてるヒューマノイドのアニメーションがあることによって、MMDのアニメーションが再生しません。",
+                    T("Due to humanoid animations found in the FX layer, MMD animations will not play."),
                     instructions:
-                        "修正方法は複数ありますが、普通はGestureレイヤーに、以下に表示されているレイヤーとステートを入れて、" +
-                        "FXレイヤーの第0レイヤーのアバターマスクを解除することになります。",
+                        T("There are various ways to fix the issue, but the normal way is to first move the animations to the Gesture layer, " +
+                        "then ensure there is no avatar mask set in the FX layer's first animation layer."),
                     detailRenderer: new AnimatorStateRenderer(
-                        title: "ヒューマノイドのアニメーションがあるステート",
+                        title: T("States containing humanoid animations"),
                         emptyMessage: "", //we don't output in this case, anyway
                         animatorController: playableLayerInformation.FX.UnderlyingController,
                         states: definitelyActiveStates))
@@ -84,11 +86,11 @@ namespace EZUtils.MMDAvatarTools
         public static class Result
         {
             public static readonly AnalysisResultIdentifier ActiveHumanoidAnimationsFound =
-                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>("使われてるヒューマノイドのアニメーションを発見");
+                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>(T("Active humanoid animations found"));
             public static readonly AnalysisResultIdentifier PossiblyActiveHumanoidAnimationsFound =
-                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>("使われてる可能性のあるヒューマノイドのアニメーションを発見");
+                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>(T("Possibly active humanoid animations found"));
             public static readonly AnalysisResultIdentifier NoActiveHumanoidAnimationsFound =
-                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>("使われてるヒューマノイドのアニメーションが未発見");
+                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>(T("Active humanoid animations not found"));
         }
     }
 }
