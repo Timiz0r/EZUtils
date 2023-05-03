@@ -43,11 +43,11 @@ msgstr "MMD対応のBodyというメッシュを発見"
 msgid "Attempted to start while already started."
 msgstr "すでに再生中にまた再生しようとしています"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:28
+#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:29
 msgid "EZUtils/MMD avatar tester"
 msgstr "EZUtils/MMD対応確認"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:38
+#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:39
 msgid "MMD Tester"
 msgstr "MMD対応確認"
 
@@ -104,13 +104,13 @@ msgstr "MMD対応メッシュ"
 msgid "Mesh named 'Body' is not a 'Skinned Mesh Renderer'"
 msgstr "BodyというメッシュはSkinned Mesh Rendererではありません"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:88
-msgid "Active humanoid animations found"
-msgstr "使われてるヒューマノイドのアニメーションを発見"
-
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:79
 msgid "There is a possibility the 'Skinned Mesh Renderer' component was deleted accidentally. Confirm what the 'Body' object should be in the original prefab (such as the '.fbx' file). Otherwise, the main mesh may be in another object altogether."
 msgstr "BodyというゲームオブジェクトのSkinned Mesh Rendererが消された可能性があります。オリジナルプレハブ（FBXなど）を確認してください。"
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:32
+msgid "There are no meshes containing MMD-compatible blendshapes."
+msgstr "MMD対応のブレンドシェープのあるメッシュが存在しません。"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:98
 msgid "Mesh named 'Body' has no MMD-compatible blendshapes"
@@ -184,9 +184,9 @@ msgstr "使われてる可能性のあるヒューマノイドのアニメーシ
 msgid "The FX layer has states with write defaults off. However, the avatar has a 'VRC Animator Layer Control' or 'VRC Playable Layer Control' that will either turn off the containing animation layer or the entire FX layer. If such states are turned off, facial expressions can change; however, the animations of these states, even when played beforehand, will not work. Furthermore, if not turned off, facial animations likely won't change."
 msgstr "FXレイヤーにWrite Defaultsがオフになっているアニメーションステートがあります。しかし、FXレイヤーまたは中のアニメーションレイヤーをオフにする「VRC Animator Layer Control」や「VRC Playable Layer Control」があります。このステートがオフにされる場合、表情が変化できますが、FXレイヤーの他のアニメーションが直前に起動しても無効化にされます。そしてオフにされない場合、表情が変化しない可能性が高くなります。"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/EmptyStateAnalyzer.cs:59
-msgid "FX layer's states all have Motions set"
-msgstr "FXレイヤーの全ステートにはモーションがあります"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:88
+msgid "Active humanoid animations found"
+msgstr "使われてるヒューマノイドのアニメーションを発見"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:85
 msgid "MMD worlds will turn off the FX layer's first and second layers. If there are important, non-gesture animations in these layers, strange behaviors may occur."
@@ -208,7 +208,7 @@ msgstr "開く"
 # id format: The FX layer's animation layer {layerIndex}
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:91
 msgid "The FX layer's animation layer {0}"
-msgstr "FXレイヤーの第{layerIndex}レイヤー"
+msgstr "FXレイヤーの第{0}レイヤー"
 
 # id format: There are no states in the FX layer's animation layer {layerIndex}.
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:92
@@ -264,9 +264,9 @@ msgstr "使われてるヒューマノイドのアニメーションが未発見
 msgid "Stop animation"
 msgstr "アニメーション停止"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:43
-msgid "Non-Body meshes have no MMD-compatible blendshapes"
-msgstr "Bodyではないメッシュには、MMD対応のブレンドシェープはありません"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/EmptyStateAnalyzer.cs:59
+msgid "FX layer's states all have Motions set"
+msgstr "FXレイヤーの全ステートにはモーションがあります"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:34
 msgid "Avatar analysis"
@@ -301,7 +301,7 @@ msgstr "FXレイヤーのWrite Defaultsがオン"
 msgid "FX layer states have Write Defaults off"
 msgstr "FXレイヤーのWrite Defaultsがオフ"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:40
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:39
 msgid "There are non-Body meshes with MMD-compatible blendshapes"
 msgstr "Bodyではないメッシュには、MMD対応のブレンドシェープがあります"
 
@@ -330,9 +330,9 @@ msgstr "再生モードには入っていません"
 msgid "Animation"
 msgstr "アニメーション"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:32
-msgid "There are no meshes containing MMD-compatible blendshapes."
-msgstr "MMD対応のブレンドシェープのあるメッシュが存在しません。"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:42
+msgid "Non-Body meshes have no MMD-compatible blendshapes"
+msgstr "Bodyではないメッシュには、MMD対応のブレンドシェープはありません"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/GeneralRenderer.uxml:16
 msgid "How to fix"

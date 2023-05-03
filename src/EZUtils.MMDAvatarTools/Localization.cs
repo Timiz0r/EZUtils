@@ -7,8 +7,8 @@ namespace EZUtils.MMDAvatarTools
     using UnityEngine.UIElements;
 
     //ports-and-adapters-wise, EZLocalization is a driver adapter connecting unity editor to a catalog
-    [LocalizationProxy]
-    [GenerateLanguage("en", "template.pot", One = "", Other = "")]
+    [LocalizationProxy] //keep in sync with AnalysisResultIdentifier
+    [GenerateLanguage("en", "template.pot")] //we dont generate plural rules because crowdin will then try to overwrite others'
     [GenerateLanguage("ja", "ja.po", Other = " @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")]
     public static class Localization
     {
@@ -42,6 +42,7 @@ namespace EZUtils.MMDAvatarTools
         //and which one each maps to depends on native locale
         //and will need to escape : with ::, ofc only if a localplural: prefix
         public static void TranslateElementTree(VisualElement rootElement) => loc.TranslateElementTree(rootElement: rootElement);
+        public static void TrackRetranslatable(IRetranslatable retranslatable) => loc.TrackRetranslatable(retranslatable: retranslatable);
 
         /// <remarks>Window title translations should be added in CreateGUI due to Unity restrictions.</remarks>
         [LocalizationMethod]

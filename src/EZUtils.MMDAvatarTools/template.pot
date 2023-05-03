@@ -4,7 +4,6 @@ msgstr "Language: en\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; n == 1 ? 1 : 0;\n"
-"X-PluralRules-One: \n"
 "X-PluralRules-Other: \n"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:63
@@ -35,11 +34,11 @@ msgstr ""
 msgid "Attempted to start while already started."
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:28
+#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:29
 msgid "EZUtils/MMD avatar tester"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:38
+#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:39
 msgid "MMD Tester"
 msgstr ""
 
@@ -96,12 +95,12 @@ msgstr ""
 msgid "Possibly active humanoid animations found"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:79
-msgid "There is a possibility the 'Skinned Mesh Renderer' component was deleted accidentally. Confirm what the 'Body' object should be in the original prefab (such as the '.fbx' file). Otherwise, the main mesh may be in another object altogether."
-msgstr ""
-
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:32
 msgid "There are no meshes containing MMD-compatible blendshapes."
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:42
+msgid "Non-Body meshes have no MMD-compatible blendshapes"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:98
@@ -176,8 +175,8 @@ msgstr ""
 msgid "Stop animation"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:88
-msgid "Active humanoid animations found"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:79
+msgid "There is a possibility the 'Skinned Mesh Renderer' component was deleted accidentally. Confirm what the 'Body' object should be in the original prefab (such as the '.fbx' file). Otherwise, the main mesh may be in another object altogether."
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:85
@@ -256,8 +255,8 @@ msgstr ""
 msgid "Active humanoid animations not found"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/EmptyStateAnalyzer.cs:59
-msgid "FX layer's states all have Motions set"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:88
+msgid "Active humanoid animations found"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:34
@@ -293,7 +292,7 @@ msgstr ""
 msgid "FX layer states have Write Defaults off"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:40
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:39
 msgid "There are non-Body meshes with MMD-compatible blendshapes"
 msgstr ""
 
@@ -322,10 +321,12 @@ msgstr ""
 msgid "Animation"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:43
-msgid "Non-Body meshes have no MMD-compatible blendshapes"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/EmptyStateAnalyzer.cs:59
+msgid "FX layer's states all have Motions set"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/GeneralRenderer.uxml:16
 msgid "How to fix"
+msgstr ""
+"How to fix"
 msgstr ""
