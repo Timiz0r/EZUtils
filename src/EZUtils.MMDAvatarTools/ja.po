@@ -5,7 +5,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-PluralRules-One: \n"
 "X-PluralRules-Other: \n"
 "X-Crowdin-Project: ezutils\n"
 "X-Crowdin-Project-ID: 583151\n"
@@ -14,7 +13,7 @@ msgstr ""
 "X-Crowdin-File-ID: 15\n"
 "Project-Id-Version: ezutils\n"
 "Language-Team: Japanese\n"
-"PO-Revision-Date: 2023-05-03 07:44\n"
+"PO-Revision-Date: 2023-05-03 07:45\n"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:63
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:77
@@ -44,11 +43,11 @@ msgstr "MMD対応のBodyというメッシュを発見"
 msgid "Attempted to start while already started."
 msgstr "すでに再生中にまた再生しようとしています"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:28
+#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:29
 msgid "EZUtils/MMD avatar tester"
 msgstr "EZUtils/MMD対応確認"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:38
+#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:39
 msgid "MMD Tester"
 msgstr "MMD対応確認"
 
@@ -105,13 +104,13 @@ msgstr "Bodyというメッシュが存在しないと、表情は変化する�
 msgid "Possibly active humanoid animations found"
 msgstr "使われてる可能性のあるヒューマノイドのアニメーションを発見"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:79
-msgid "There is a possibility the 'Skinned Mesh Renderer' component was deleted accidentally. Confirm what the 'Body' object should be in the original prefab (such as the '.fbx' file). Otherwise, the main mesh may be in another object altogether."
-msgstr "BodyというゲームオブジェクトのSkinned Mesh Rendererが消された可能性があります。オリジナルプレハブ（FBXなど）を確認してください。"
-
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:32
 msgid "There are no meshes containing MMD-compatible blendshapes."
 msgstr "MMD対応のブレンドシェープのあるメッシュが存在しません。"
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:42
+msgid "Non-Body meshes have no MMD-compatible blendshapes"
+msgstr "Bodyではないメッシュには、MMD対応のブレンドシェープはありません"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:98
 msgid "Mesh named 'Body' has no MMD-compatible blendshapes"
@@ -185,9 +184,9 @@ msgstr "BodyというゲームオブジェクトにはRendererがありません
 msgid "Stop animation"
 msgstr "アニメーション停止"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:88
-msgid "Active humanoid animations found"
-msgstr "使われてるヒューマノイドのアニメーションを発見"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:79
+msgid "There is a possibility the 'Skinned Mesh Renderer' component was deleted accidentally. Confirm what the 'Body' object should be in the original prefab (such as the '.fbx' file). Otherwise, the main mesh may be in another object altogether."
+msgstr "BodyというゲームオブジェクトのSkinned Mesh Rendererが消された可能性があります。オリジナルプレハブ（FBXなど）を確認してください。"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:85
 msgid "MMD worlds will turn off the FX layer's first and second layers. If there are important, non-gesture animations in these layers, strange behaviors may occur."
@@ -265,9 +264,9 @@ msgstr "FXレイヤーにWrite Defaultsがオフになっているアニメー�
 msgid "Active humanoid animations not found"
 msgstr "使われてるヒューマノイドのアニメーションが未発見"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/EmptyStateAnalyzer.cs:59
-msgid "FX layer's states all have Motions set"
-msgstr "FXレイヤーの全ステートにはモーションがあります"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:88
+msgid "Active humanoid animations found"
+msgstr "使われてるヒューマノイドのアニメーションを発見"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:34
 msgid "Avatar analysis"
@@ -302,7 +301,7 @@ msgstr "FXレイヤーのWrite Defaultsがオン"
 msgid "FX layer states have Write Defaults off"
 msgstr "FXレイヤーのWrite Defaultsがオフ"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:40
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:39
 msgid "There are non-Body meshes with MMD-compatible blendshapes"
 msgstr "Bodyではないメッシュには、MMD対応のブレンドシェープがあります"
 
@@ -331,9 +330,9 @@ msgstr "再生モードには入っていません"
 msgid "Animation"
 msgstr "アニメーション"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:43
-msgid "Non-Body meshes have no MMD-compatible blendshapes"
-msgstr "Bodyではないメッシュには、MMD対応のブレンドシェープはありません"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/EmptyStateAnalyzer.cs:59
+msgid "FX layer's states all have Motions set"
+msgstr "FXレイヤーの全ステートにはモーションがあります"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/GeneralRenderer.uxml:16
 msgid "How to fix"
