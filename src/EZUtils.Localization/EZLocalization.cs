@@ -137,6 +137,8 @@ namespace EZUtils.Localization
                 }
             });
         }
+        public void TrackRetranslatable(IRetranslatable retranslatable)
+            => catalogReference.TrackRetranslatable(retranslatable);
 
         /// <remarks>Window title translations should be added in CreateGUI due to Unity restrictions.</remarks>
         [LocalizationMethod]
