@@ -14,7 +14,7 @@ msgstr ""
 "X-Crowdin-File-ID: 15\n"
 "Project-Id-Version: ezutils\n"
 "Language-Team: Japanese\n"
-"PO-Revision-Date: 2023-05-02 19:45\n"
+"PO-Revision-Date: 2023-05-03 07:44\n"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:63
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:77
@@ -34,7 +34,7 @@ msgstr "アバターのメインメッシュが本当にBodyのメッシュと�
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:25
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:29
 msgid "No FX layer found"
-msgstr "No FX layer found"
+msgstr "FXレイヤーが見つかりません"
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:90
 msgid "MMD-compatible mesh found"
@@ -209,7 +209,7 @@ msgstr "開く"
 # id format: The FX layer's animation layer {layerIndex}
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:91
 msgid "The FX layer's animation layer {0}"
-msgstr "FXレイヤーの第{layerIndex}レイヤー"
+msgstr "FXレイヤーの第{0}レイヤー"
 
 # id format: The FX layer's animation layer {layerIndex} appears to be gesture-style.
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:101
