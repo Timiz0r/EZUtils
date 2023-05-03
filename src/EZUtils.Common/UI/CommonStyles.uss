@@ -10,3 +10,7 @@
     top: -8px;
     margin-bottom: -5px;
 }
+.unity-toolbar {
+    flex-shrink: 0;
+    margin-bottom: 2px;
+}
