@@ -88,11 +88,11 @@ namespace EZUtils.MMDAvatarTools
         public static class Result
         {
             public static readonly AnalysisResultIdentifier WriteDefaultsEnabled =
-                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>(T("FX layer states have Write Defaults on"));
+                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>("FX layer states have Write Defaults on");
             public static readonly AnalysisResultIdentifier WriteDefaultsDisabled =
-                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>(T("FX layer states have Write Defaults off"));
+                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>("FX layer states have Write Defaults off");
             public static readonly AnalysisResultIdentifier WriteDefaultsPotentiallyDisabled =
-                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>(T("FX layer states have Write Defaults possibly off"));
+                AnalysisResultIdentifier.Create<WriteDefaultsAnalyzer>("FX layer states have Write Defaults possibly off");
         }
     }
 }

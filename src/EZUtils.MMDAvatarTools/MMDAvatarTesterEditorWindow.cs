@@ -3,6 +3,7 @@ namespace EZUtils.MMDAvatarTools
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using EZUtils.Localization;
     using EZUtils.Localization.UIElements;
     using UnityEditor;
     using UnityEditor.UIElements;
@@ -109,11 +110,12 @@ namespace EZUtils.MMDAvatarTools
             }
         }
 
+        private RetranslatableCommand avatarAnalysisResultCommand = null;
         private void RenderAvatarAnalyzer()
         {
-
             Button analyzeButton = rootVisualElement.Q<Button>(name: "analyze");
             ScrollView resultsContainer = rootVisualElement.Q<ScrollView>(className: "analyzer-result-container");
+
             analyzeButton.clicked += () => ValidateAvatar();
 
             analysisValidation.AddValueValidation(targetAvatar, passCondition: o => o != null);
@@ -121,28 +123,38 @@ namespace EZUtils.MMDAvatarTools
             analysisValidation.TriggerWhenValid(() => ValidateAvatar());
             analysisValidation.TriggerWhenInvalid(() => resultsContainer.Clear());
 
+
             void ValidateAvatar()
             {
-                MmdAvatarAnalyzer analyzer = new MmdAvatarAnalyzer();
-                IReadOnlyList<AnalysisResult> results = analyzer.Analyze(targetAvatar.value);
+                avatarAnalysisResultCommand?.ForceFinished();
 
-                resultsContainer.Clear();
-                foreach (AnalysisResult result in results.OrderByDescending(r => r.Level))
-                {
-                    VisualElement resultElement = analysisResultUxml.CommonUIClone();
-                    resultsContainer.Add(resultElement);
-
-                    resultElement
-                        .Q<VisualElement>(className: "analyzer-result-icon")
-                        .AddToClassList($"analyzer-result-icon-{result.Level.ToString().ToLowerInvariant()}");
-                    resultElement.Q<Label>(className: "analyzer-result-friendlyname").text = result.Result.FriendlyName;
-                    resultElement.Q<Label>(className: "analyzer-result-code").text = result.Result.Code;
-
-                    if (result.Renderer != null)
+                avatarAnalysisResultCommand = new RetranslatableCommand(
+                    finishedFunc: () => false, //we'll force it finished when the time is right
+                    action: () =>
                     {
-                        result.Renderer.Render(resultElement.Q<VisualElement>(className: "analyzer-result-details"));
-                    }
-                }
+                        resultsContainer.Clear();
+
+                        MmdAvatarAnalyzer analyzer = new MmdAvatarAnalyzer();
+                        IReadOnlyList<AnalysisResult> results = analyzer.Analyze(targetAvatar.value);
+
+                        foreach (AnalysisResult result in results.OrderByDescending(r => r.Level))
+                        {
+
+                            VisualElement resultElement = analysisResultUxml.CommonUIClone();
+                            resultsContainer.Add(resultElement);
+
+                            resultElement
+                                .Q<VisualElement>(className: "analyzer-result-icon")
+                                .AddToClassList($"analyzer-result-icon-{result.Level.ToString().ToLowerInvariant()}");
+                            resultElement.Q<Label>(className: "analyzer-result-friendlyname").text =
+                                result.Result.FriendlyName;
+                            resultElement.Q<Label>(className: "analyzer-result-code").text = result.Result.Code;
+
+                            result.Renderer?.Render(
+                                resultElement.Q<VisualElement>(className: "analyzer-result-details"));
+                        }
+                    });
+                TrackRetranslatable(avatarAnalysisResultCommand);
             };
         }
     }

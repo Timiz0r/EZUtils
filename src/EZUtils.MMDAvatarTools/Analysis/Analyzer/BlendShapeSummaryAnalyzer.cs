@@ -21,7 +21,7 @@ namespace EZUtils.MMDAvatarTools
         public static class Result
         {
             public static readonly AnalysisResultIdentifier BlendShapeSummary =
-                AnalysisResultIdentifier.Create<BlendShapeSummaryAnalyzer>(T("MMD-compatible blendshapes"));
+                AnalysisResultIdentifier.Create<BlendShapeSummaryAnalyzer>("MMD-compatible blendshapes");
         }
     }
 }

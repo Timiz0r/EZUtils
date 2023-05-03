@@ -150,13 +150,13 @@ namespace EZUtils.MMDAvatarTools
         public static class Result
         {
             public static readonly AnalysisResultIdentifier Layer1_IsGestureLayer =
-                AnalysisResultIdentifier.Create<Layer1And2Analyzer>(T("FX layer animation layer 1 is gesture-style"));
+                AnalysisResultIdentifier.Create<Layer1And2Analyzer>("FX layer animation layer 1 is gesture-style");
             public static readonly AnalysisResultIdentifier Layer1_MayNotBeGestureLayer =
-                AnalysisResultIdentifier.Create<Layer1And2Analyzer>(T("FX layer animation layer 1 may not be gesture-style"));
+                AnalysisResultIdentifier.Create<Layer1And2Analyzer>("FX layer animation layer 1 may not be gesture-style");
             public static readonly AnalysisResultIdentifier Layer2_IsGestureLayer =
-                AnalysisResultIdentifier.Create<Layer1And2Analyzer>(T("FX layer animation layer 2 is gesture-style"));
+                AnalysisResultIdentifier.Create<Layer1And2Analyzer>("FX layer animation layer 2 is gesture-style");
             public static readonly AnalysisResultIdentifier Layer2_MayNotBeGestureLayer =
-                AnalysisResultIdentifier.Create<Layer1And2Analyzer>(T("FX layer animation layer 2 may not be gesture-style"));
+                AnalysisResultIdentifier.Create<Layer1And2Analyzer>("FX layer animation layer 2 may not be gesture-style");
         }
     }
 }

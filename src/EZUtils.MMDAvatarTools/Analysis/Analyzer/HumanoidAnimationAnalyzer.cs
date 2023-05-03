@@ -86,11 +86,11 @@ namespace EZUtils.MMDAvatarTools
         public static class Result
         {
             public static readonly AnalysisResultIdentifier ActiveHumanoidAnimationsFound =
-                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>(T("Active humanoid animations found"));
+                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>("Active humanoid animations found");
             public static readonly AnalysisResultIdentifier PossiblyActiveHumanoidAnimationsFound =
-                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>(T("Possibly active humanoid animations found"));
+                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>("Possibly active humanoid animations found");
             public static readonly AnalysisResultIdentifier NoActiveHumanoidAnimationsFound =
-                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>(T("Active humanoid animations not found"));
+                AnalysisResultIdentifier.Create<HumanoidAnimationAnalyzer>("Active humanoid animations not found");
         }
     }
 }

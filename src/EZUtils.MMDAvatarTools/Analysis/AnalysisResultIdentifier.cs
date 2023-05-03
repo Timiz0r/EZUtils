@@ -1,23 +1,30 @@
 namespace EZUtils.MMDAvatarTools
 {
     using System.Runtime.CompilerServices;
+    using EZUtils.Localization;
+    using static Localization;
 
+    [GenerateLanguage("en", "template.pot", One = "", Other = "")]
+    [GenerateLanguage("ja", "ja.po", Other = " @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …")]
     public class AnalysisResultIdentifier
     {
-        //TODO: will eventually be localized
-        //this could hypothetically have been paired with renderer, which also would need to be localized
-        public string FriendlyName { get; }
+        private readonly string nativeFriendlyName;
+
+        public string FriendlyName => T(nativeFriendlyName);
 
         //where this will not be localized
         public string Code { get; }
 
         public AnalysisResultIdentifier(string friendlyName, string code)
         {
-            FriendlyName = friendlyName;
+            nativeFriendlyName = friendlyName;
             Code = code;
         }
 
-        public static AnalysisResultIdentifier Create<T>(string friendlyName, [CallerMemberName] string caller = "") where T : IAnalyzer
+        [LocalizationMethod]
+        public static AnalysisResultIdentifier Create<T>(
+            [LocalizationParameter(LocalizationParameter.Id)] string friendlyName,
+            [CallerMemberName] string caller = "") where T : IAnalyzer
             => new AnalysisResultIdentifier(friendlyName, code: $"{typeof(T).Name}.{caller}");
     }
 }

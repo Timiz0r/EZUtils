@@ -38,10 +38,10 @@ namespace EZUtils.MMDAvatarTools
         {
             public static readonly AnalysisResultIdentifier ContainsMMDBlendShapes =
                 AnalysisResultIdentifier.Create<NonBodyMeshAnalyzer>(
-                    T("There are non-Body meshes with MMD-compatible blendshapes"));
+                    "There are non-Body meshes with MMD-compatible blendshapes");
             public static readonly AnalysisResultIdentifier ClearOfMMDBlendShapes =
                 AnalysisResultIdentifier.Create<NonBodyMeshAnalyzer>(
-                    T("Non-Body meshes have no MMD-compatible blendshapes"));
+                    "Non-Body meshes have no MMD-compatible blendshapes");
         }
     }
 }

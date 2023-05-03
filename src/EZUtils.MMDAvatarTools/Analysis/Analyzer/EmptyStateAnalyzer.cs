@@ -55,9 +55,9 @@ namespace EZUtils.MMDAvatarTools
         public static class Result
         {
             public static readonly AnalysisResultIdentifier FXLayerHasEmptyStates =
-                AnalysisResultIdentifier.Create<EmptyStateAnalyzer>(T("FX layer has states with no Motion set"));
+                AnalysisResultIdentifier.Create<EmptyStateAnalyzer>("FX layer has states with no Motion set");
             public static readonly AnalysisResultIdentifier FXLayerHasNoEmptyStates =
-                AnalysisResultIdentifier.Create<EmptyStateAnalyzer>(T("FX layer's states all have Motions set"));
+                AnalysisResultIdentifier.Create<EmptyStateAnalyzer>("FX layer's states all have Motions set");
         }
     }
 }

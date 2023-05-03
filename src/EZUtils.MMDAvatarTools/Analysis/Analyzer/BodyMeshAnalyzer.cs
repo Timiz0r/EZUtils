@@ -88,15 +88,15 @@ namespace EZUtils.MMDAvatarTools
         public static class Result
         {
             public static readonly AnalysisResultIdentifier MmdBodyMeshFound =
-                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>(T("MMD-compatible mesh found"));
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("MMD-compatible mesh found");
             public static readonly AnalysisResultIdentifier NoBody =
-                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>(T("Object named 'Body' not found"));
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("Object named 'Body' not found");
             public static readonly AnalysisResultIdentifier NotSkinnedMeshRenderer =
-                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>(T("Mesh named 'Body' is not a 'Skinned Mesh Renderer'"));
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("Mesh named 'Body' is not a 'Skinned Mesh Renderer'");
             public static readonly AnalysisResultIdentifier NoRendererInBody =
-                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>(T("Object named 'Body' has no renderer"));
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("Object named 'Body' has no renderer");
             public static readonly AnalysisResultIdentifier BodyHasNoMmdBlendShapes =
-                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>(T("Mesh named 'Body' has no MMD-compatible blendshapes"));
+                AnalysisResultIdentifier.Create<BodyMeshAnalyzer>("Mesh named 'Body' has no MMD-compatible blendshapes");
         }
     }
 }
