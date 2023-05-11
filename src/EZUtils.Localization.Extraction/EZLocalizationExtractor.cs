@@ -6,6 +6,7 @@ namespace EZUtils.Localization
     using System.Linq;
     using Microsoft.CodeAnalysis;
     using UnityEditor;
+    using UnityEngine;
 
     //TODO: integration test survival of invalid po file
     //  presumably T will end up throwing due to poor parsing. dont want that to happen. since this would be in unityland via catalogreference, we can log it!
@@ -30,6 +31,7 @@ namespace EZUtils.Localization
                 compilation => compilation
                     .AddReferences(MetadataReference.CreateFromFile(assemblyDefinition.Assembly.Location))
                     .AddReferences(assemblyDefinition.References.Select(a => MetadataReference.CreateFromFile(a.Location)))
+                    .AddReferences(MetadataReference.CreateFromFile(typeof(Component).Assembly.Location)) //for component menu translation
                     .AddReferences(MetadataReference.CreateFromFile(typeof(EditorWindow).Assembly.Location)), //for window title translation
                 extractionWorkRunner);
             foreach (FileInfo file in assemblyDefinition.GetFiles("*.cs"))
