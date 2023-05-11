@@ -1,7 +1,7 @@
 {
   "$schema": "../emptyschema.json",
   "name": "com.timiz0r.ezutils.localization.extraction",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Extracts localization calls from code and uxml",
   "displayName": "EZUtils Localization Extraction",
   "unity": "2019.4",

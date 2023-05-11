@@ -15,7 +15,7 @@ namespace EZUtils.Localization
 #pragma warning restore IDE0051
 
         private static void DomainReloaded()
-            => PerformExtractionFor(AssemblyDefinition.GetAssemblyDefinitions().ToArray());
+            => PerformExtractionFor(AssemblyDefinition.GetAssemblyDefinitions());
 
 #pragma warning disable IDE0051 //Private member is unused; unity message
         private static void OnPostprocessAllAssets(
@@ -32,14 +32,16 @@ namespace EZUtils.Localization
 
             IEnumerable<AssemblyDefinition> assemblyDefinitions = AssemblyDefinition.GetAssemblyDefinitions()
                 .Where(ad => allPaths.Any(p => p.StartsWith(ad.Root, StringComparison.Ordinal)));
-            PerformExtractionFor(assemblyDefinitions.ToArray());
+            PerformExtractionFor(assemblyDefinitions);
         }
 
-        private static void PerformExtractionFor(IReadOnlyList<AssemblyDefinition> assemblyDefinitions)
+        private static void PerformExtractionFor(IEnumerable<AssemblyDefinition> assemblyDefinitions)
         {
             System.Diagnostics.Stopwatch stopwatch = System.Diagnostics.Stopwatch.StartNew();
             EZLocalizationExtractor extractor = new EZLocalizationExtractor(
-                new UnityAssemblyRootResolver(assemblyDefinitions));
+                //NOTE: we provide the full list of assemblies here because it's possible to reference
+                //localization code outside of the assembly, let's say, the uxml file is in
+                new UnityAssemblyRootResolver(AssemblyDefinition.GetAssemblyDefinitions().ToArray()));
             foreach (AssemblyDefinition def in assemblyDefinitions
                 .Where(ad => ad.Assembly?.GetCustomAttribute<LocalizedAssemblyAttribute>() != null))
             {
