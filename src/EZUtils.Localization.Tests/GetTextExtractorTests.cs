@@ -117,9 +117,9 @@ namespace EZUtils.Localization.Tests
                 }";
             GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
             IGetTextExtractionWorkRunner workRunner = GetTextExtractionWorkRunner.CreateSynchronous();
-            GetTextExtractor extractor = new GetTextExtractor(compilation => compilation, workRunner);
+            GetTextExtractor extractor = new GetTextExtractor(Resolver.PathResolver, compilation => compilation, workRunner);
 
-            extractor.AddSource(source: code, displayPath: "Bar.cs", catalogRoot: string.Empty);
+            extractor.AddSource(source: code, displayPath: "Bar.cs");
             extractor.Extract(catalogBuilder);
             GetTextDocument document = catalogBuilder.GetDocuments()[0];
 
@@ -152,9 +152,9 @@ namespace EZUtils.Localization.Tests
                 }";
             GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
             IGetTextExtractionWorkRunner workRunner = GetTextExtractionWorkRunner.CreateSynchronous();
-            GetTextExtractor extractor = new GetTextExtractor(compilation => compilation, workRunner);
+            GetTextExtractor extractor = new GetTextExtractor(Resolver.PathResolver, compilation => compilation, workRunner);
 
-            extractor.AddSource(source: code, displayPath: "Bar.cs", catalogRoot: string.Empty);
+            extractor.AddSource(source: code, displayPath: "Bar.cs");
             extractor.Extract(catalogBuilder);
             GetTextDocument document = catalogBuilder.GetDocuments()[0];
 
@@ -226,9 +226,9 @@ namespace EZUtils.Localization.Tests
                 }";
             GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
             IGetTextExtractionWorkRunner workRunner = GetTextExtractionWorkRunner.CreateSynchronous();
-            GetTextExtractor extractor = new GetTextExtractor(compilation => compilation, workRunner);
+            GetTextExtractor extractor = new GetTextExtractor(Resolver.PathResolver, compilation => compilation, workRunner);
 
-            extractor.AddSource(source: code, displayPath: "Foo.cs", catalogRoot: string.Empty);
+            extractor.AddSource(source: code, displayPath: "Foo.cs");
             extractor.Extract(catalogBuilder);
             GetTextDocument document = catalogBuilder.GetDocuments()[0];
 
@@ -290,12 +290,19 @@ namespace EZUtils.Localization.Tests
 
             GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
             IGetTextExtractionWorkRunner workRunner = GetTextExtractionWorkRunner.CreateSynchronous();
-            GetTextExtractor extractor = new GetTextExtractor(compilation => compilation, workRunner);
+            GetTextExtractor extractor = new GetTextExtractor(Resolver.PathResolver, compilation => compilation, workRunner);
 
-            extractor.AddSource(source: code, displayPath: "Bar.cs", catalogRoot: string.Empty);
+            extractor.AddSource(source: code, displayPath: "Bar.cs");
             extractor.Extract(catalogBuilder);
 
             return catalogBuilder;
+        }
+
+        private class Resolver : IAssemblyRootResolver
+        {
+            public string GetAssemblyRoot(string assemblyFullName) => string.Empty;
+
+            public static AssemblyPathResolver PathResolver { get; } = new AssemblyPathResolver(assemblyFullName: "GetTextExtractorTests", string.Empty, new Resolver());
         }
     }
 }

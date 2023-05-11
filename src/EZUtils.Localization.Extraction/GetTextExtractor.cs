@@ -13,15 +13,21 @@ namespace EZUtils.Localization
 
     public class GetTextExtractor
     {
-        private readonly List<(SyntaxTree syntaxTree, string catalogRoot)> syntaxTrees = new List<(SyntaxTree, string)>();
+        //in previous designs, we passed catalog root (effectively root of assembly cs files) along with code
+        //technically, this allowed us to pass multiple assemblies worth of files
+        //but using compilations implies only one assembly, so this design change is natural
+        private readonly AssemblyPathResolver assemblyPathResolver;
+        private readonly List<SyntaxTree> syntaxTrees = new List<SyntaxTree>();
         private readonly IGetTextExtractionWorkRunner extractionQueue;
         private CSharpCompilation compilation;
 
         public GetTextExtractor(
+            AssemblyPathResolver assemblyPathResolver,
             Func<CSharpCompilation, CSharpCompilation> compilationBuilder,
             IGetTextExtractionWorkRunner extractionQueue)
         {
-            CSharpCompilation compilation = CSharpCompilation.Create("EZLocalizationExtractor")
+            this.assemblyPathResolver = assemblyPathResolver;
+            CSharpCompilation compilation = CSharpCompilation.Create(assemblyPathResolver.AssemblyFullName)
                 //we need a reference for each thing that we inspect from EZLocalization
                 .AddReferences(MetadataReference.CreateFromFile(typeof(GetTextCatalog).Assembly.Location))
                 .AddReferences(MetadataReference.CreateFromFile(typeof(GetTextExtractor).Assembly.Location))
@@ -31,24 +37,24 @@ namespace EZUtils.Localization
             this.extractionQueue = extractionQueue;
         }
 
-        public void AddFile(string sourceFilePath, string displayPath, string catalogRoot)
-            => AddSource(source: File.ReadAllText(sourceFilePath), displayPath: displayPath, catalogRoot: catalogRoot);
+        public void AddFile(string sourceFilePath, string displayPath)
+            => AddSource(source: File.ReadAllText(sourceFilePath), displayPath: displayPath);
 
-        public void AddSource(string source, string displayPath, string catalogRoot)
+        public void AddSource(string source, string displayPath)
         {
             SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(source, path: displayPath);
             compilation = compilation.AddSyntaxTrees(syntaxTree);
-            syntaxTrees.Add((syntaxTree, catalogRoot));
+            syntaxTrees.Add(syntaxTree);
         }
 
         public void Extract(GetTextCatalogBuilder catalogBuilder)
         {
-            foreach ((SyntaxTree syntaxTree, string catalogRoot) in syntaxTrees)
+            foreach (SyntaxTree syntaxTree in syntaxTrees)
             {
                 extractionQueue.StartWork(() =>
                 {
                     SemanticModel model = compilation.GetSemanticModel(syntaxTree);
-                    SyntaxWalker syntaxWalker = new SyntaxWalker(model, catalogBuilder, catalogRoot);
+                    SyntaxWalker syntaxWalker = new SyntaxWalker(model, catalogBuilder, assemblyPathResolver);
                     syntaxWalker.VisitCompilationUnit(syntaxTree.GetCompilationUnitRoot());
                 });
             }
@@ -58,13 +64,13 @@ namespace EZUtils.Localization
         {
             private readonly SemanticModel model;
             private readonly GetTextCatalogBuilder catalogBuilder;
-            private readonly string catalogRoot;
+            private readonly AssemblyPathResolver assemblyPathResolver;
 
-            public SyntaxWalker(SemanticModel model, GetTextCatalogBuilder catalogBuilder, string catalogRoot)
+            public SyntaxWalker(SemanticModel model, GetTextCatalogBuilder catalogBuilder, AssemblyPathResolver assemblyPathResolver)
             {
                 this.model = model;
                 this.catalogBuilder = catalogBuilder;
-                this.catalogRoot = catalogRoot;
+                this.assemblyPathResolver = assemblyPathResolver;
             }
 
             public override void VisitClassDeclaration(ClassDeclarationSyntax node)
@@ -110,17 +116,16 @@ namespace EZUtils.Localization
                     .GetAttributes()
                     .Any(a => a.AttributeClass.ToString() == "EZUtils.Localization.LocalizationMethodAttribute")) return;
 
-                InvocationParser invocationParser = InvocationParser.ForInvocation(invocationOperation);
+                InvocationParser invocationParser = InvocationParser.ForInvocation(invocationOperation, assemblyPathResolver);
                 if (!invocationParser.Success) return;
 
                 foreach ((string poFilePath, Locale locale) in invocationParser.Targets)
                 {
-                    string path = Path.Combine(catalogRoot, poFilePath);
                     _ = catalogBuilder
                         //TODO: the current design has a hard dependency on file io, which isnt entirely ideal
                         //as it makes it hard to unit test. granted, extraction is supposed to write to files.
                         //we currently work around it by referring to a non-existent file so we dont accidentally load it
-                        .ForPoFile(path, locale, changeLocaleIfDifferent: true, doc => doc
+                        .ForPoFile(poFilePath, locale, changeLocaleIfDifferent: true, doc => doc
                             .AddEntry(e =>
                             {
                                 FileLinePositionSpan location = node.GetLocation().GetLineSpan();
@@ -161,7 +166,7 @@ namespace EZUtils.Localization
                 }
 
                 IReadOnlyList<(string poFilePath, Locale locale)> targets =
-                    GenerateLanguageAttributeParser.ParseTargets(symbol.GetAttributes());
+                    GenerateLanguageAttributeParser.ParseTargets(symbol, symbol.GetAttributes(), assemblyPathResolver);
                 if (targets.Count == 0)
                 {
                     //we support GenerateLanguageAttribute on classes, fields, and properties
@@ -177,8 +182,7 @@ namespace EZUtils.Localization
                 //even if there are no (valid) calls to this class/field/property, we want an entryless file
                 foreach ((string poFilePath, Locale locale) in targets)
                 {
-                    string path = Path.Combine(catalogRoot, poFilePath);
-                    _ = catalogBuilder.ForPoFile(path, locale, changeLocaleIfDifferent: true, _ => { });
+                    _ = catalogBuilder.ForPoFile(poFilePath, locale, changeLocaleIfDifferent: true, _ => { });
                 }
 
                 continueVisiting = false;

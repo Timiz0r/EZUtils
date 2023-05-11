@@ -14,12 +14,14 @@ namespace EZUtils
         public string Name { get; }
         public string Root { get; }
         public Assembly Assembly { get; }
+        public IReadOnlyList<Assembly> References { get; }
 
-        public AssemblyDefinition(string name, string root, Assembly assembly)
+        public AssemblyDefinition(string name, string root, Assembly assembly, IReadOnlyList<Assembly> references)
         {
             Name = name;
             Root = root;
             Assembly = assembly;
+            References = references;
             assemblyRootFullPath = Path.GetFullPath(root);
         }
 
@@ -52,25 +54,31 @@ namespace EZUtils
                 {
                     string pathToFile = AssetDatabase.GUIDToAssetPath(id);
                     string root = Path.GetDirectoryName(pathToFile).Replace('\\', '/');
-                    string assemblyName = NameDeserializer.GetName(pathToFile);
+                    Deserializer.Deserialize(pathToFile, out string assemblyName, out IReadOnlyList<string> referenceAssemblyNames);
+                    Assembly[] references = referenceAssemblyNames
+                        .Select(n => assemblies.TryGetValue(n, out Assembly reference) ? reference : null)
+                        .Where(ra => ra != null)
+                        .ToArray();
                     Assembly assembly = assemblies.TryGetValue(assemblyName, out Assembly a) ? a : null;
 
-                    return new AssemblyDefinition(name: assemblyName, root, assembly);
+                    return new AssemblyDefinition(name: assemblyName, root, assembly, references);
                 });
             return assemblyDefinitions;
         }
 
-        private class NameDeserializer
+        private class Deserializer
         {
             public string name;
+            public string[] references;
 
-            public static string GetName(string assemblyDefinitionPath)
+            public static void Deserialize(string assemblyDefinitionPath, out string name, out IReadOnlyList<string> references)
             {
-                NameDeserializer nameDeserializer = new NameDeserializer();
+                Deserializer deserializer = new Deserializer();     
                 EditorJsonUtility.FromJsonOverwrite(
                     File.ReadAllText(assemblyDefinitionPath),
-                    nameDeserializer);
-                return nameDeserializer.name;
+                    deserializer);
+                name = deserializer.name;
+                references = deserializer.references ?? Array.Empty<string>();
             }
         }
     }

@@ -1,9 +1,8 @@
 {
-    "name": "EZUtils.Localization.Tests.IntegrationTestAssembly",
+    "name": "EZUtils.Localization.Tests.IntegrationTestAssembly.LocalizationAssembly",
     "references": [
         "EZUtils.Common",
-        "EZUtils.Localization",
-        "EZUtils.Localization.Tests.IntegrationTestAssembly.LocalizationAssembly"
+        "EZUtils.Localization"
     ],
     "includePlatforms": [
         "Editor"

@@ -28,7 +28,8 @@ namespace EZUtils.Localization
             Targets = targets;
         }
 
-        public static InvocationParser ForInvocation(IInvocationOperation invocationOperation)
+        public static InvocationParser ForInvocation(
+            IInvocationOperation invocationOperation, AssemblyPathResolver assemblyPathResolver)
         {
             ImmutableArray<AttributeData> targetAttributes;
             if (invocationOperation.Instance is IMemberReferenceOperation memberReferenceOperation)
@@ -54,7 +55,8 @@ namespace EZUtils.Localization
                 $"Unable to extract any attributes in order to find catalog generation attributes.");
 
             IReadOnlyList<(string poFilePath, Locale locale)> targets =
-                GenerateLanguageAttributeParser.ParseTargets(targetAttributes);
+                GenerateLanguageAttributeParser.ParseTargets(
+                    invocationOperation.TargetMethod, targetAttributes, assemblyPathResolver);
             if (targets.Count == 0) return NonLocalized;
 
             InvocationParser invocationParser = new InvocationParser(targets);

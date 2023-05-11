@@ -12,24 +12,31 @@ namespace EZUtils.Localization
     //  also test how reloads will work. also want to nullify and log. or keep current doc?
     internal class EZLocalizationExtractor
     {
+        private readonly IAssemblyRootResolver assemblyRootResolver;
         private readonly GetTextCatalogBuilder catalogBuilder = new GetTextCatalogBuilder();
         private readonly IGetTextExtractionWorkRunner extractionWorkRunner = GetTextExtractionWorkRunner.CreateSynchronous();
         private readonly List<(string path, string root)> uxmlPathsToExtract = new List<(string, string)>();
 
+        public EZLocalizationExtractor(IAssemblyRootResolver assemblyRootResolver)
+        {
+            this.assemblyRootResolver = assemblyRootResolver;
+        }
+
         public void ExtractFrom(AssemblyDefinition assemblyDefinition)
         {
+            string assemblyRoot = assemblyDefinition.Root;
             GetTextExtractor getTextExtractor = new GetTextExtractor(
+                new AssemblyPathResolver(assemblyDefinition.Assembly.FullName, assemblyRoot, assemblyRootResolver),
                 compilation => compilation
                     .AddReferences(MetadataReference.CreateFromFile(assemblyDefinition.Assembly.Location))
-                    .AddReferences(MetadataReference.CreateFromFile(typeof(EditorWindow).Assembly.Location)),
+                    .AddReferences(assemblyDefinition.References.Select(a => MetadataReference.CreateFromFile(a.Location)))
+                    .AddReferences(MetadataReference.CreateFromFile(typeof(EditorWindow).Assembly.Location)), //for window title translation
                 extractionWorkRunner);
-            string assemblyRoot = assemblyDefinition.Root;
             foreach (FileInfo file in assemblyDefinition.GetFiles("*.cs"))
             {
                 getTextExtractor.AddFile(
                     sourceFilePath: file.FullName,
-                    displayPath: assemblyDefinition.GetUnityPath(file.FullName),
-                    catalogRoot: assemblyRoot);
+                    displayPath: assemblyDefinition.GetUnityPath(file.FullName));
             }
             getTextExtractor.Extract(catalogBuilder);
 

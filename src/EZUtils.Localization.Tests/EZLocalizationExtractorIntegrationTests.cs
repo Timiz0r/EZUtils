@@ -156,6 +156,54 @@ namespace EZUtils.Localization.Tests.Integration
             }));
         }
 
+        //also doubles as {AssemblyRoot} pofilepath test, since that's the scenario for which it was added
+        [UnityTest]
+        public IEnumerator AutomatedExtraction_ExtractsProxyInvocations_WhenProxyInDifferentAssembly()
+        {
+            GenerateAssemblyAttribute();
+            //note that IndirectLocalization is in IntegrationTestAssembly/LocalizationAssembly
+            GenerateTestAction(
+                code: @"
+            IndirectLocalization.SelectLocale(CultureInfo.GetCultureInfo(""ja""));
+            result.Add(IndirectLocalization.T(""foo""));
+            decimal value = 1m;
+            result.Add(IndirectLocalization.T($""{value} foo"", value, $""{value} foos""));
+
+            IndirectLocalization.SelectLocaleOrNative();
+            result.Add(IndirectLocalization.T(""foo""));
+            result.Add(IndirectLocalization.T($""{value} foo"", value, $""{value} foos""));
+            ");
+
+            AssetDatabase.Refresh();
+            yield return new WaitForDomainReload();
+
+            Locale locale = new Locale(
+                CultureInfo.GetCultureInfo("ja"),
+                new PluralRules(other: "@integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …"));
+            string poFilePath = Path.Combine(TestAssemblyRootFolder, "Gen", "ja-integrationtest-indirect.po");
+            Assert.That(File.Exists(poFilePath), Is.True);
+            _ = new GetTextCatalogBuilder()
+                .ForPoFile(poFilePath, locale, d => d
+                    .OverwriteEntry(e => e
+                        .ConfigureId("foo")
+                        .ConfigureValue("ja:foo"))
+                    .OverwriteEntry(e => e
+                        .ConfigureId("{0} foo")
+                        .ConfigureAsPlural("{0} foos")
+                        .ConfigureAdditionalPluralValue("ja:{0} foos")))
+                .WriteToDisk();
+
+            IReadOnlyList<string> result = new IntegrationTestAction().Execute();
+
+            Assert.That(result, Is.EqualTo(new[]
+            {
+                "ja:foo",
+                "ja:1 foos",
+                "foo",
+                "1 foo"
+            }));
+        }
+
         [UnityTest]
         public IEnumerator EZLocalization_AutoRetranslates_WhenLocaleChanged()
         {
