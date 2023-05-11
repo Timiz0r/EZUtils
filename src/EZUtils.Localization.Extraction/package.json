@@ -1,7 +1,7 @@
 {
   "$schema": "../emptyschema.json",
   "name": "com.timiz0r.ezutils.localization.extraction",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Extracts localization calls from code and uxml",
   "displayName": "EZUtils Localization Extraction",
   "unity": "2019.4",
@@ -15,7 +15,7 @@
       "url": "https://github.com/Timiz0r/EZUtils.git"
   },
   "dependencies": {
-    "com.timiz0r.ezutils.localization": "1.0.1",
+    "com.timiz0r.ezutils.localization": "1.0.4",
     "com.timiz0r.ezutils.common": "1.0.6"
   }
 }
