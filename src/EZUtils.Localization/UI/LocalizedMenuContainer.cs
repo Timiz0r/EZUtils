@@ -29,6 +29,9 @@ namespace EZUtils.Localization //purposely not uielements, unlike many other typ
         }
 
         public void AddMenu(string name, int priority, Action action)
+            => AddMenu(name, priority, action, validate: null);
+
+        public void AddMenu(string name, int priority, Action action, Func<bool> validate)
         {
             Descriptor descriptor = new Descriptor(
                 nativeName: name,
@@ -36,7 +39,7 @@ namespace EZUtils.Localization //purposely not uielements, unlike many other typ
                 @checked: false,
                 priority,
                 execute: action,
-                validate: null);
+                validate: validate);
             descriptors.Add(descriptor);
 
             if (!firstRetranslateOccurred) return;

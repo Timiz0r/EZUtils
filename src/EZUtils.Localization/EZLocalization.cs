@@ -149,12 +149,30 @@ namespace EZUtils.Localization
             Initialize();
             catalogReference.TrackRetranslatable(window, () => window.titleContent.text = T(titleText));
         }
+        //LocalizedMenuContainer supports adding menus before initialization is done
+        //and initialization add them later
+        //so no need to Initialize here
         [LocalizationMethod]
-        public void AddMenu([LocalizationParameter(LocalizationParameter.Id)] string name, int priority, Action action)
-            //LocalizedMenuContainer supports adding menus before initialization is done
-            //and initialization add them later
-            //so no need to Initialize here
+        public void AddMenu(
+            [LocalizationParameter(LocalizationParameter.Id)] string name,
+            int priority,
+            Action action)
             => localizedMenuContainer.AddMenu(name, priority, action);
+        [LocalizationMethod]
+        public void AddMenu(
+            [LocalizationParameter(LocalizationParameter.Id)] string name,
+            int priority,
+            Action action,
+            Func<bool> validate)
+            => localizedMenuContainer.AddMenu(name, priority, action, validate);
+        [LocalizationMethod]
+        public void AddComponentMenu<T>([LocalizationParameter(LocalizationParameter.Id)] string name, int priority)
+            where T : UnityEngine.Component
+            => localizedMenuContainer.AddMenu(
+                "Component/" + name,
+                priority,
+                () => AddComponent<T>(),
+                () => ValidateAddComponent());
 
         [LocalizationMethod]
         public string T(RawString id)
@@ -271,6 +289,15 @@ namespace EZUtils.Localization
 #pragma warning restore IDE0046 // Convert to conditional expression
             return InheritsFromGenericType(typeToInspect.BaseType, genericTypeDefinition);
         }
+
+        private static void AddComponent<T>() where T : UnityEngine.Component
+        {
+            foreach (UnityEngine.GameObject go in Selection.gameObjects)
+            {
+                _ = go.AddComponent<T>();
+            }
+        }
+        private static bool ValidateAddComponent() => Selection.gameObjects.Length > 0;
 
         protected virtual void Dispose(bool disposing)
         {

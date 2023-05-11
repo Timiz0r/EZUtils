@@ -1,3 +1,5 @@
+//a note that we have the assembly attribute removed most of the time to keep the file from generating
+//if we need to update this, we temporarily add it back before removing it again
 namespace EZUtils.Localization.Tests.Integration
 {
     using System;
@@ -48,8 +50,23 @@ namespace EZUtils.Localization.Tests.Integration
         public static void TranslateWindowTitle(
             EditorWindow window,
             [LocalizationParameter(LocalizationParameter.Id)] string titleText) => loc.TranslateWindowTitle(window: window, titleText: titleText);
+        //LocalizedMenuContainer supports adding menus before initialization is done
+        //and initialization add them later
+        //so no need to Initialize here
         [LocalizationMethod]
-        public static void AddMenu([LocalizationParameter(LocalizationParameter.Id)] string name, int priority, Action action) => loc.AddMenu(name: name, priority: priority, action: action);
+        public static void AddMenu(
+            [LocalizationParameter(LocalizationParameter.Id)] string name,
+            int priority,
+            Action action) => loc.AddMenu(name: name, priority: priority, action: action);
+        [LocalizationMethod]
+        public static void AddMenu(
+            [LocalizationParameter(LocalizationParameter.Id)] string name,
+            int priority,
+            Action action,
+            Func<bool> validate) => loc.AddMenu(name: name, priority: priority, action: action, validate: validate);
+        [LocalizationMethod]
+        public static void AddComponentMenu<T>([LocalizationParameter(LocalizationParameter.Id)] string name, int priority)             where T : UnityEngine.Component
+=> loc.AddComponentMenu<T>(name: name, priority: priority);
 
         [LocalizationMethod]
         public static string T(RawString id) => loc.T(id: id);

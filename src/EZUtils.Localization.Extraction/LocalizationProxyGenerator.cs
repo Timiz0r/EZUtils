@@ -157,6 +157,19 @@ namespace EZUtils.Localization
                                 SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(SyntaxFactory.Space),
                                 arguments.Length - 1)));
 
+                SimpleNameSyntax memberAccessExpressionName = node.TypeParameterList == null
+                    ? SyntaxFactory.IdentifierName(node.Identifier.ValueText)
+                    : (SimpleNameSyntax)SyntaxFactory.GenericName(
+                        SyntaxFactory.Identifier(node.Identifier.ValueText),
+                        SyntaxFactory.TypeArgumentList(
+                            SyntaxFactory.SeparatedList<TypeSyntax>(
+                                node.TypeParameterList.Parameters
+                                    .Select(tp => SyntaxFactory.IdentifierName(tp.Identifier.ValueText)),
+                                Enumerable.Repeat(
+                                    SyntaxFactory.Token(SyntaxKind.CommaToken).WithTrailingTrivia(SyntaxFactory.Space),
+                                    node.TypeParameterList.Parameters.Count - 1)
+                            )));
+
                 MethodDeclarationSyntax newNode = node
                     .WithModifiers(
                         SyntaxFactory.TokenList(
@@ -171,7 +184,7 @@ namespace EZUtils.Localization
                                 SyntaxFactory.MemberAccessExpression(
                                     SyntaxKind.SimpleMemberAccessExpression,
                                     SyntaxFactory.IdentifierName(fieldName),
-                                    SyntaxFactory.IdentifierName(node.Identifier.ValueText)),
+                                    memberAccessExpressionName),
                             argumentList)))
                     .WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken))
                     .WithTriviaFrom(node);
