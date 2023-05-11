@@ -72,14 +72,31 @@ namespace EZUtils.Localization
                             }
                             else
                             {
+                                //we do a best-effort attempt at finding the associated po files for the uxml files
+                                //first, if all of the po files share the same directory, then we'll use all of them
+                                //otherwise, we'll only use documents that are in the same or sub directory of the po file
+
+                                //it's a bit of a roundabout way, but it's what we expose at the moment
+                                string poFileDirectory = null;
+                                bool usesCommonDirectory = true;
                                 _ = catalogBuilder.ForEachDocument(doc =>
                                 {
-                                    //if uxml dir does not start with po file dir
-                                    //in the event a GenerateLanguage is not specified, we try to find docs
-                                    //in the current or sub directories
-                                    if (!Path.GetDirectoryName(uxmlFilePath).StartsWith(
-                                        Path.GetDirectoryName(doc.Path),
-                                        StringComparison.OrdinalIgnoreCase)) return;
+                                    if (!usesCommonDirectory) return;
+                                    if (poFileDirectory == null)
+                                    {
+                                        poFileDirectory = Path.GetDirectoryName(doc.Path);
+                                        return;
+                                    }
+                                    usesCommonDirectory = poFileDirectory == Path.GetDirectoryName(doc.Path);
+                                });
+
+                                _ = catalogBuilder.ForEachDocument(doc =>
+                                {
+                                    bool useCurrentDoc = usesCommonDirectory
+                                        || Path.GetDirectoryName(uxmlFilePath).StartsWith(
+                                            Path.GetDirectoryName(doc.Path),
+                                            StringComparison.OrdinalIgnoreCase);
+                                    if (!useCurrentDoc) return;
 
                                     AddEntry(doc);
                                 });
