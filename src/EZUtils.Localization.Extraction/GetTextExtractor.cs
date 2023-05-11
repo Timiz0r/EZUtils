@@ -27,7 +27,7 @@ namespace EZUtils.Localization
             IGetTextExtractionWorkRunner extractionQueue)
         {
             this.assemblyPathResolver = assemblyPathResolver;
-            CSharpCompilation compilation = CSharpCompilation.Create(assemblyPathResolver.AssemblyFullName)
+            CSharpCompilation compilation = CSharpCompilation.Create(assemblyPathResolver.AssemblyName)
                 //we need a reference for each thing that we inspect from EZLocalization
                 .AddReferences(MetadataReference.CreateFromFile(typeof(GetTextCatalog).Assembly.Location))
                 .AddReferences(MetadataReference.CreateFromFile(typeof(GetTextExtractor).Assembly.Location))

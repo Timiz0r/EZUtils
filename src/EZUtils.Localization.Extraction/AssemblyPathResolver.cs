@@ -1,21 +1,19 @@
 namespace EZUtils.Localization
 {
-    using Microsoft.CodeAnalysis;
-
     public class AssemblyPathResolver
     {
         private readonly IAssemblyRootResolver assemblyRootResolver;
 
-        public string AssemblyFullName { get; }
+        public string AssemblyName { get; }
         public string AssemblyRoot { get; }
 
-        public AssemblyPathResolver(string assemblyFullName, string assemblyRoot, IAssemblyRootResolver assemblyRootResolver)
+        public AssemblyPathResolver(string assemblyName, string assemblyRoot, IAssemblyRootResolver assemblyRootResolver)
         {
-            AssemblyFullName = assemblyFullName;
+            AssemblyName = assemblyName;
             AssemblyRoot = assemblyRoot;
             this.assemblyRootResolver = assemblyRootResolver;
         }
 
-        public string Resolve(string assemblyFullName) => assemblyRootResolver.GetAssemblyRoot(assemblyFullName);
+        public string Resolve(string assemblyName) => assemblyRootResolver.GetAssemblyRoot(assemblyName);
     }
 }

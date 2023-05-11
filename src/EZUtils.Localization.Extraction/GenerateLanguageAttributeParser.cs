@@ -51,7 +51,7 @@ namespace EZUtils.Localization
                         string partToReplace = m.Groups[1].Value;
                         if (partToReplace.Equals("CalleeAssemblyRoot", StringComparison.OrdinalIgnoreCase))
                         {
-                            return assemblyPathResolver.Resolve(containingSymbol.ContainingAssembly.ToString());
+                            return assemblyPathResolver.Resolve(containingSymbol.ContainingAssembly.Name);
                         }
 
                         if (partToReplace.Equals("AssemblyRoot", StringComparison.OrdinalIgnoreCase))

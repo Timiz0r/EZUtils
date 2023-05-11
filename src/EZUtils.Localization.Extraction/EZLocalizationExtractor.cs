@@ -26,7 +26,7 @@ namespace EZUtils.Localization
         {
             string assemblyRoot = assemblyDefinition.Root;
             GetTextExtractor getTextExtractor = new GetTextExtractor(
-                new AssemblyPathResolver(assemblyDefinition.Assembly.FullName, assemblyRoot, assemblyRootResolver),
+                new AssemblyPathResolver(assemblyDefinition.Assembly.GetName().Name, assemblyRoot, assemblyRootResolver),
                 compilation => compilation
                     .AddReferences(MetadataReference.CreateFromFile(assemblyDefinition.Assembly.Location))
                     .AddReferences(assemblyDefinition.References.Select(a => MetadataReference.CreateFromFile(a.Location)))

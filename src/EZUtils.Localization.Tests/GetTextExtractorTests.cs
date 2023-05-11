@@ -300,9 +300,9 @@ namespace EZUtils.Localization.Tests
 
         private class Resolver : IAssemblyRootResolver
         {
-            public string GetAssemblyRoot(string assemblyFullName) => string.Empty;
+            public string GetAssemblyRoot(string assemblyName) => string.Empty;
 
-            public static AssemblyPathResolver PathResolver { get; } = new AssemblyPathResolver(assemblyFullName: "GetTextExtractorTests", string.Empty, new Resolver());
+            public static AssemblyPathResolver PathResolver { get; } = new AssemblyPathResolver(assemblyName: "GetTextExtractorTests", string.Empty, new Resolver());
         }
     }
 }

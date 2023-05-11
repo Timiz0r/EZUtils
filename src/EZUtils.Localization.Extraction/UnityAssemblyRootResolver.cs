@@ -12,10 +12,10 @@ namespace EZUtils.Localization
         {
             assemblyNameToRoot = assemblyDefinitions
                 .Where(ad => ad.Assembly != null)
-                .ToDictionary(ad => ad.Assembly.FullName, ad => ad.Root);
+                .ToDictionary(ad => ad.Assembly.GetName().Name, ad => ad.Root);
         }
 
-        public string GetAssemblyRoot(string assemblyFullName)
-            => assemblyNameToRoot.TryGetValue(assemblyFullName, out string root) ? root : null;
+        public string GetAssemblyRoot(string assemblyName)
+            => assemblyNameToRoot.TryGetValue(assemblyName, out string root) ? root : null;
     }
 }

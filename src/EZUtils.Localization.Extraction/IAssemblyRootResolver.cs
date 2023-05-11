@@ -2,6 +2,6 @@ namespace EZUtils.Localization
 {
     public interface IAssemblyRootResolver
     {
-        string GetAssemblyRoot(string assemblyFullName);
+        string GetAssemblyRoot(string assemblyName);
     }
 }
