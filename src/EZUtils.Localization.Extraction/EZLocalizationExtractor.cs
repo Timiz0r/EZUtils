@@ -158,12 +158,12 @@ namespace EZUtils.Localization
                 if (referenceCountComparison != 0) return referenceCountComparison;
 
                 (string path, int line) xReference = GetCandidateReference(x);
-                (string path, int line) yReference = GetCandidateReference(x);
+                (string path, int line) yReference = GetCandidateReference(y);
 
                 int referencePathComparison = StringComparer.OrdinalIgnoreCase.Compare(xReference.path, yReference.path);
                 return referencePathComparison != 0
-                    ? referenceCountComparison
-                    : yReference.line - xReference.line;
+                    ? referencePathComparison
+                    : xReference.line - yReference.line;
 
                 (string path, int line) GetCandidateReference(GetTextEntry entry)
                     => entry.Header.References.Count == 0

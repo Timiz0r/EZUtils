@@ -6,19 +6,14 @@ msgstr "Language: en\n"
 "Plural-Forms: nplurals=2; n == 1 ? 1 : 0;\n"
 "X-PluralRules-Other: \n"
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:63
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:77
-msgid "States containing humanoid animations"
-msgstr ""
-
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:49
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:65
-msgid "States with Write Defaults on"
-msgstr ""
-
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:52
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:65
 msgid "Confirm that the main mesh of the avatar is actually called 'Body'. Be aware that, if there is no MMD-compatible mesh, the avatar may simply not be meant to be MMD-compatible."
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:63
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:77
+msgid "States containing humanoid animations"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:25
@@ -26,25 +21,9 @@ msgstr ""
 msgid "No FX layer found"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:90
-msgid "MMD-compatible mesh found"
-msgstr ""
-
-#: Packages/com.timiz0r.ezutils.mmdavatartools/MmdAvatarTester.cs:15
-msgid "Attempted to start while already started."
-msgstr ""
-
-#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:29
-msgid "EZUtils/MMD avatar tester"
-msgstr ""
-
-#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:39
-msgid "MMD Tester"
-msgstr ""
-
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/MMDAvatarAnalyzer.cs:45
-# id format: An error has occurred in '{analyzer.GetType().Name}'.
-msgid "An error has occurred in '{0}'."
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:49
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:65
+msgid "States with Write Defaults on"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BlendShapeSummaryAnalyzer.cs:16
@@ -55,16 +34,16 @@ msgstr ""
 msgid "MMD-compatible blendshapes"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:92
-msgid "Object named 'Body' not found"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:16
+msgid "MMD-compatible mesh"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:17
 msgid "There are no MMD-compatible meshes on this avatar."
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:16
-msgid "MMD-compatible mesh"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:30
+msgid "If there are no meshes named 'Body', it is not possible to change facial expressions."
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:31
@@ -87,20 +66,24 @@ msgstr ""
 msgid "An object named 'Body' was found, but it has no renderer. In the event the mesh of the avatar is in another object, note that it must be named 'Body' for facial expressions to change."
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:30
-msgid "If there are no meshes named 'Body', it is not possible to change facial expressions."
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:79
+msgid "There is a possibility the 'Skinned Mesh Renderer' component was deleted accidentally. Confirm what the 'Body' object should be in the original prefab (such as the '.fbx' file). Otherwise, the main mesh may be in another object altogether."
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:90
-msgid "Possibly active humanoid animations found"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:90
+msgid "MMD-compatible mesh found"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:32
-msgid "There are no meshes containing MMD-compatible blendshapes."
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:92
+msgid "Object named 'Body' not found"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:42
-msgid "Non-Body meshes have no MMD-compatible blendshapes"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:94
+msgid "Mesh named 'Body' is not a 'Skinned Mesh Renderer'"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:96
+msgid "Object named 'Body' has no renderer"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:98
@@ -131,12 +114,12 @@ msgstr ""
 msgid "FX layer has states with no Motion set"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:17
-msgid "Even if there was a humanoid animation, the default avatar mask would disable it."
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/EmptyStateAnalyzer.cs:59
+msgid "FX layer's states all have Motions set"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/GeneralRenderer.uxml:13
-msgid "Explanation"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:17
+msgid "Even if there was a humanoid animation, the default avatar mask would disable it."
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:28
@@ -163,20 +146,21 @@ msgstr ""
 msgid "There are various ways to fix the issue, but the normal way is to first move the animations to the Gesture layer, then ensure there is no avatar mask set in the FX layer's first animation layer."
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:94
-msgid "Mesh named 'Body' is not a 'Skinned Mesh Renderer'"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:88
+msgid "Active humanoid animations found"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:96
-msgid "Object named 'Body' has no renderer"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:90
+msgid "Possibly active humanoid animations found"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:29
-msgid "Stop animation"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:92
+msgid "Active humanoid animations not found"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/BodyMeshAnalyzer.cs:79
-msgid "There is a possibility the 'Skinned Mesh Renderer' component was deleted accidentally. Confirm what the 'Body' object should be in the original prefab (such as the '.fbx' file). Otherwise, the main mesh may be in another object altogether."
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:48
+# id format: The FX layer's layer {layerIndex} does not exist.
+msgid "The FX layer's layer {0} does not exist."
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:85
@@ -192,13 +176,14 @@ msgstr ""
 msgid "If they are problematic, consider making layer {0} an empty layer."
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/AnimatorStateRendererLayerElement.uxml:15
-msgid "Open"
-msgstr ""
-
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:91
 # id format: The FX layer's animation layer {layerIndex}
 msgid "The FX layer's animation layer {0}"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:92
+# id format: There are no states in the FX layer's animation layer {layerIndex}.
+msgid "There are no states in the FX layer's animation layer {0}."
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:101
@@ -208,11 +193,6 @@ msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:112
 msgid "Too many traversals."
-msgstr ""
-
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:92
-# id format: There are no states in the FX layer's animation layer {layerIndex}.
-msgid "There are no states in the FX layer's animation layer {0}."
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:152
@@ -239,41 +219,28 @@ msgstr ""
 msgid "If the below meshes must be used, merge them with the Body mesh."
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:28
-msgid "Start animation"
-msgstr ""
-
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:31
 msgid "Meshes containing MMD-compatible blendshapes"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:32
+msgid "There are no meshes containing MMD-compatible blendshapes."
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:39
+msgid "There are non-Body meshes with MMD-compatible blendshapes"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:42
+msgid "Non-Body meshes have no MMD-compatible blendshapes"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:37
 msgid "The FX layer has states with write defaults off. However, the avatar has a 'VRC Animator Layer Control' or 'VRC Playable Layer Control' that will either turn off the containing animation layer or the entire FX layer. If such states are turned off, facial expressions can change; however, the animations of these states, even when played beforehand, will not work. Furthermore, if not turned off, facial animations likely won't change."
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:92
-msgid "Active humanoid animations not found"
-msgstr ""
-
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/HumanoidAnimationAnalyzer.cs:88
-msgid "Active humanoid animations found"
-msgstr ""
-
-#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:34
-msgid "Avatar analysis"
-msgstr ""
-
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/Layer1And2Analyzer.cs:48
-# id format: The FX layer's layer {layerIndex} does not exist.
-msgid "The FX layer's layer {0} does not exist."
-msgstr ""
-
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:43
 msgid "To ensure these animations continue to work, instead of using 'VRC Animator Layer Control' or 'VRC Playable Layer Control', prefer turning Write Defaults on. Be sure to verify that the animations work fine with Write Defaults on by testing them in play mode or in MMD worlds."
-msgstr ""
-
-#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:35
-msgid "Reanalyze"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:58
@@ -292,17 +259,42 @@ msgstr ""
 msgid "FX layer states have Write Defaults off"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/NonBodyMeshAnalyzer.cs:39
-msgid "There are non-Body meshes with MMD-compatible blendshapes"
-msgstr ""
-
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/WriteDefaultsAnalyzer.cs:94
 msgid "FX layer states have Write Defaults possibly off"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/MMDAvatarAnalyzer.cs:45
+# id format: An error has occurred in '{analyzer.GetType().Name}'.
+msgid "An error has occurred in '{0}'."
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/AnimatorStateRenderer.cs:69
 # id format: Unable to find layer '{layerName}' in controller '{animatorController}'. Layers available: {string.Join(", ", animatorController.layers.Select(l => l.name))}.
 msgid "Unable to find layer '{0}' in controller '{1}'. Layers available: {2}."
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/AnimatorStateRendererLayerElement.uxml:15
+msgid "Open"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/GeneralRenderer.uxml:13
+msgid "Explanation"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/GeneralRenderer.uxml:16
+msgid "How to fix"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/MmdAvatarTester.cs:15
+msgid "Attempted to start while already started."
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:29
+msgid "EZUtils/MMD avatar tester"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.cs:39
+msgid "MMD Tester"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:16
@@ -321,10 +313,18 @@ msgstr ""
 msgid "Animation"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Analyzer/EmptyStateAnalyzer.cs:59
-msgid "FX layer's states all have Motions set"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:28
+msgid "Start animation"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.mmdavatartools/Analysis/Renderer/GeneralRenderer.uxml:16
-msgid "How to fix"
+#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:29
+msgid "Stop animation"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:34
+msgid "Avatar analysis"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.mmdavatartools/MMDAvatarTesterEditorWindow.uxml:35
+msgid "Reanalyze"
 msgstr ""
