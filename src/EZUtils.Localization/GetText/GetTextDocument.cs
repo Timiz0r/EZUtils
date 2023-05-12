@@ -260,15 +260,19 @@ namespace EZUtils.Localization
                 _ = Directory.CreateDirectory(Path.GetDirectoryName(path));
             }
 
-            using (StreamWriter sw = new StreamWriter(File.OpenWrite(path), System.Text.Encoding.UTF8))
+            using (FileStream fs = File.OpenWrite(path))
             {
-                foreach (GetTextEntry entry in Entries)
+                using (StreamWriter sw = new StreamWriter(fs, System.Text.Encoding.UTF8))
                 {
-                    foreach (GetTextLine line in entry.Lines)
+                    foreach (GetTextEntry entry in Entries)
                     {
-                        sw.WriteLine(line.RawLine);
+                        foreach (GetTextLine line in entry.Lines)
+                        {
+                            sw.WriteLine(line.RawLine);
+                        }
                     }
                 }
+                fs.SetLength(fs.Position);
             }
         }
     }

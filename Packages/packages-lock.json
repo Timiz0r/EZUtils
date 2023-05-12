@@ -27,7 +27,7 @@
       "depth": 0,
       "source": "local",
       "dependencies": {
-        "com.timiz0r.ezutils.localization": "1.0.1",
+        "com.timiz0r.ezutils.localization": "1.0.5",
         "com.timiz0r.ezutils.common": "1.0.6"
       }
     },
