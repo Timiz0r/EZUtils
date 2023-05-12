@@ -262,7 +262,7 @@ namespace EZUtils.Localization
 
             using (FileStream fs = File.OpenWrite(path))
             {
-                using (StreamWriter sw = new StreamWriter(fs, System.Text.Encoding.UTF8))
+                using (StreamWriter sw = new StreamWriter(fs, System.Text.Encoding.UTF8, bufferSize: 4096, leaveOpen: true))
                 {
                     foreach (GetTextEntry entry in Entries)
                     {
