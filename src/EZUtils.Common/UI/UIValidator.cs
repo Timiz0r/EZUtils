@@ -29,7 +29,7 @@ namespace EZUtils
                 }
                 else
                 {
-                    validationIssues.Add(sourceObject, new ValidationIssue());
+                    validationIssues[sourceObject] = new ValidationIssue();
                 }
 
                 elementsToDisable.ForEach(element => element.SetEnabled(validationIssues.Count == 0));
