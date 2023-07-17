@@ -80,6 +80,12 @@
       "source": "local",
       "dependencies": {}
     },
+    "com.timiz0r.ezutils.vpmunitypackage": {
+      "version": "file:../src/EZUtils.VPMUnityPackage",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.timiz0r.ezutils.windowcloser": {
       "version": "file:../src/EZUtils.WindowCloser",
       "depth": 0,

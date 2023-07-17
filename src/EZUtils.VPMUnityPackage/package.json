@@ -1,0 +1,21 @@
+{
+    "$schema": "../emptyschema.json",
+    "name": "com.timiz0r.ezutils.vpmunitypackage",
+    "version": "0.0.1-preview1",
+    "description": "Creates .unitypackage packages that, when imported, will add a community VPM repository to the machine if necessary and add a VPM package to the project.",
+    "displayName": "EZUtils VPM .unitypackage Creator",
+    "unity": "2019.4",
+    "author": {
+        "displayName": "Timiz0r/まむ",
+        "url": "https://github.com/Timiz0r/EZUtils"
+    },
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Timiz0r/EZUtils.git"
+    },
+    "vpmDependencies": {
+      "com.vrchat.core.vpm-resolver": "^0.1.21",
+      "com.timiz0r.ezutils.common": "^1.0.7"
+    }
+}
