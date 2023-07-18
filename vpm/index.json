@@ -2,7 +2,7 @@
   "repo": {
     "name": "EZUtils",
     "author": "Timiz0r",
-    "url": "https://nyanmamu.booth.pm/",
+    "url": "https://raw.githubusercontent.com/Timiz0r/EZUtils/vccunitypackage/vpm/index.json",
     "id": "com.timiz0r.ezutils",
     "packages": {
       "com.timiz0r.ezutils.common": {
