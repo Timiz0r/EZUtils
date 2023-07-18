@@ -20,20 +20,20 @@ jobs:
         package:
           - name: com.timiz0r.ezutils.common
             path: ./src/EZUtils.Common
-          - name: com.timiz0r.ezutils.mmdavatartools
-            path: ./src/EZUtils.MMDAvatarTools
-          - name: com.timiz0r.ezutils.packagemanager
-            path: ./src/EZUtils.PackageManager
-          - name: com.timiz0r.ezutils.repackprefab
-            path: ./src/EZUtils.RepackPrefab
-          - name: com.timiz0r.ezutils.windowcloser
-            path: ./src/EZUtils.WindowCloser
-          - name: com.timiz0r.ezutils.editorenhancements
-            path: ./src/EZUtils.EditorEnhancements
-          - name: com.timiz0r.ezutils.localization
-            path: ./src/EZUtils.Localization
-          - name: com.timiz0r.ezutils.localization.extraction
-            path: ./src/EZUtils.Localization.Extraction
+        #   - name: com.timiz0r.ezutils.mmdavatartools
+        #     path: ./src/EZUtils.MMDAvatarTools
+        #   - name: com.timiz0r.ezutils.packagemanager
+        #     path: ./src/EZUtils.PackageManager
+        #   - name: com.timiz0r.ezutils.repackprefab
+        #     path: ./src/EZUtils.RepackPrefab
+        #   - name: com.timiz0r.ezutils.windowcloser
+        #     path: ./src/EZUtils.WindowCloser
+        #   - name: com.timiz0r.ezutils.editorenhancements
+        #     path: ./src/EZUtils.EditorEnhancements
+        #   - name: com.timiz0r.ezutils.localization
+        #     path: ./src/EZUtils.Localization
+        #   - name: com.timiz0r.ezutils.localization.extraction
+        #     path: ./src/EZUtils.Localization.Extraction
     steps:
       - uses: actions/checkout@v3
         with:
@@ -52,7 +52,7 @@ jobs:
     if: ${{ always() }}
     runs-on: ubuntu-latest
     permissions:
-      pages: write
+      contents: write
     steps:
       - uses: actions/checkout@v3
         with:
@@ -62,24 +62,27 @@ jobs:
         with:
           path: vpm
       - name: Update index.json
-        shell: bash --noprofile --norc {0}
+        shell: bash
         working-directory: vpm
         run: |
-          jq -n ' \
+          #may not be any manifests
+          shopt -s nullglob
+
+          jq -n '
           reduce inputs as $manifest (input;
             if (.repo?.packages?[$manifest.name]?.versions?[$manifest.version]? != null) then
                 .
             else
                 .repo.packages[$manifest.name].versions[$manifest.version] += $manifest
             end
-            )' index.json "Manifest-*/Manifest.json"
+            )' index.json Manifest-*/Manifest.json > index.json
 
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add index.json
           git commit -m "Update VPM index.json
 
-          $(jq -s 'map({ name, version })' "Manifest-*/Manifest.json")"
+          $(jq -s 'map({ name, version })' Manifest-*/Manifest.json)"
 
           git push origin
 

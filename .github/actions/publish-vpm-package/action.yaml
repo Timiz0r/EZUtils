@@ -6,13 +6,13 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Set tag name
-      shell: bash
-      run: echo 'tag_name=${{ steps.package-info.outputs.name }}-${{ steps.package-info.outputs.version }}' >> $GITHUB_ENV
     - uses: ./.github/actions/get-package-info
       id: package-info
       with:
         package-path: ${{ inputs.package-path }}
+    - name: Set tag name
+      shell: bash
+      run: echo 'tag_name=${{ steps.package-info.outputs.name }}-${{ steps.package-info.outputs.version }}' >> $GITHUB_ENV
     - name: Create package zip
       id: create-package-zip
       if: "!fromJson(steps.package-info.outputs.version-exists)"
@@ -20,7 +20,7 @@ runs:
       working-directory: ${{ inputs.package-path }}
       run: |
         filename="$tag_name.zip"
-        zip -r "$filename" .
+        zip -r "$filename" *
         echo "filename=$filename" >> $GITHUB_OUTPUT
         echo "fullpath=$(realpath "$filename")" >> $GITHUB_OUTPUT
         echo "sha256=$(sha256sum "$filename")" >> $GITHUB_OUTPUT
@@ -36,6 +36,8 @@ runs:
       id: prepare-package-manifest
       shell: bash
       working-directory: ${{ inputs.package-path }}
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         release_assets=$(gh release view "$tag_name" --json assets)
         package_url=$( \
