@@ -14,8 +14,8 @@
         "type": "git",
         "url": "https://github.com/Timiz0r/EZUtils.git"
     },
-    "dependencies": {
-      "com.timiz0r.ezutils.common": "1.0.6",
-      "com.timiz0r.ezutils.localization": "1.0.2"
+    "vpmDependencies": {
+      "com.timiz0r.ezutils.common": "^1.0.8",
+      "com.timiz0r.ezutils.localization": "^1.0.6"
     }
 }

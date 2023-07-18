@@ -16,6 +16,6 @@
     },
     "vpmDependencies": {
       "com.vrchat.core.vpm-resolver": "^0.1.21",
-      "com.timiz0r.ezutils.common": "^1.0.7"
+      "com.timiz0r.ezutils.common": "^1.0.8"
     }
 }

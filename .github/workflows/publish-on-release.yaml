@@ -22,8 +22,6 @@ jobs:
             path: ./src/EZUtils.Common
           - name: com.timiz0r.ezutils.mmdavatartools
             path: ./src/EZUtils.MMDAvatarTools
-          - name: com.timiz0r.ezutils.packagemanager
-            path: ./src/EZUtils.PackageManager
           - name: com.timiz0r.ezutils.repackprefab
             path: ./src/EZUtils.RepackPrefab
           - name: com.timiz0r.ezutils.windowcloser
