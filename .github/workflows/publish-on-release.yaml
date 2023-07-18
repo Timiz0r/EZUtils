@@ -88,6 +88,7 @@ jobs:
           git push origin
   publish-index:
     uses: ./.github/workflows/publish-vpm-changes.yaml
+    needs: update-index
 
 
 

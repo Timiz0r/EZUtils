@@ -26,7 +26,7 @@ runs:
       run: |
         package_name=$(jq -r '.name' package.json)
         package_version=$(jq -r '.version' package.json)
-        published_versions=$(jq --arg package_name "$package_name" '.repo?.packages?[$package_name]?.versions? // {} | keys_unsorted' "$GITHUB_WORKSPACE/vpm/index.json")
+        published_versions=$(jq -c --arg package_name "$package_name" '.packages?[$package_name]?.versions? // {} | keys_unsorted' "$GITHUB_WORKSPACE/vpm/index.json")
         version_exists=$(echo $published_versions | jq --arg package_version "$package_version" 'any(. == $package_version)')
 
         echo "name=$package_name" >> $GITHUB_OUTPUT
