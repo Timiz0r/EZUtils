@@ -6,7 +6,7 @@ on:
     branches:
       - main
     paths:
-      - './src/**/package.json'
+      - 'src/**/package.json'
 
 jobs:
   publish:
@@ -67,6 +67,10 @@ jobs:
         run: |
           #may not be any manifests
           shopt -s nullglob
+
+          if ! compgen -G 'Manifest-*/Manifest.json' > /dev/null ; then
+            exit 0
+          fi
 
           jq -n '
           reduce inputs as $manifest (input;
