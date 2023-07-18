@@ -4,5 +4,185 @@
   "url": "https://nyanmamu.booth.pm/",
   "id": "com.timiz0r.ezutils",
   "packages": {
+    "com.timiz0r.ezutils.common": {
+      "versions": {
+        "1.0.8": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.common",
+          "version": "1.0.8",
+          "description": "Contains code for EZUtils.",
+          "displayName": "EZUtils Common",
+          "unity": "2019.4",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {},
+          "zipSHA256": "0bc96f24d5cc98da7cf97db3f943ad8048baf2e06e874c52fa689410d53497c4",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.common-1.0.8/com.timiz0r.ezutils.common-1.0.8.zip"
+        }
+      }
+    },
+    "com.timiz0r.ezutils.editorenhancements": {
+      "versions": {
+        "1.0.3": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.editorenhancements",
+          "version": "1.0.3",
+          "description": "Improves the editor experience.",
+          "displayName": "EZUtils Editor Enhancements",
+          "unity": "2019.4",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.common": "^1.0.8"
+          },
+          "zipSHA256": "57a905a3d1ef5772f7e5e2ac621dcb6bbbdcb9101634d3083142822bf7f1ffd6",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.editorenhancements-1.0.3/com.timiz0r.ezutils.editorenhancements-1.0.3.zip"
+        }
+      }
+    },
+    "com.timiz0r.ezutils.localization": {
+      "versions": {
+        "1.0.7": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.localization",
+          "version": "1.0.7",
+          "description": "Tools for helping with localization of EZUtils packages.",
+          "displayName": "EZUtils Localization Tools",
+          "unity": "2019.4",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.common": "^1.0.8"
+          },
+          "zipSHA256": "badd56bf07b046c273521a080fb310207640961d15ce58f92f649fec57c2302f",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.localization-1.0.7/com.timiz0r.ezutils.localization-1.0.7.zip"
+        }
+      }
+    },
+    "com.timiz0r.ezutils.localization.extraction": {
+      "versions": {
+        "1.0.9": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.localization.extraction",
+          "version": "1.0.9",
+          "description": "Extracts localization calls from code and uxml",
+          "displayName": "EZUtils Localization Extraction",
+          "unity": "2019.4",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.localization": "^1.0.7",
+            "com.timiz0r.ezutils.common": "^1.0.8"
+          },
+          "zipSHA256": "f1f534c1b92bd6d80d19b2d44591f79664b06d7f4014a9e469f3cf46dc1a76fc",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.localization.extraction-1.0.9/com.timiz0r.ezutils.localization.extraction-1.0.9.zip"
+        }
+      }
+    },
+    "com.timiz0r.ezutils.mmdavatartools": {
+      "versions": {
+        "1.0.3": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.mmdavatartools",
+          "version": "1.0.3",
+          "description": "Contains tools for validating if VRChat avatars are MMD world-compatible.",
+          "displayName": "EZUtils MMD Avatar Tools",
+          "unity": "2019.4",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.common": "^1.0.8",
+            "com.timiz0r.ezutils.localization": "^1.0.7"
+          },
+          "zipSHA256": "fb49dd75f78e1b5e8e4f41839f4eadfe15fdb15757561f80ecca94bcf64eb3e7",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.mmdavatartools-1.0.3/com.timiz0r.ezutils.mmdavatartools-1.0.3.zip"
+        }
+      }
+    },
+    "com.timiz0r.ezutils.repackprefab": {
+      "versions": {
+        "1.0.1": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.repackprefab",
+          "version": "1.0.1",
+          "description": "A tool that takes an unpacked prefab that has been modified, plus a reference prefab, and produces a variant prefab.",
+          "displayName": "EZUtils Repack Prefab",
+          "unity": "2019.4",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.common": "^1.0.8"
+          },
+          "zipSHA256": "3dceb72c0d1c569500f4ce728f3fbef2153ec19d6591fd90a557308f343b701e",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.repackprefab-1.0.1/com.timiz0r.ezutils.repackprefab-1.0.1.zip"
+        }
+      }
+    },
+    "com.timiz0r.ezutils.windowcloser": {
+      "versions": {
+        "1.0.1": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.windowcloser",
+          "version": "1.0.1",
+          "description": "A tool for closing windows that don't show up, making it impossible to close or show them.",
+          "displayName": "EZUtils Window Closer",
+          "unity": "2019.4",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "dependencies": {},
+          "zipSHA256": "2e5b9e58f4665e4693d34715ac114308e10e1e16de5d782062574d332697810c",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.windowcloser-1.0.1/com.timiz0r.ezutils.windowcloser-1.0.1.zip"
+        }
+      }
+    }
   }
 }
