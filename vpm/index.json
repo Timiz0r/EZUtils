@@ -1,9 +1,34 @@
 {
   "repo": {
-      "name": "EZUtils",
-      "author": "Timiz0r",
-      "url": "https://nyanmamu.booth.pm/",
-      "id": "com.timiz0r.ezutils",
-      "packages": {}
+    "name": "EZUtils",
+    "author": "Timiz0r",
+    "url": "https://nyanmamu.booth.pm/",
+    "id": "com.timiz0r.ezutils",
+    "packages": {
+      "com.timiz0r.ezutils.common": {
+        "versions": {
+          "1.0.8": {
+            "$schema": "../emptyschema.json",
+            "name": "com.timiz0r.ezutils.common",
+            "version": "1.0.8",
+            "description": "Contains code for EZUtils.",
+            "displayName": "EZUtils Common",
+            "unity": "2019.4",
+            "author": {
+              "displayName": "Timiz0r/まむ",
+              "url": "https://github.com/Timiz0r/EZUtils"
+            },
+            "license": "MIT",
+            "repository": {
+              "type": "git",
+              "url": "https://github.com/Timiz0r/EZUtils.git"
+            },
+            "dependencies": {},
+            "zipSHA256": "52441ebe5d7a3272cae22b0e491010bbc0f6068673827dfe6bc6c4c94dd42de8",
+            "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.common-1.0.8/com.timiz0r.ezutils.common-1.0.8.zip"
+          }
+        }
+      }
+    }
   }
 }
