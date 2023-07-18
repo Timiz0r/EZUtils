@@ -86,6 +86,8 @@ jobs:
           $(jq -s 'map({ name, version })' Manifest-*/Manifest.json)"
 
           git push origin
+  publish-index:
+    uses: ./.github/workflows/publish-vpm-changes.yaml
 
 
 
