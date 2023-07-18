@@ -11,7 +11,6 @@ jobs:
     name: Publish ${{ matrix.package.name }}
     runs-on: ubuntu-latest
     permissions:
-      packages: write
       contents: write
     strategy:
       # an awkward consequence is that dependencies might not get published
@@ -39,21 +38,54 @@ jobs:
       - uses: actions/checkout@v3
         with:
           lfs: 'true'
-      - uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - name: Setup npmrc
-        run: |
-          cat <<EOF > ~/.npmrc
-          //pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/:username=timiz0r
-          //pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/:_password=\${AZURE_ARTIFACTS_PAT}
-          //pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/:email=foo@foo.foo
-          registry=https://pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/
-          always-auth=true
-          EOF
-      - name: Publish package
-        uses: ./.github/actions/publish-package
+    #   - name: Publish UPM package
+    #     uses: ./.github/actions/publish-upm-package
+    #     with:
+    #       package-path: ${{ matrix.package.path }}
+      - uses: ./.github/actions/publish-vpm-package
         with:
           package-path: ${{ matrix.package.path }}
-        env:
-            AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
+  update-index:
+    name: Update package index
+    needs: publish
+    #we allow individual package publishes to fail, but we still want to finish successful ones
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: 'true'
+      - name: Get manifests
+        uses: actions/download-artifact@v3
+        with:
+          path: vpm
+      - name: Update index.json
+        shell: bash
+        working-directory: vpm
+        run: |
+          #may not be any manifests
+          shopt -s nullglob
+
+          jq -n '
+          reduce inputs as $manifest (input;
+            if (.repo?.packages?[$manifest.name]?.versions?[$manifest.version]? != null) then
+                .
+            else
+                .repo.packages[$manifest.name].versions[$manifest.version] += $manifest
+            end
+            )' index.json Manifest-*/Manifest.json > index-working.json
+          mv index-working.json index.json
+
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add index.json
+          git commit -m "Update VPM index.json
+
+          $(jq -s 'map({ name, version })' Manifest-*/Manifest.json)"
+
+          git push origin
+
+
+

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="$(SrcRoot)\EZUtils.Common\EZUtils.Common.csproj" />
+
+    <Reference Include="vpm-core-lib">
+      <HintPath>$(ProjectRoot)\Packages\com.vrchat.core.vpm-resolver\Editor\Dependencies\vpm-core-lib.dll</HintPath>
+    </Reference>
+    <!-- does not seem to show up in props file. could also workaround by packagereference -->
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(RepoRoot)\Library\PackageCache\com.unity.nuget.newtonsoft-json@2.0.2\Runtime\Portable\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>
