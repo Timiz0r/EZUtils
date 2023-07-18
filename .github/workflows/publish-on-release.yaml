@@ -70,10 +70,10 @@ jobs:
 
           jq -n '
           reduce inputs as $manifest (input;
-            if (.repo?.packages?[$manifest.name]?.versions?[$manifest.version]? != null) then
+            if (.packages?[$manifest.name]?.versions?[$manifest.version]? != null) then
                 .
             else
-                .repo.packages[$manifest.name].versions[$manifest.version] += $manifest
+                .packages[$manifest.name].versions[$manifest.version] += $manifest
             end
             )' index.json Manifest-*/Manifest.json > index-working.json
           mv index-working.json index.json
