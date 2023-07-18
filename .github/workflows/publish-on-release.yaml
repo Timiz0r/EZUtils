@@ -75,7 +75,8 @@ jobs:
             else
                 .repo.packages[$manifest.name].versions[$manifest.version] += $manifest
             end
-            )' index.json Manifest-*/Manifest.json > index.json
+            )' index.json Manifest-*/Manifest.json > index-working.json
+          mv index-working.json index.json
 
           git config user.name github-actions
           git config user.email github-actions@github.com
