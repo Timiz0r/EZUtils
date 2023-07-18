@@ -5,8 +5,8 @@ on:
   push:
     branches:
       - main
-    paths-ignore:
-      - '/vpm/**'
+    paths:
+      - './src/**/package.json'
 
 jobs:
   publish:

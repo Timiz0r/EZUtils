@@ -26,14 +26,15 @@ runs:
         echo "sha256=$(sha256sum "$filename" | head -c 64)" >> $GITHUB_OUTPUT
     - name: Create release
       id: create-release
-      uses: softprops/action-gh-release@v1
       if: "!fromJson(steps.package-info.outputs.version-exists)"
+      uses: softprops/action-gh-release@v1
       with:
         tag_name: ${{ env.tag_name }}
         prerelease: ${{ contains(steps.package-info.outputs.version, 'preview') }}
         files: ${{ steps.create-package-zip.outputs.fullpath }}
     - name: Prepare package manifest
       id: prepare-package-manifest
+      if: "!fromJson(steps.package-info.outputs.version-exists)"
       shell: bash
       working-directory: ${{ inputs.package-path }}
       env:
@@ -51,6 +52,7 @@ runs:
         gh release upload "$tag_name" Manifest.json
         echo "fullpath=$(realpath Manifest.json)" >> $GITHUB_OUTPUT
     - name: Add package manifest artifact
+      if: "!fromJson(steps.package-info.outputs.version-exists)"
       uses: actions/upload-artifact@v3
       with:
         name: Manifest-${{ env.tag_name }}
