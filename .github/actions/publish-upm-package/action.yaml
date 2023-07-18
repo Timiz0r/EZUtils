@@ -1,5 +1,6 @@
-name: Publish package
-description: Publishes a new package if it doesn't already exist in the registry
+# note: not tested after refactor, since doing away with it
+name: Publish UPM package
+description: Publishes a new UPM package if it doesn't already exist in the registry
 inputs:
   package-path:
     required: true
@@ -13,35 +14,29 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Get package info
-      id: package-info
-      working-directory: ${{ inputs.package-path }}
-      shell: bash --noprofile --norc {0}
+    - uses: actions/setup-node@v3
+      with:
+          node-version: 18
+    - name: Setup npmrc
       run: |
-        package_name="$(node -p "require('./package.json').name")"
-        package_version="$(node -p "require('./package.json').version")"
-        published_versions="$( \
-          npm -j view $package_name versions \
-            | jq -c 'if type == "object" and .error.code=="E404" then [] else . end' \
-            | jq -c 'if type == "string" then [.] else . end' \
-            | jq -c 'if type == "array" then . else error("failed to retrieve published versions") end' \
-        )"
-        version_exists=$(echo $published_versions | jq -c "any(. == \"$package_version\")")
-
-        echo "name=$package_name" >> $GITHUB_OUTPUT
-        echo "version=$package_version" >> $GITHUB_OUTPUT
-        echo "published-versions=$published_versions" >> $GITHUB_OUTPUT
-        echo "version-exists=$version_exists" >> $GITHUB_OUTPUT
-
-        echo "Package name: $package_name"
-        echo "Package version: $package_version"
-        echo "Package name: $published_versions"
-        echo "Version exists: $version_exists"
+          cat <<EOF > ~/.npmrc
+          //pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/:username=timiz0r
+          //pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/:_password=\${AZURE_ARTIFACTS_PAT}
+          //pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/:email=foo@foo.foo
+          registry=https://pkgs.dev.azure.com/timiz0r/EZUtils/_packaging/EZUtils/npm/registry/
+          always-auth=true
+          EOF
+    - uses: ./.github/actions/get-package-info
+      id: package-info
+      with:
+        package-path: ${{ inputs.package-path }}
     - name: Publish package
       if: "!fromJson(steps.package-info.outputs.version-exists)"
       working-directory: ${{ inputs.package-path }}
       shell: bash
       run: npm publish --loglevel=silly
+      env:
+        AZURE_ARTIFACTS_PAT: ${{secrets.AZURE_ARTIFACTS_PAT}}
     - uses: softprops/action-gh-release@v1
       if: "!fromJson(steps.package-info.outputs.version-exists)"
       with:

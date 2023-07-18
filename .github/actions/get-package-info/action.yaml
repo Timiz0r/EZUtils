@@ -1,0 +1,39 @@
+name: Get package info
+description: Gets information about a package
+inputs:
+  package-path:
+    required: true
+outputs:
+  package-name:
+    description: "Package name"
+    value: ${{ steps.package-info.outputs.name }}
+  package-version:
+    description: "Package version"
+    value: ${{ steps.package-info.outputs.version }}
+  published-versions:
+    description: "Published versions"
+    value: ${{ steps.package-info.outputs.published-versions }}
+  version-exists:
+    description: "Version exists"
+    value: ${{ steps.package-info.outputs.version-exists }}
+runs:
+  using: composite
+  steps:
+    - name: Get package info
+      id: package-info
+      working-directory: ${{ inputs.package-path }}
+      shell: bash --noprofile --norc {0}
+      run: |
+        package_name=$(jq '.name' package.json)
+        package_version=$(jq '.version' package.json)
+        package_index=$(curl -f 'https://timiz0r.github.io/EZUtils/index.json')
+        if [[ $? -ne 0 ]] ; then
+            package_index='{}'
+        fi
+        published_versions=$(jq '.repo?.packages?["com.vrchat.avatars"]?.versions? // {} | keys_unsorted' "$GITHUB_WORKSPACE/vpm/index.json")
+        version_exists=$(echo $published_versions | jq -c "any(. == \"$package_version\")")
+
+        echo "name=$package_name" >> $GITHUB_OUTPUT
+        echo "version=$package_version" >> $GITHUB_OUTPUT
+        echo "published-versions=$published_versions" >> $GITHUB_OUTPUT
+        echo "version-exists=$version_exists" >> $GITHUB_OUTPUT
