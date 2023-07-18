@@ -4,5 +4,79 @@
   "url": "https://nyanmamu.booth.pm/",
   "id": "com.timiz0r.ezutils",
   "packages": {
+    "com.timiz0r.ezutils.common": {
+      "versions": {
+        "1.0.8": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.common",
+          "version": "1.0.8",
+          "description": "Contains code for EZUtils.",
+          "displayName": "EZUtils Common",
+          "unity": "2019.4",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {},
+          "zipSHA256": "62e58da87c50c948775872ae35cdc8b22ade40ad3f3f68fa91ac9c4e274347e1",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.common-1.0.8/com.timiz0r.ezutils.common-1.0.8.zip"
+        }
+      }
+    },
+    "com.timiz0r.ezutils.repackprefab": {
+      "versions": {
+        "1.0.0": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.repackprefab",
+          "version": "1.0.0",
+          "description": "A tool that takes an unpacked prefab that has been modified, plus a reference prefab, and produces a variant prefab.",
+          "displayName": "EZUtils Repack Prefab",
+          "unity": "2019.4",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.common": "^1.0.8"
+          },
+          "zipSHA256": "bd298fd80015922fd135c6452ae578448844c30c4ebfd4ea5b8680629384d9cc",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.repackprefab-1.0.0/com.timiz0r.ezutils.repackprefab-1.0.0.zip"
+        }
+      }
+    },
+    "com.timiz0r.ezutils.windowcloser": {
+      "versions": {
+        "1.0.0": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.windowcloser",
+          "version": "1.0.0",
+          "description": "A tool for closing windows that don't show up, making it impossible to close or show them.",
+          "displayName": "EZUtils Window Closer",
+          "unity": "2019.4",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "dependencies": {},
+          "zipSHA256": "2e5ac53b0f891b5b4cfadab43bbc870569dcdff5d6118d210e8e67fb77614327",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.windowcloser-1.0.0/com.timiz0r.ezutils.windowcloser-1.0.0.zip"
+        }
+      }
+    }
   }
 }
