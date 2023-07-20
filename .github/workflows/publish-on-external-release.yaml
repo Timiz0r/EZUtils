@@ -1,0 +1,39 @@
+name: Update VPM index with external release
+
+on:
+  workflow_dispatch:
+    inputs:
+      manifest-url:
+        description: Manifest url
+        required: true
+  repository_dispatch:
+    types: [external_vpm_release]
+
+env:
+  manifest_url: ${{ github.event_name == 'workflow_dispatch' && inputs.manifest-url || github.event.client_payload.manifest-url }}
+
+jobs:
+  update-index:
+    name: Update package index
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          lfs: 'true'
+      - name: Get manifest
+        shell: bash
+        working-directory: vpm
+        run: |
+          http_status=$(curl -w '%{http_code}' -o Manifest-external/Manifest.json "$manifest_url")
+          if [[ http_status -ne '200' ]] ; then
+            exit 1
+          fi
+       - uses: ./.github/actions/update-index-json
+  publish-index:
+    uses: ./.github/workflows/publish-vpm-changes.yaml
+    needs: update-index
+
+
+

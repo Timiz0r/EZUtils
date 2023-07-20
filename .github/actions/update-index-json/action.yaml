@@ -1,0 +1,34 @@
+name: Updates the index.json with manifests places alongside it
+description: Requires a vpm folder from the root that contains the index.json, plus Manifest-* subdirectories
+runs:
+  using: composite
+  steps:
+    - name: Update index.json
+    shell: bash
+    working-directory: vpm
+    run: |
+        #may not be any manifests
+        shopt -s nullglob
+
+        if ! compgen -G 'Manifest-*/Manifest.json' > /dev/null ; then
+          exit 0
+        fi
+
+        jq -n '
+        reduce inputs as $manifest (input;
+        if (.packages?[$manifest.name]?.versions?[$manifest.version]? != null) then
+          .
+        else
+          .packages[$manifest.name].versions[$manifest.version] += $manifest
+        end
+        )' index.json Manifest-*/Manifest.json > index-working.json
+        mv index-working.json index.json
+
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+        git add index.json
+        git commit -m "Update VPM index.json
+
+        $(jq -s 'map({ name, version })' Manifest-*/Manifest.json)"
+
+        git push origin
