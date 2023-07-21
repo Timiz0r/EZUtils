@@ -12,7 +12,7 @@ outputs:
 runs:
   using: composite
   steps:
-    - uses: ./.github/actions/get-package-info
+    - uses: ${{ github.action_path }}/../get-package-info
       id: package-info
       with:
         package-path: ${{ inputs.package-path }}
