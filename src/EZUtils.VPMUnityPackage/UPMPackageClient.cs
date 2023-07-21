@@ -4,6 +4,7 @@ namespace EZUtils.VPMUnityPackage
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
     using System.Threading.Tasks;
     using UnityEditor;
     using UnityEditor.PackageManager.Requests;
@@ -27,6 +28,9 @@ namespace EZUtils.VPMUnityPackage
         public static Task<UPM.PackageInfo> AddAsync(string identifier) => Request(() => UPM.Client.Add(identifier));
 
         public static Task RemoveAsync(string name) => Request(() => UPM.Client.Remove(name));
+
+        public static void Resolve()
+            => typeof(UPM.Client).GetMethod("Resolve", BindingFlags.NonPublic | BindingFlags.Static).Invoke(null, null);
 
         private static Task<T> Request<T>(Func<Request<T>> requestCreator)
             => RequestDescriptor<T>.Create(requestCreator).Task;

@@ -25,14 +25,15 @@ namespace EZUtils.VPMUnityPackage
             if (File.Exists("Assets/EZUtils/BootstrapPackage/Editor/Development.txt")) return;
 
             IReadOnlyList<string> packagesToReadd = await RemoveDeprecatedScopedRegistry();
+            Uri repoUrl = new Uri(TargetRepoUrl);
 
-            if (!Repos.UserRepoExists(TargetRepoUrl))
+            if (!Repos.UserRepoExists(repoUrl))
             {
-                _ = Repos.AddRepo(new Uri(TargetRepoUrl), new Dictionary<string, string>());
+                _ = Repos.AddRepo(repoUrl, new Dictionary<string, string>());
             }
 
             VPMPackageProvider.SerializableCreationInfo targetRepoInfo =
-                Repos.GetAllRepoInfo().SingleOrDefault(r => r.url == TargetRepoUrl.ToString());
+                Repos.GetAllRepoInfo().SingleOrDefault(r => r.url == TargetRepoUrl);
             VPMPackageProvider targetRepo = VPMPackageProvider.Create(targetRepoInfo);
             IEnumerable<IVRCPackageProvider> packageProviders = Enumerable.Repeat(targetRepo, 1);
             IVRCPackage targetPackage = targetRepo.GetPackage(TargetPackageName);
@@ -43,11 +44,15 @@ namespace EZUtils.VPMUnityPackage
                 if (packageIdToReadd.Equals(targetPackage.Id, StringComparison.OrdinalIgnoreCase)) continue;
 
                 IVRCPackage packageToReadd = targetRepo.GetPackage(packageIdToReadd);
+                if (packageToReadd == null) continue;
+
+                // System.Diagnostics.Debugger.Break();
                 _ = vpmProject.AddVPMPackage(packageToReadd, packageProviders);
             }
             _ = vpmProject.AddVPMPackage(targetPackage, packageProviders);
 
             _ = AssetDatabase.DeleteAsset($"Assets/EZUtils/BootstrapPackage/Editor/VPMUnityPackage/{TargetPackageName}");
+            EditorApplication.delayCall += () => UPMPackageClient.Resolve();
         }
 
         //NOTE: it's mostly not feasible to avoid a newtonsoft.json assembly
@@ -62,6 +67,7 @@ namespace EZUtils.VPMUnityPackage
 
             JObject manifest = JObject.Parse(File.ReadAllText("Packages/manifest.json"));
             JArray scopedRegistries = (JArray)manifest["scopedRegistries"];
+            JObject dependencies = (JObject)manifest["dependencies"];
             if (scopedRegistries == null)
             {
                 return packagesToReadd;
@@ -82,7 +88,17 @@ namespace EZUtils.VPMUnityPackage
                 if (targetScopedRegistryNames.Contains(package?.registry?.name))
                 {
                     packagesToReadd.Add(package.name);
+
+                    //we can't simply remove from the manifest because
+                    //first, we need to delay-call a UPM resolve to get the packages to actually disappear.
+                    //only then can will VPM actually install the packages.
+                    //if the UPM packages are still around, they'll be in the vpm manifest but not placed in the dir.
+                    //furthermore, since this results in a domain reload, it's not a simple as waiting.
+                    //while there are workarounds, the slower but more sensical method is to remove from UPM.
                     await UPMPackageClient.RemoveAsync(package.name);
+
+                    //reflect the upm remove operation back into our in-memory manifest
+                    _ = dependencies.Remove(package.name);
                 }
             }
 
@@ -92,39 +108,8 @@ namespace EZUtils.VPMUnityPackage
             }
 
             File.WriteAllText("Packages/manifest.json", manifest.ToString());
+
             return packagesToReadd;
-        }
-
-        private class ScopedRegistry
-        {
-            //fields are to match manifest.json
-            public string name;
-            public string url;
-            public List<string> scopes;
-
-            private ScopedRegistry() { }
-
-            public static IReadOnlyList<ScopedRegistry> GetScopedRegistries()
-            {
-                PackageManifest data = new PackageManifest();
-                EditorJsonUtility.FromJsonOverwrite(
-                    File.ReadAllText("Packages/manifest.json"),
-                    data);
-
-                return data.scopedRegistries;
-            }
-
-            public void Remove()
-            {
-
-            }
-
-            //NOTE: we should try our best to make sure it matches the manifest exactly
-            //when we remove a scoped registry, we'll write the object back out and dont want to lose data
-            private class PackageManifest
-            {
-                public List<ScopedRegistry> scopedRegistries;
-            }
         }
     }
 }
