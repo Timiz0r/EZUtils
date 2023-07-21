@@ -69,9 +69,7 @@ namespace EZUtils.VPMUnityPackage
 
             JObject[] targetScopedRegistries = scopedRegistries
                 .Cast<JObject>()
-                .Where(sr => sr["scopes"]
-                    .Cast<string>()
-                    .Any(scope => scope == TargetScopedRegistryScope))
+                .Where(sr => sr["scopes"].Any(scope => scope.ToString() == TargetScopedRegistryScope))
                 .ToArray();
             if (targetScopedRegistries.Length == 0) return packagesToReadd;
 
@@ -81,7 +79,7 @@ namespace EZUtils.VPMUnityPackage
                 await UPMPackageClient.ListAsync(offlineMode: true);
             foreach (UPM.PackageInfo package in upmPackages)
             {
-                if (targetScopedRegistryNames.Contains(package.registry.name))
+                if (targetScopedRegistryNames.Contains(package?.registry?.name))
                 {
                     packagesToReadd.Add(package.name);
                     await UPMPackageClient.RemoveAsync(package.name);

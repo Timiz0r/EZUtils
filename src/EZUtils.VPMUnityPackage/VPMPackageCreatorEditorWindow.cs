@@ -31,16 +31,12 @@ namespace EZUtils.VPMUnityPackage
             string generationRoot = EnsureFolderCreated("Assets/EZUtils/BootstrapPackage/Editor/VPMUnityPackage");
 
             TextField repositoryUrlField = rootVisualElement.Q<TextField>(name: "repositoryUrl");
-            repositoryUrlField.isDelayed = true;
             repositoryUrlField.SetValueWithoutNotify(EditorPrefs.GetString(RepositoryUrlPrefKey));
             _ = repositoryUrlField.RegisterValueChangedCallback(
                 evt => EditorPrefs.SetString(RepositoryUrlPrefKey, evt.newValue));
 
             TextField packageNameField = rootVisualElement.Q<TextField>(name: "packageName");
-            packageNameField.isDelayed = true;
-
             TextField scopedRepositoryScopeField = rootVisualElement.Q<TextField>(name: "scopedRepositoryScope");
-            scopedRepositoryScopeField.isDelayed = true;
             scopedRepositoryScopeField.SetValueWithoutNotify(EditorPrefs.GetString(ScopedRepositoryScopePrefKey));
             _ = scopedRepositoryScopeField.RegisterValueChangedCallback(
                 evt => EditorPrefs.SetString(ScopedRepositoryScopePrefKey, evt.newValue));

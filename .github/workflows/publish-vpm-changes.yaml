@@ -32,8 +32,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      # we specify a ref because when another workflow calls into this one, it'll use the old ref, not the one with the latest commit
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+            ref: main
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact

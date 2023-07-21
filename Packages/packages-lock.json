@@ -10,26 +10,19 @@
       "version": "file:../src/EZUtils.EditorEnhancements",
       "depth": 0,
       "source": "local",
-      "dependencies": {
-        "com.timiz0r.ezutils.common": "1.0.2"
-      }
+      "dependencies": {}
     },
     "com.timiz0r.ezutils.localization": {
       "version": "file:../src/EZUtils.Localization",
       "depth": 0,
       "source": "local",
-      "dependencies": {
-        "com.timiz0r.ezutils.common": "1.0.6"
-      }
+      "dependencies": {}
     },
     "com.timiz0r.ezutils.localization.extraction": {
       "version": "file:../src/EZUtils.Localization.Extraction",
       "depth": 0,
       "source": "local",
-      "dependencies": {
-        "com.timiz0r.ezutils.localization": "1.0.6",
-        "com.timiz0r.ezutils.common": "1.0.6"
-      }
+      "dependencies": {}
     },
     "com.timiz0r.ezutils.localization.tests": {
       "version": "file:../src/EZUtils.Localization.Tests",
@@ -41,10 +34,7 @@
       "version": "file:../src/EZUtils.MMDAvatarTools",
       "depth": 0,
       "source": "local",
-      "dependencies": {
-        "com.timiz0r.ezutils.common": "1.0.6",
-        "com.timiz0r.ezutils.localization": "1.0.2"
-      }
+      "dependencies": {}
     },
     "com.timiz0r.ezutils.mmdavatartools.tests": {
       "version": "file:../src/EZUtils.MMDAvatarTools.Tests",
@@ -64,9 +54,7 @@
       "version": "file:../src/EZUtils.RepackPrefab",
       "depth": 0,
       "source": "local",
-      "dependencies": {
-        "com.timiz0r.ezutils.common": "1.0.0"
-      }
+      "dependencies": {}
     },
     "com.timiz0r.ezutils.repackprefab.tests": {
       "version": "file:../src/EZUtils.RepackPrefab.Tests",
