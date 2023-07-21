@@ -1,7 +1,7 @@
 {
     "$schema": "../emptyschema.json",
     "name": "com.timiz0r.ezutils.vpmunitypackage",
-    "version": "0.0.1-preview1",
+    "version": "1.0.0",
     "description": "Creates .unitypackage packages that, when imported, will add a community VPM repository to the machine if necessary and add a VPM package to the project.",
     "displayName": "EZUtils VPM .unitypackage Creator",
     "unity": "2019.4",

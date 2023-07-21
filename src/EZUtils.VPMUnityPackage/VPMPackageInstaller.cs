@@ -40,6 +40,9 @@ namespace EZUtils.VPMUnityPackage
                 //the package ids to be read back later, as we have chosen to do here.
                 //we chose to keep state because we don't want to resolve all untargeted packages on behalf of the user,
                 //just the ones in our scope.
+                //
+                //by returning here after we've modified manifest.json, and with the resolve call,
+                //we'll get a domain reload, and this method will get called again
                 return;
             }
 
@@ -74,18 +77,19 @@ namespace EZUtils.VPMUnityPackage
             }
             _ = vpmProject.AddVPMPackage(targetPackage, packageProviders);
 
-            _ = AssetDatabase.DeleteAsset($"Assets/EZUtils/BootstrapPackage/Editor/VPMUnityPackage/{TargetPackageName}");
-
-            //resolve doesnt work without the delay call
             EditorApplication.delayCall += () =>
             {
+                //resolve doesnt work without the delay call
                 UPMPackageClient.Resolve();
-                EditorApplication.delayCall += () => UPMPackageClient.Resolve();
+
+                //a previous attempt put this before the delay call
+                //the end result was the delay call getting eaten by a domain reload
+                _ = AssetDatabase.DeleteAsset($"Assets/EZUtils/BootstrapPackage/Editor/VPMUnityPackage/{TargetPackageName}");
             };
         }
 
-        //NOTE: it's mostly not feasible to avoid a newtonsoft.json assembly
-        //the internal unity class changes between versions and would be a pain to use
+        //NOTE: it's mostly not feasible to avoid a newtonsoft.json assembly,
+        //as the internal unity class for removing scoped registries changes between versions and would be a pain to use
         //EditorJsonUtility is obnoxious to use when writing data without risking losing it or altering the look
         //
         //would also prefer an out instead of return type, but cant do that with async-await yet
