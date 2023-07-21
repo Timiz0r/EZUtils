@@ -30,10 +30,7 @@ jobs:
           if [[ http_status -ne '200' ]] ; then
             exit 1
           fi
-       - uses: ./.github/actions/update-index-json
+      - uses: ./.github/actions/update-index-json
   publish-index:
     uses: ./.github/workflows/publish-vpm-changes.yaml
     needs: update-index
-
-
-

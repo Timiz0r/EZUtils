@@ -3,6 +3,10 @@ description: Incrementally ublishes a new VPM package if it doesn't already exis
 inputs:
   package-path:
     required: true
+outputs:
+  manifest-url:
+    description: Manifest URL
+    value: ${{ steps.prepare-package-manifest.outputs.manifest-url }}
 runs:
   using: composite
   steps:
@@ -51,6 +55,9 @@ runs:
 
         gh release upload "$tag_name" Manifest.json
         echo "fullpath=$(realpath Manifest.json)" >> $GITHUB_OUTPUT
+
+        manifest_url=$(gh release view "$tag_name" --json assets -q '.assets[] | select(.name == "Manifest.json") | .url')
+        echo "manifest-url=$manifest_url" >> $GITHUB_OUTPUT
     - name: Add package manifest artifact
       if: "!fromJson(steps.package-info.outputs.version-exists)"
       uses: actions/upload-artifact@v3
