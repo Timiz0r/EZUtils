@@ -24,9 +24,32 @@ namespace EZUtils.VPMUnityPackage
         {
             if (File.Exists("Assets/EZUtils/BootstrapPackage/Editor/Development.txt")) return;
 
+            string packagesToReaddKey = $"{typeof(VPMPackageInstaller).FullName}.PackagesToReadd";
             IReadOnlyList<string> packagesToReadd = await RemoveDeprecatedScopedRegistry();
-            Uri repoUrl = new Uri(TargetRepoUrl);
+            if (packagesToReadd.Count > 0)
+            {
+                EditorPrefs.SetString(packagesToReaddKey, string.Join("\xff", packagesToReadd));
 
+                //resolve doesnt work without the delay call
+                EditorApplication.delayCall += () => UPMPackageClient.Resolve();
+
+                //NOTE:
+                //VPM won't place the packages in the packages folder if the upm packages still exist (with the same id)
+                //therefore, they must be removed first. removing a package, one or many, results in a domain reload.
+                //with the domain reload, we either need to write to the vpm manifest first, or we need to store
+                //the package ids to be read back later, as we have chosen to do here.
+                //we chose to keep state because we don't want to resolve all untargeted packages on behalf of the user,
+                //just the ones in our scope.
+                return;
+            }
+
+            if (EditorPrefs.GetString(packagesToReaddKey) is string storedPackagesToReadd)
+            {
+                packagesToReadd = storedPackagesToReadd.Split('\xff');
+                EditorPrefs.DeleteKey(packagesToReaddKey);
+            }
+
+            Uri repoUrl = new Uri(TargetRepoUrl);
             if (!Repos.UserRepoExists(repoUrl))
             {
                 _ = Repos.AddRepo(repoUrl, new Dictionary<string, string>());
@@ -52,7 +75,13 @@ namespace EZUtils.VPMUnityPackage
             _ = vpmProject.AddVPMPackage(targetPackage, packageProviders);
 
             _ = AssetDatabase.DeleteAsset($"Assets/EZUtils/BootstrapPackage/Editor/VPMUnityPackage/{TargetPackageName}");
-            EditorApplication.delayCall += () => UPMPackageClient.Resolve();
+
+            //resolve doesnt work without the delay call
+            EditorApplication.delayCall += () =>
+            {
+                UPMPackageClient.Resolve();
+                EditorApplication.delayCall += () => UPMPackageClient.Resolve();
+            };
         }
 
         //NOTE: it's mostly not feasible to avoid a newtonsoft.json assembly
@@ -89,15 +118,8 @@ namespace EZUtils.VPMUnityPackage
                 {
                     packagesToReadd.Add(package.name);
 
-                    //we can't simply remove from the manifest because
-                    //first, we need to delay-call a UPM resolve to get the packages to actually disappear.
-                    //only then can will VPM actually install the packages.
-                    //if the UPM packages are still around, they'll be in the vpm manifest but not placed in the dir.
-                    //furthermore, since this results in a domain reload, it's not a simple as waiting.
-                    //while there are workarounds, the slower but more sensical method is to remove from UPM.
-                    await UPMPackageClient.RemoveAsync(package.name);
-
-                    //reflect the upm remove operation back into our in-memory manifest
+                    //versus many remove operations (and apparently subsequent domain reloads)
+                    //we'll just remove from the manifest and force a resolve later
                     _ = dependencies.Remove(package.name);
                 }
             }
