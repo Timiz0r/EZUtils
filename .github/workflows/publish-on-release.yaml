@@ -45,6 +45,7 @@ jobs:
       - uses: ./.github/actions/publish-vpm-package
         with:
           package-path: ${{ matrix.package.path }}
+          index-path: vpm/index.json
   update-index:
     name: Update package index
     needs: publish

@@ -3,6 +3,8 @@ description: Incrementally ublishes a new VPM package if it doesn't already exis
 inputs:
   package-path:
     required: true
+  index-path:
+    required: true
 outputs:
   manifest-url:
     description: Manifest URL
@@ -14,6 +16,7 @@ runs:
       id: package-info
       with:
         package-path: ${{ inputs.package-path }}
+        index-path: ${{ inputs.index-path }}
     - name: Set tag name
       shell: bash
       run: echo 'tag_name=${{ steps.package-info.outputs.name }}-${{ steps.package-info.outputs.version }}' >> $GITHUB_ENV

@@ -3,6 +3,8 @@ description: Gets information about a package
 inputs:
   package-path:
     required: true
+  index-path:
+    required: true
 outputs:
   name:
     description: "Package name"
@@ -21,12 +23,12 @@ runs:
   steps:
     - name: Get package info
       id: package-info
-      working-directory: ${{ inputs.package-path }}
       shell: bash --noprofile --norc {0}
       run: |
-        package_name=$(jq -r '.name' package.json)
-        package_version=$(jq -r '.version' package.json)
-        published_versions=$(jq -c --arg package_name "$package_name" '.packages?[$package_name]?.versions? // {} | keys_unsorted' "$GITHUB_WORKSPACE/vpm/index.json")
+        package_json_path=${{ inputs.package-path }}/package.json
+        package_name=$(jq -r '.name' "$package_json_path")
+        package_version=$(jq -r '.version' "$package_json_path")
+        published_versions=$(jq -c --arg package_name "$package_name" '.packages?[$package_name]?.versions? // {} | keys_unsorted' '${{ inputs.index-path }}')
         version_exists=$(echo $published_versions | jq --arg package_version "$package_version" 'any(. == $package_version)')
 
         echo "name=$package_name" >> $GITHUB_OUTPUT
