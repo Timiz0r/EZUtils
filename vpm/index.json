@@ -205,6 +205,33 @@
           "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.windowcloser-1.0.1/com.timiz0r.ezutils.windowcloser-1.0.1.zip"
         }
       }
+    },
+    "com.timiz0r.ezutils.ezfxlayer": {
+      "versions": {
+        "1.1.1": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.ezfxlayer",
+          "version": "1.1.1",
+          "description": "Tool providing an easy way to configure VRChat's FX playable animator controller layer",
+          "displayName": "EZUtils EZFXLayer",
+          "unity": "2019.4",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZFXLayer"
+          },
+          "license": "LICENSE",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZFXLayer.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.localization": "1.0.7",
+            "com.timiz0r.ezutils.common": "1.0.8"
+          },
+          "zipSHA256": "29edeeeb4a4562162d45ceb4a52f651bb5e4c4d3acb6494c624ffb65e59f13eb",
+          "url": "https://github.com/Timiz0r/EZFXLayer/releases/download/com.timiz0r.ezutils.ezfxlayer-1.1.1/com.timiz0r.ezutils.ezfxlayer-1.1.1.zip"
+        }
+      }
     }
   }
 }
