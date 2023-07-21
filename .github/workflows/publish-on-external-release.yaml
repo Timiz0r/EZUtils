@@ -27,7 +27,7 @@ jobs:
         working-directory: vpm
         run: |
           mkdir Manifest-external
-          http_status=$(curl -w '%{http_code}' -o Manifest-external/Manifest.json "$manifest_url")
+          http_status=$(curl -L -w '%{http_code}' -o Manifest-external/Manifest.json "$manifest_url")
           if [[ http_status -ne '200' ]] ; then
             exit 1
           fi
