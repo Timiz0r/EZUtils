@@ -53,7 +53,8 @@ namespace EZUtils.VPMUnityPackage
                 return;
             }
 
-            if (EditorPrefs.GetString(packagesToReaddKey) is string storedPackagesToReadd)
+            if (EditorPrefs.GetString(packagesToReaddKey) is string storedPackagesToReadd
+                && string.IsNullOrEmpty(storedPackagesToReadd))
             {
                 packagesToReadd = storedPackagesToReadd.Split('\xff');
                 EditorPrefs.DeleteKey(packagesToReaddKey);

@@ -1,4 +1,4 @@
-namespace EZUtils.VPM.com_timiz0r_ezutils_ezfxlayer
+namespace EZUtils.VPM.jp_lilxyzw_liltoon
 {
     using System;
     using System.Collections.Generic;
@@ -16,9 +16,9 @@ namespace EZUtils.VPM.com_timiz0r_ezutils_ezfxlayer
     public static class VPMPackageInstaller
     {
         private static readonly bool IsTemplate = false;
-        private static readonly string TargetRepoUrl = "https://timiz0r.github.io/EZUtils/";
-        private static readonly string TargetPackageName = "com.timiz0r.ezutils.ezfxlayer";
-        private static readonly string TargetScopedRegistryScope = "com.timiz0r.ezutils";
+        private static readonly string TargetRepoUrl = "https://lilxyzw.github.io/vpm-repos/vpm.json";
+        private static readonly string TargetPackageName = "jp.lilxyzw.liltoon";
+        private static readonly string TargetScopedRegistryScope = "";
 
         public static string ScriptRoot(string packageName)
             => $"Assets/EZUtils/Editor/VPMUnityPackage/{packageName}";

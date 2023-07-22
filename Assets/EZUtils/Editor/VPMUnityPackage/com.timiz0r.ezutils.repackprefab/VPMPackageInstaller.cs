@@ -53,7 +53,8 @@ namespace EZUtils.VPM.com_timiz0r_ezutils_repackprefab
                 return;
             }
 
-            if (EditorPrefs.GetString(packagesToReaddKey) is string storedPackagesToReadd)
+            if (EditorPrefs.GetString(packagesToReaddKey) is string storedPackagesToReadd
+                && string.IsNullOrEmpty(storedPackagesToReadd))
             {
                 packagesToReadd = storedPackagesToReadd.Split('\xff');
                 EditorPrefs.DeleteKey(packagesToReaddKey);
