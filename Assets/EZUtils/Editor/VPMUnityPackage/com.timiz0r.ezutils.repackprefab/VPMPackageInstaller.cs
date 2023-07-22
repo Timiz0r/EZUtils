@@ -1,4 +1,4 @@
-namespace EZUtils.VPMUnityPackage
+namespace EZUtils.VPM.com_timiz0r_ezutils_repackprefab
 {
     using System;
     using System.Collections.Generic;
@@ -15,10 +15,10 @@ namespace EZUtils.VPMUnityPackage
 
     public static class VPMPackageInstaller
     {
-        private static readonly bool IsTemplate = true;
-        private static readonly string TargetRepoUrl = "{TargetRepoUrl}";
-        private static readonly string TargetPackageName = "{TargetPackageName}";
-        private static readonly string TargetScopedRegistryScope = "{TargetScopedRegistryScope}";
+        private static readonly bool IsTemplate = false;
+        private static readonly string TargetRepoUrl = "https://timiz0r.github.io/EZUtils/";
+        private static readonly string TargetPackageName = "com.timiz0r.ezutils.repackprefab";
+        private static readonly string TargetScopedRegistryScope = "com.timiz0r.ezutils";
 
         public static string ScriptRoot(string packageName)
             => $"Assets/EZUtils/Editor/VPMUnityPackage/{packageName}";

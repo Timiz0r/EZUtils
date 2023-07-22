@@ -19,16 +19,12 @@ namespace EZUtils.VPMUnityPackage
                 GetWindow<VPMPackageCreatorEditorWindow>("EZUtils VPM .unitypackage Creator");
             window.Show();
         }
-        [MenuItem("EZUtils/VPM .unitypackage Creator", isValidateFunction: true, priority: 0)]
-        public static bool ValidatePackageManager() => File.Exists("Assets/EZUtils/BootstrapPackage/Editor/Development.txt");
 
         public async void CreateGUI()
         {
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 "Packages/com.timiz0r.ezutils.vpmunitypackage/VPMPackageCreatorEditorWindow.uxml");
             visualTree.CloneTree(rootVisualElement);
-
-            string generationRoot = EnsureFolderCreated("Assets/EZUtils/BootstrapPackage/Editor/VPMUnityPackage");
 
             TextField repositoryUrlField = rootVisualElement.Q<TextField>(name: "repositoryUrl");
             repositoryUrlField.SetValueWithoutNotify(EditorPrefs.GetString(RepositoryUrlPrefKey));
@@ -51,7 +47,12 @@ namespace EZUtils.VPMUnityPackage
             createButton.clicked += () =>
             {
                 string targetPackageName = packageNameField.value;
-                string packageFolder = EnsureFolderCreated(Path.Combine(generationRoot, targetPackageName));
+                string packageFolder = EnsureFolderCreated(VPMPackageInstaller.ScriptRoot(targetPackageName));
+
+                //this is here so the script, sitting in the original repo, doesnt run
+                //whereas IsTemplate is meant for the original script, set to false when copied when generating
+                string executionBlockingFile = VPMPackageInstaller.ExecutionBlockingFile(targetPackageName);
+                File.Create(executionBlockingFile).Dispose();
 
                 _ = CreatePackage(
                     Path.Combine(packageFolder, $"VPM-{targetPackageName}.unitypackage"),
@@ -87,6 +88,7 @@ namespace EZUtils.VPMUnityPackage
                         destinationPath,
                         (@"namespace EZUtils\.VPMUnityPackage", $"namespace EZUtils.VPM.{targetPackageName.Replace(".", "_")}"),
                         (@"using EZUtils\.VPMUnityPackage;", $"using EZUtils.VPM.{targetPackageName.Replace(".", "_")}"),
+                        ("IsTemplate = true", "IsTemplate = false"),
                         ("{TargetRepoUrl}", repositoryUrlField.value),
                         ("{TargetPackageName}", targetPackageName),
                         ("{TargetScopedRegistryScope}", scopedRepositoryScopeField.value));
