@@ -257,6 +257,29 @@
           },
           "zipSHA256": "f3df3507595c136cb4cfb16caa29bdab2c215b7514c69f2d8e997008c664c922",
           "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.vpmunitypackage-1.0.0/com.timiz0r.ezutils.vpmunitypackage-1.0.0.zip"
+        },
+        "1.0.1": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.vpmunitypackage",
+          "version": "1.0.1",
+          "description": "Creates .unitypackage packages that, when imported, will add a community VPM repository to the machine if necessary and add a VPM package to the project.",
+          "displayName": "EZUtils VPM .unitypackage Creator",
+          "unity": "2019.4",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.vrchat.core.vpm-resolver": "^0.1.21",
+            "com.timiz0r.ezutils.common": "^1.0.8"
+          },
+          "zipSHA256": "3b07001abcda41be1ad6db708dba38714ec8fe7d46b97b844754e8668580772c",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.vpmunitypackage-1.0.1/com.timiz0r.ezutils.vpmunitypackage-1.0.1.zip"
         }
       }
     }
