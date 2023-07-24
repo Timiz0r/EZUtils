@@ -8,6 +8,7 @@ namespace EZUtils.EditorEnhancements
 
     internal class AutoSaveScene
     {
+        private readonly string autoSaveFolderPath;
         private readonly DirectoryInfo autoSaveFolder;
         private readonly string sceneName;
         public string Path { get; }
@@ -16,12 +17,13 @@ namespace EZUtils.EditorEnhancements
         {
             Path = scenePath;
             sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePath);
-            autoSaveFolder = new DirectoryInfo(string.Concat(
+            autoSaveFolderPath = string.Concat(
                 //a slight preference for unity-style paths means no Path class
                 Path.Substring(0, Path.Length - sceneName.Length - ".unity".Length),
                 //we use a hidden folder so unity wont do an import each time we create an autosave
                 ".SceneAutoSave/",
-                sceneName));
+                sceneName);
+            autoSaveFolder = new DirectoryInfo(autoSaveFolderPath);
         }
 
         public bool IsAutoSaveNewer()
@@ -32,7 +34,7 @@ namespace EZUtils.EditorEnhancements
             //could also go modified time
             //but since these are never intended to be modified, creation time is the best match
             FileInfo latestAutoSave = autoSaveFolder
-                .GetFiles()
+                .GetFiles("*.unity")
                 .OrderByDescending(f => f.CreationTimeUtc)
                 .FirstOrDefault();
 
@@ -42,15 +44,18 @@ namespace EZUtils.EditorEnhancements
 
         public void AutoSave()
         {
+            //we don't current have this as a field because some instances of this start out with not having
+            //a loaded scene
+            Scene scene = SceneManager.GetSceneByPath(Path);
+
             if (!autoSaveFolder.Exists) autoSaveFolder.Create();
 
-            FileInfo sceneFile = new FileInfo(Path);
-            _ = sceneFile.CopyTo(
-                System.IO.Path.Combine(
-                    autoSaveFolder.FullName,
-                    $"{sceneName}-AutoSave-{DateTimeOffset.Now:yyyy'-'MM'-'dd'T'HHmmss}.unity"));
+            _ = EditorSceneManager.SaveScene(
+                scene,
+                $"{autoSaveFolderPath}/{sceneName}-AutoSave-{DateTimeOffset.Now:yyyy'-'MM'-'dd'T'HHmmss}.unity",
+                saveAsCopy: true);
 
-            FileInfo[] autoSaveFiles = autoSaveFolder.GetFiles();
+            FileInfo[] autoSaveFiles = autoSaveFolder.GetFiles("*.unity");
             if (autoSaveFiles.Length > SceneAutoSaver.SceneAutoSaveCopies.Value)
             {
                 autoSaveFiles.OrderBy(f => f.CreationTimeUtc).First().Delete();
@@ -67,7 +72,7 @@ namespace EZUtils.EditorEnhancements
             FileInfo latestAutoSaveFile = !autoSaveFolder.Exists
                 ? null
                 : autoSaveFolder
-                    .GetFiles()
+                    .GetFiles("*.unity")
                     .OrderByDescending(f => f.CreationTimeUtc)
                     .FirstOrDefault();
             //so we recovered towards the set of open scenes, but we can't load an autosave
