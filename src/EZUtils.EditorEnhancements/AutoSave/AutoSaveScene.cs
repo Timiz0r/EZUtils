@@ -47,6 +47,7 @@ namespace EZUtils.EditorEnhancements
             //we don't current have this as a field because some instances of this start out with not having
             //a loaded scene
             Scene scene = SceneManager.GetSceneByPath(Path);
+            if (!scene.isDirty) return;
 
             if (!autoSaveFolder.Exists) autoSaveFolder.Create();
 
