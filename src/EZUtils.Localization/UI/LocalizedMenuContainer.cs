@@ -61,7 +61,9 @@ namespace EZUtils.Localization //purposely not uielements, unlike many other typ
             {
                 AddMenu(descriptor);
             }
-            UpdateAllMenus();
+
+            //this cannot run in InitializeOnLoads, so, even if not necessary, we delay call this
+            EditorApplication.delayCall += () => UpdateAllMenus();
         }
 
         private void AddMenu(Descriptor descriptor)

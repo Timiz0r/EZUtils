@@ -16,6 +16,6 @@
     },
     "vpmDependencies": {
       "com.timiz0r.ezutils.common": "^1.0.8",
-      "com.timiz0r.ezutils.localization": "^1.0.7"
+      "com.timiz0r.ezutils.localization": "^1.0.8"
     }
 }
