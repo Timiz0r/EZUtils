@@ -13,15 +13,18 @@ namespace EZUtils.EditorEnhancements
         private DateTimeOffset lastAutoSaveTime = DateTimeOffset.Now;
         private readonly SceneAutoSaver sceneAutoSaver = new SceneAutoSaver();
 
+        //grabbing the on-load set of scenes doesnt work well without a delay call
+        //also, on first start, only the splash screen is showing,
+        //and it's somewhat stylistically preferred to have the full editor showing
         [InitializeOnLoadMethod]
-        private static void UnityInitialize()
+        private static void UnityInitialize() => EditorApplication.delayCall += () =>
         {
             AutoSave autoSave = new AutoSave();
 
             autoSave.sceneAutoSaver.Load();
 
             EditorApplication.update += autoSave.EditorUpdate;
-        }
+        };
 
         private void EditorUpdate()
         {
