@@ -6,18 +6,18 @@ msgstr "Language: ja\n"
 "Plural-Forms: nplurals=1; 0;\n"
 "X-PluralRules-Other:  @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\n"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:48
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:54
 msgid "Scene auto-save"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:49
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:55
 msgid "It does not appear that Unity was properly closed, and there is auto-save data available. Attempt to recover using auto-save data?"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:51
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:57
 msgid "Yes"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:52
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:58
 msgid "No"
 msgstr ""

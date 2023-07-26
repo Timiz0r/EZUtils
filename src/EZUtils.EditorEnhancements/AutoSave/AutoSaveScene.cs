@@ -6,16 +6,26 @@ namespace EZUtils.EditorEnhancements
     using UnityEditor.SceneManagement;
     using UnityEngine.SceneManagement;
 
+    //NOTE: we dont store a scene because there are code paths where there is no associated scene,
+    //particularly if unity crashed and the initial scenes are different from what was open at the time.
     internal class AutoSaveScene
     {
         private readonly string autoSaveFolderPath;
         private readonly DirectoryInfo autoSaveFolder;
         private readonly string sceneName;
+        private readonly bool wasDirty;
+        private Scene? cachedScene = null;
+        private Scene Scene => cachedScene
+            ?? (SceneManager.GetSceneByPath(Path) is Scene scene && scene.IsValid()
+                ? (cachedScene = scene).Value
+                : default(Scene));
+
         public string Path { get; }
 
-        public AutoSaveScene(string scenePath)
+        public AutoSaveScene(string scenePath, bool wasDirty)
         {
             Path = scenePath;
+            this.wasDirty = wasDirty;
             sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePath);
             autoSaveFolderPath = string.Concat(
                 //a slight preference for unity-style paths means no Path class
@@ -26,9 +36,15 @@ namespace EZUtils.EditorEnhancements
             autoSaveFolder = new DirectoryInfo(autoSaveFolderPath);
         }
 
-        public bool IsAutoSaveNewer()
+        public AutoSaveScene(string scenePath) : this(scenePath, wasDirty: false)
+        { }
+
+        //which is to say both that an improper close happened, and there is something to recover to
+        public bool IsRecoveryNeeded()
         {
-            if (!autoSaveFolder.Exists) return false;
+            //this happens on domain reload, where scenes remain dirty
+            //so nothing has been lost, and nothing needs to be recovered
+            if (Scene.isDirty) return false;
 
             FileInfo sceneFile = new FileInfo(Path);
             //could also go modified time
@@ -37,22 +53,34 @@ namespace EZUtils.EditorEnhancements
                 .GetFiles("*.unity")
                 .OrderByDescending(f => f.CreationTimeUtc)
                 .FirstOrDefault();
+            if (latestAutoSave == null)
+            {
+                return false;
+            }
 
-            bool result = latestAutoSave != null && latestAutoSave.CreationTimeUtc > sceneFile.LastWriteTimeUtc;
-            return result;
+            bool sceneNoLongerOpened = !Scene.IsValid();
+            bool dirtySceneNoLongerDirty = wasDirty && !Scene.isDirty; //check scene dirtyness again for code maintainability reasons
+            //if a scene is copied, it's last write time will be the same as the last save,
+            //but it's creation time will be newer
+            DateTime sceneModifiedTime = sceneFile.CreationTimeUtc > sceneFile.LastWriteTimeUtc
+                ? sceneFile.CreationTimeUtc
+                : sceneFile.LastWriteTimeUtc;
+            bool autoSaveNewerThanScene = latestAutoSave.CreationTimeUtc > sceneModifiedTime;
+
+
+            bool isRecoveryNeeded = sceneNoLongerOpened || dirtySceneNoLongerDirty || autoSaveNewerThanScene;
+            return isRecoveryNeeded;
         }
 
         public void AutoSave()
         {
-            //we don't current have this as a field because some instances of this start out with not having
-            //a loaded scene
-            Scene scene = SceneManager.GetSceneByPath(Path);
-            if (!scene.isDirty) return;
+            if (!Scene.isDirty) return;
 
             if (!autoSaveFolder.Exists) autoSaveFolder.Create();
 
+            //this indeed works even in hidden folders outside the scope of AssetDatabase
             _ = EditorSceneManager.SaveScene(
-                scene,
+                Scene,
                 $"{autoSaveFolderPath}/{sceneName}-AutoSave-{DateTimeOffset.Now:yyyy'-'MM'-'dd'T'HHmmss}.unity",
                 saveAsCopy: true);
 
@@ -64,11 +92,11 @@ namespace EZUtils.EditorEnhancements
         }
         public void Recover()
         {
-            Scene actualScene = Enumerable
-                .Range(0, SceneManager.sceneCount)
-                .Select(i => SceneManager.GetSceneAt(i))
-                .SingleOrDefault(s => s.path == Path);
-            if (actualScene == default) actualScene = EditorSceneManager.OpenScene(Path, OpenSceneMode.Additive);
+            if (!Scene.IsValid())
+            {
+                //it's probably more correct to just open and let the cached value load as normal, but we'll just do this
+                cachedScene = EditorSceneManager.OpenScene(Path, OpenSceneMode.Additive);
+            }
 
             FileInfo latestAutoSaveFile = !autoSaveFolder.Exists
                 ? null
