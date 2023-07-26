@@ -106,6 +106,14 @@ namespace EZUtils.EditorEnhancements
             EditorSceneManager.sceneDirtied += SceneDirtied;
             EditorSceneManager.sceneSaved += SceneSaved;
             Undo.undoRedoPerformed += UndoRedo;
+            EditorApplication.quitting += EditorQuitting;
+        }
+
+        private void EditorQuitting()
+        {
+            //clean quits means we dont need to keep around this state to recover
+            editorRecord.scenes.Clear();
+            StoreEditorRecord();
         }
 
         //there are no scene-related events for when a scene is undid back into a clean state
