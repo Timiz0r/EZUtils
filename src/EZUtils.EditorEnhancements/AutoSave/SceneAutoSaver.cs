@@ -16,21 +16,11 @@ namespace EZUtils.EditorEnhancements
             new EditorPreference<int>("EZUtils.EditorEnhancements.AutoSave.Scene.Copies", 5);
 
         //if unity crashes, the set of scenes opened on load may be different from what were open beforehand
-        private readonly EditorPreference<string> rawEditorRecord;
-        private readonly EditorRecord editorRecord;
+        private readonly EditorPreference<string> rawEditorRecord = new EditorPreference<string>(
+            "EZUtils.EditorEnhancements.AutoSave.Scene.EditorRecord", null);
+        private readonly EditorRecord editorRecord = new EditorRecord();
 
         private readonly Dictionary<string, AutoSaveScene> autoSaveScenes = new Dictionary<string, AutoSaveScene>();
-
-        public SceneAutoSaver()
-        {
-            rawEditorRecord = new EditorPreference<string>(
-                "EZUtils.EditorEnhancements.AutoSave.Scene.EditorRecord", null);
-            editorRecord = new EditorRecord();
-            if (rawEditorRecord.Value is string r)
-            {
-                EditorJsonUtility.FromJsonOverwrite(r, editorRecord);
-            }
-        }
 
         public void AutoSave()
         {
@@ -42,7 +32,13 @@ namespace EZUtils.EditorEnhancements
 
         public void Load()
         {
-            if (editorRecord.scenes.Any(sr => IsRecoveryNeeded(sr))
+            EditorRecord previousEditorRecord = new EditorRecord();
+            if (rawEditorRecord.Value is string r)
+            {
+                EditorJsonUtility.FromJsonOverwrite(r, previousEditorRecord);
+            }
+
+            if (previousEditorRecord.scenes.Any(sr => IsRecoveryNeeded(sr))
                 && EditorUtility.DisplayDialog(
                     T("Scene auto-save"),
                     T("It does not appear that Unity was properly closed, and there is auto-save data available. " +
@@ -50,7 +46,7 @@ namespace EZUtils.EditorEnhancements
                     T("Yes"),
                     T("No")))
             {
-                foreach (EditorSceneRecord sceneRecord in editorRecord.scenes)
+                foreach (EditorSceneRecord sceneRecord in previousEditorRecord.scenes)
                 {
                     Scene scene = SceneManager.GetSceneByPath(sceneRecord.path);
                     if (!scene.IsValid())
@@ -79,7 +75,7 @@ namespace EZUtils.EditorEnhancements
                 {
                     Scene scene = SceneManager.GetSceneAt(i);
                     EditorSceneRecord sceneRecord =
-                        editorRecord.scenes.SingleOrDefault(sr => sr.path == scene.path);
+                        previousEditorRecord.scenes.SingleOrDefault(sr => sr.path == scene.path);
 
                     if (sceneRecord == null)
                     {
@@ -98,6 +94,17 @@ namespace EZUtils.EditorEnhancements
                 }
             }
 
+            Scene activeScene = SceneManager.GetActiveScene();
+            foreach (AutoSaveScene scene in autoSaveScenes.Values)
+            {
+                editorRecord.scenes.Add(new EditorSceneRecord()
+                {
+                    path = scene.Path,
+                    wasActive = scene.Path == activeScene.path,
+                    wasDirty = scene.Scene.isDirty,
+                    wasLoaded = scene.Scene.isLoaded
+                });
+            }
             StoreEditorRecord();
 
             EditorSceneManager.activeSceneChangedInEditMode += ActiveSceneChanged;
