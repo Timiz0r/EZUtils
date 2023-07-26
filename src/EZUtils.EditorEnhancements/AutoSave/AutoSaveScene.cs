@@ -92,12 +92,6 @@ namespace EZUtils.EditorEnhancements
         }
         public void Recover()
         {
-            if (!Scene.IsValid())
-            {
-                //it's probably more correct to just open and let the cached value load as normal, but we'll just do this
-                cachedScene = EditorSceneManager.OpenScene(Path, OpenSceneMode.Additive);
-            }
-
             FileInfo latestAutoSaveFile = !autoSaveFolder.Exists
                 ? null
                 : autoSaveFolder
@@ -107,9 +101,29 @@ namespace EZUtils.EditorEnhancements
             //so we recovered towards the set of open scenes, but we can't load an autosave
             if (latestAutoSaveFile == null) return;
 
-            //TODO: if this doesn't work well, then will need to mess with loading
-            //and if it does work well, we don't need to have a scene var. so try opening without checking anything
-            _ = latestAutoSaveFile.CopyTo(Path);
+            Scene backupScene = EditorSceneManager.OpenScene(latestAutoSaveFile.FullName, OpenSceneMode.Additive);
+            try
+            {
+                foreach (GameObject root in Scene.GetRootGameObjects())
+                {
+                    UnityEngine.Object.DestroyImmediate(root);
+                }
+
+                using (UndoGroup undoGroup = new UndoGroup(T($"Recover scene '{Scene.name}' from auto-save")))
+                {
+                    foreach (GameObject root in backupScene.GetRootGameObjects())
+                    {
+                        //since we wont save the other scene, moving is perfectly fine and becomes effectively a copy
+                        Undo.MoveGameObjectToScene(root, Scene, T("Copy GameObject"));
+                    }
+                }
+            }
+            finally
+            {
+                _ = EditorSceneManager.CloseScene(backupScene, removeScene: true);
+            }
+
+        }
         }
     }
 }
