@@ -7,6 +7,12 @@ namespace EZUtils.Localization
     using EZUtils.Localization.UIElements;
     using UnityEditor;
 
+    //TODO: there is a bug that results from inconsistent locale sets across catalogs
+    //let's say one catalog has korean, and others don't. we set the editorpref to korean.
+    //then, let's say the catalog for `subscribers.Count == 1` doesn't have korean.
+    //then, the editorpref gets set effectively back to native.
+    //this happens because we try to get a locale out of a set of cultureinfos, fail, and set back the native locale.
+    //it's hard to fix in the current design, and it's being deferred because it's preferable to only ever have consistent catalogs.
     internal class CatalogLocaleSynchronizer
     {
         private static readonly Dictionary<string, CatalogLocaleSynchronizer> synchronizers =
@@ -42,7 +48,6 @@ namespace EZUtils.Localization
         public void Register(CatalogReference catalogReference)
         {
             subscribers.Add(catalogReference);
-            catalogReference.RecordIntendedLocale(SelectedLocale);
 
             //we take first registration as a signal that it's safe to use editorprefs, which can't be used in cctor land
             //EZLocalization only calls this when it's safe
@@ -54,6 +59,15 @@ namespace EZUtils.Localization
                     : null;
 
                 _ = SelectLocaleOrNative(UnityLanguageTracking.NewlySelectedUnityEditorLanguage, storedLocale);
+            }
+            //note that the above is effectively a superset of the below
+            else
+            {
+                catalogReference.RecordIntendedLocale(SelectedLocale);
+                if (catalogReference.Catalog.TrySelectLocale(SelectedLocale))
+                {
+                    catalogReference.RecordCurrentLocale(SelectedLocale);
+                }
             }
         }
 
