@@ -71,7 +71,7 @@ namespace EZUtils.EditorEnhancements
 
                 //reverse since closing scenes changes the counts and indices
                 //we dont use our GetScenes because it goes in ascending order
-                for (int i = SceneManager.sceneCount; i >= 0; i--)
+                for (int i = SceneManager.sceneCount - 1; i >= 0; i--)
                 {
                     Scene scene = SceneManager.GetSceneAt(i);
                     EditorSceneRecord sceneRecord =
@@ -102,7 +102,8 @@ namespace EZUtils.EditorEnhancements
                     path = scene.Path,
                     wasActive = scene.Path == activeScene.path,
                     wasDirty = scene.Scene.isDirty,
-                    wasLoaded = scene.Scene.isLoaded
+                    wasLoaded = scene.Scene.isLoaded,
+                    lastCleanTime = DateTimeOffset.Now
                 });
             }
             StoreEditorRecord();
@@ -206,8 +207,8 @@ namespace EZUtils.EditorEnhancements
 
         private void StoreEditorRecord() => rawEditorRecord.Value = EditorJsonUtility.ToJson(editorRecord);
 
-        //which is to say both that an improper close happened, and there is something to recover to
-        private bool IsRecoveryNeeded(EditorSceneRecord sceneRecord)
+        //which is to say both that an improper close happened, and there is something to recover to 
+        private static bool IsRecoveryNeeded(EditorSceneRecord sceneRecord)
         {
             Scene scene = SceneManager.GetSceneByPath(sceneRecord.path);
 

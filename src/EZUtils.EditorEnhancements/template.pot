@@ -6,12 +6,12 @@ msgstr "Language: en\n"
 "Plural-Forms: nplurals=1; 0;\n"
 "X-PluralRules-Other: \n"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:67
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:70
 # id format: Recover scene '{Scene.name}' from auto-save
 msgid "Recover scene '{0}' from auto-save"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:72
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:75
 msgid "Copy GameObject"
 msgstr ""
 
