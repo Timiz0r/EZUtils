@@ -2,6 +2,7 @@ namespace EZUtils.EditorEnhancements
 {
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using UnityEditor;
     using UnityEditor.SceneManagement;
@@ -9,7 +10,7 @@ namespace EZUtils.EditorEnhancements
 
     using static Localization;
 
-    internal class SceneAutoSaver
+    internal partial class SceneAutoSaver
     {
         internal static readonly EditorPreference<int> SceneAutoSaveCopies =
             new EditorPreference<int>("EZUtils.EditorEnhancements.AutoSave.Scene.Copies", 5);
@@ -41,16 +42,7 @@ namespace EZUtils.EditorEnhancements
 
         public void Load()
         {
-            //it's not normally possible to have zero open scenes
-            bool firstTimeLoad = editorRecord.scenes.Count == 0;
-            AutoSaveScene[] lastOpenedAutoSaveScenes = editorRecord.scenes
-                .Select(s => new AutoSaveScene(s.path, s.wasDirty))
-                .ToArray();
-
-            bool improperCloseDetected = SceneManager.sceneCount != lastOpenedAutoSaveScenes.Length
-                || lastOpenedAutoSaveScenes.Any(s => s.IsRecoveryNeeded());
-            if (!firstTimeLoad
-                && improperCloseDetected
+            if (editorRecord.scenes.Any(sr => IsRecoveryNeeded(sr))
                 && EditorUtility.DisplayDialog(
                     T("Scene auto-save"),
                     T("It does not appear that Unity was properly closed, and there is auto-save data available. " +
@@ -58,24 +50,16 @@ namespace EZUtils.EditorEnhancements
                     T("Yes"),
                     T("No")))
             {
-                foreach (AutoSaveScene autoSaveScene in lastOpenedAutoSaveScenes)
+                foreach (EditorSceneRecord sceneRecord in editorRecord.scenes)
                 {
-                    autoSaveScene.Recover();
-                }
-
-                //reverse since closing scenes changes the counts and indices
-                //we dont use our GetScenes because it goes in ascending order
-                for (int i = SceneManager.sceneCount; i >= 0; i--)
-                {
-                    Scene scene = SceneManager.GetSceneAt(i);
-                    EditorRecord.SceneRecord sceneRecord =
-                        editorRecord.scenes.SingleOrDefault(sr => sr.path == scene.path);
-
-                    if (sceneRecord == null)
+                    Scene scene = SceneManager.GetSceneByPath(sceneRecord.path);
+                    if (!scene.IsValid())
                     {
-                        _ = EditorSceneManager.CloseScene(scene, removeScene: true);
-                        continue;
+                        scene = EditorSceneManager.OpenScene(sceneRecord.path, OpenSceneMode.Additive);
                     }
+
+                    AutoSaveScene autoSaveScene = new AutoSaveScene(scene);
+                    autoSaveScene.Recover();
 
                     if (sceneRecord.wasActive)
                     {
@@ -85,13 +69,22 @@ namespace EZUtils.EditorEnhancements
                     {
                         _ = EditorSceneManager.CloseScene(scene, removeScene: false);
                     }
+
+                    autoSaveScenes.Add(sceneRecord.path, autoSaveScene);
                 }
 
-                //we can't set lastOpenedScenePaths directly from the editorpref
-                //because if the user doesn't want to recover, we need to populate with the current set of scenes
-                foreach (AutoSaveScene scene in lastOpenedAutoSaveScenes)
+                //reverse since closing scenes changes the counts and indices
+                //we dont use our GetScenes because it goes in ascending order
+                for (int i = SceneManager.sceneCount; i >= 0; i--)
                 {
-                    autoSaveScenes[scene.Path] = scene;
+                    Scene scene = SceneManager.GetSceneAt(i);
+                    EditorSceneRecord sceneRecord =
+                        editorRecord.scenes.SingleOrDefault(sr => sr.path == scene.path);
+
+                    if (sceneRecord == null)
+                    {
+                        _ = EditorSceneManager.CloseScene(scene, removeScene: true);
+                    }
                 }
             }
             else
@@ -101,7 +94,7 @@ namespace EZUtils.EditorEnhancements
                     .Select(i => SceneManager.GetSceneAt(i));
                 foreach (Scene scene in initialScenes)
                 {
-                    autoSaveScenes[scene.path] = new AutoSaveScene(scene.path);
+                    autoSaveScenes.Add(scene.path, new AutoSaveScene(scene));
                 }
             }
 
@@ -110,6 +103,31 @@ namespace EZUtils.EditorEnhancements
             EditorSceneManager.activeSceneChangedInEditMode += ActiveSceneChanged;
             EditorSceneManager.sceneOpened += SceneOpened;
             EditorSceneManager.sceneClosed += SceneClosed;
+            EditorSceneManager.sceneDirtied += SceneDirtied;
+            EditorSceneManager.sceneSaved += SceneSaved;
+            Undo.undoRedoPerformed += UndoRedo;
+        }
+
+        //there are no scene-related events for when a scene is undid back into a clean state
+        private void UndoRedo()
+        {
+            foreach (AutoSaveScene scene in autoSaveScenes.Values)
+            {
+                editorRecord.scenes.Single(sr => sr.path == scene.Path).SetDirtiness(scene.Scene.isDirty);
+            }
+            StoreEditorRecord();
+        }
+
+        private void SceneSaved(Scene scene)
+        {
+            editorRecord.scenes.Single(sr => sr.path == scene.path).SetDirtiness(scene.isDirty);
+            StoreEditorRecord();
+        }
+
+        private void SceneDirtied(Scene scene)
+        {
+            editorRecord.scenes.Single(sr => sr.path == scene.path).SetDirtiness(scene.isDirty);
+            StoreEditorRecord();
         }
 
         //scene rename notes:
@@ -118,13 +136,13 @@ namespace EZUtils.EditorEnhancements
         //scene is for the new name
         private void SceneClosed(Scene scene)
         {
+            string targetScenePath;
+
             //rename
             if (!autoSaveScenes.ContainsKey(scene.path))
             {
                 HashSet<string> openedScenes = new HashSet<string>(GetScenes().Select(s => s.path));
-                string oldPath = autoSaveScenes.Keys.Single(p => !openedScenes.Contains(p));
-                _ = autoSaveScenes.Remove(oldPath);
-                _ = editorRecord.scenes.RemoveAll(sr => sr.path == oldPath);
+                targetScenePath = autoSaveScenes.Keys.Single(p => !openedScenes.Contains(p));
             }
             else
             {
@@ -134,48 +152,72 @@ namespace EZUtils.EditorEnhancements
 
             StoreEditorRecord();
         }
+
         //scene rename notes:
         //GetScenes has a copy of the new name and none of the old name
         //scene is default and useless (actually forgot to check if default or just weird)
         //except if there are multiple scenes, then it's the new scene
         private void SceneOpened(Scene scene, OpenSceneMode mode)
         {
-            EditorRecord.SceneRecord sceneRecord = new EditorRecord.SceneRecord()
-            {
-                wasActive = false,
-                wasDirty = false,
-                wasLoaded = true
-            };
-
             //rename with only one scene opened
             //but because this is a bug and we don't know for sure it only triggers if there's one scene opened,
             //we;ll be extra safe
-            if (scene.path == null)
+            if (!scene.IsValid())
             {
                 IEnumerable<string> openedScenes = GetScenes().Select(s => s.path);
                 string newPath = openedScenes.Single(p => !autoSaveScenes.ContainsKey(p));
 
-                autoSaveScenes.Add(newPath, new AutoSaveScene(newPath));
-                sceneRecord.path = newPath;
-            }
-            else
-            {
-                autoSaveScenes.Add(scene.path, new AutoSaveScene(scene.path));
-                sceneRecord.path = scene.path;
+                scene = SceneManager.GetSceneByPath(newPath);
             }
 
-            editorRecord.scenes.Add(sceneRecord);
+            autoSaveScenes.Add(scene.path, new AutoSaveScene(scene));
+            editorRecord.scenes.Add(new EditorSceneRecord
+            {
+                wasLoaded = mode != OpenSceneMode.AdditiveWithoutLoading,
+                path = scene.path,
+                lastCleanTime = DateTimeOffset.Now
+            });
             StoreEditorRecord();
         }
+
         private void ActiveSceneChanged(Scene oldScene, Scene newScene)
         {
-            foreach (EditorRecord.SceneRecord sr in editorRecord.scenes)
+            foreach (EditorSceneRecord sr in editorRecord.scenes)
             {
                 sr.wasActive = newScene.path == sr.path;
             }
+            StoreEditorRecord();
         }
 
         private void StoreEditorRecord() => rawEditorRecord.Value = EditorJsonUtility.ToJson(editorRecord);
+
+        //which is to say both that an improper close happened, and there is something to recover to
+        private bool IsRecoveryNeeded(EditorSceneRecord sceneRecord)
+        {
+            Scene scene = SceneManager.GetSceneByPath(sceneRecord.path);
+
+            //this happens on domain reload, where scenes remain dirty
+            //so nothing has been lost, and nothing needs to be recovered
+            if (scene.IsValid() && scene.isDirty) return false;
+
+            //could also go modified time
+            //but since these are never intended to be modified, creation time is the best match
+            FileInfo latestAutoSave = new DirectoryInfo(AutoSaveScene.GetAutoSavePath(sceneRecord.path))
+                .GetFiles("*.unity")
+                .OrderByDescending(f => f.CreationTimeUtc)
+                .FirstOrDefault();
+            if (latestAutoSave == null)
+            {
+                return false;
+            }
+
+            bool sceneNoLongerOpened = !scene.IsValid();
+            bool dirtySceneNoLongerDirty = sceneRecord.wasDirty && !scene.isDirty;
+            bool autoSaveNewerThanLastCleanTime = latestAutoSave.CreationTimeUtc > sceneRecord.lastCleanTime;
+
+            bool isRecoveryNeeded = sceneNoLongerOpened || dirtySceneNoLongerDirty || autoSaveNewerThanLastCleanTime;
+            return isRecoveryNeeded;
+        }
 
         private static IEnumerable<Scene> GetScenes() => Enumerable
             .Range(0, SceneManager.sceneCount)
@@ -184,15 +226,7 @@ namespace EZUtils.EditorEnhancements
         [Serializable]
         private class EditorRecord
         {
-            public List<SceneRecord> scenes;
-
-            public class SceneRecord
-            {
-                public string path;
-                public bool wasLoaded;
-                public bool wasDirty;
-                public bool wasActive;
-            }
+            public List<EditorSceneRecord> scenes = new List<EditorSceneRecord>();
         }
     }
 }
