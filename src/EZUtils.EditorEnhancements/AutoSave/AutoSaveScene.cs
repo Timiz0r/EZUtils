@@ -57,7 +57,10 @@ namespace EZUtils.EditorEnhancements
             //so we recovered towards the set of open scenes, but we can't load an autosave
             if (latestAutoSaveFile == null) return;
 
-            Scene backupScene = EditorSceneManager.OpenScene(latestAutoSaveFile.FullName, OpenSceneMode.Additive);
+            const string recoveryAssetPath = "Assets/AutoSaveRecoveryTemp.unity";
+            _ = latestAutoSaveFile.CopyTo(recoveryAssetPath);
+            AssetDatabase.ImportAsset(recoveryAssetPath, ImportAssetOptions.ForceSynchronousImport);
+            Scene backupScene = EditorSceneManager.OpenScene(recoveryAssetPath, OpenSceneMode.Additive);
             try
             {
                 foreach (GameObject root in Scene.GetRootGameObjects())
@@ -77,6 +80,7 @@ namespace EZUtils.EditorEnhancements
             finally
             {
                 _ = EditorSceneManager.CloseScene(backupScene, removeScene: true);
+                _ = AssetDatabase.DeleteAsset(recoveryAssetPath);
             }
 
         }
