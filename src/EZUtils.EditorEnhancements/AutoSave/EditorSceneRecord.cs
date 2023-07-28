@@ -14,7 +14,7 @@ namespace EZUtils.EditorEnhancements
         [SerializeField]
         private long lastCleanTimeUnix;
         private DateTimeOffset? actualLastCleanTime;
-        public DateTimeOffset lastCleanTime
+        public DateTimeOffset LastCleanTime
         {
             get => actualLastCleanTime ?? (actualLastCleanTime = DateTimeOffset.FromUnixTimeMilliseconds(lastCleanTimeUnix)).Value;
             set
@@ -31,7 +31,7 @@ namespace EZUtils.EditorEnhancements
             wasDirty = isDirty;
             if (!isDirty)
             {
-                lastCleanTime = DateTime.UtcNow;
+                LastCleanTime = DateTime.UtcNow;
             }
         }
     }

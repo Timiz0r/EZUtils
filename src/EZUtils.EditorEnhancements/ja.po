@@ -9,24 +9,24 @@ msgstr "Language: ja\n"
 #: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:70
 # id format: Recover scene '{Scene.name}' from auto-save
 msgid "Recover scene '{0}' from auto-save"
-msgstr ""
+msgstr "自動保存のデータからシーン「{0}」を復元する"
 
 #: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:75
 msgid "Copy GameObject"
-msgstr ""
+msgstr "GameObjectをコピー"
 
 #: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:42
 msgid "Scene auto-save"
-msgstr ""
+msgstr "シーン自動保存"
 
 #: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:43
-msgid "It does not appear that Unity was properly closed, and there is auto-save data available. Attempt to recover using auto-save data?"
-msgstr ""
+msgid "It does not appear that Unity was properly closed, but there is auto-save data available. Attempt to recover using auto-save data?"
+msgstr "Unityが適切に終了していないようですけど、自動保存データがあります。自動保存データで復元してみますか？"
 
 #: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:45
-msgid "Yes"
-msgstr ""
+msgid "Recover"
+msgstr "復元する"
 
 #: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:46
-msgid "No"
-msgstr ""
+msgid "Do not recover"
+msgstr "復元しない"

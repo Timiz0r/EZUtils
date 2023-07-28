@@ -20,13 +20,13 @@ msgid "Scene auto-save"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:43
-msgid "It does not appear that Unity was properly closed, and there is auto-save data available. Attempt to recover using auto-save data?"
+msgid "It does not appear that Unity was properly closed, but there is auto-save data available. Attempt to recover using auto-save data?"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:45
-msgid "Yes"
+msgid "Recover"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:46
-msgid "No"
+msgid "Do not recover"
 msgstr ""

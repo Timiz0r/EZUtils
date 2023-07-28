@@ -41,10 +41,10 @@ namespace EZUtils.EditorEnhancements
             if (previousEditorRecord.scenes.Any(sr => IsRecoveryNeeded(sr))
                 && EditorUtility.DisplayDialog(
                     T("Scene auto-save"),
-                    T("It does not appear that Unity was properly closed, and there is auto-save data available. " +
+                    T("It does not appear that Unity was properly closed, but there is auto-save data available. " +
                         "Attempt to recover using auto-save data?"),
-                    T("Yes"),
-                    T("No")))
+                    T("Recover"),
+                    T("Do not recover")))
             {
                 foreach (EditorSceneRecord sceneRecord in previousEditorRecord.scenes)
                 {
@@ -90,6 +90,7 @@ namespace EZUtils.EditorEnhancements
                     .Select(i => SceneManager.GetSceneAt(i));
                 foreach (Scene scene in initialScenes)
                 {
+                    if (string.IsNullOrEmpty(scene.path)) continue;
                     autoSaveScenes.Add(scene.path, new AutoSaveScene(scene));
                 }
             }
@@ -103,7 +104,7 @@ namespace EZUtils.EditorEnhancements
                     wasActive = scene.Path == activeScene.path,
                     wasDirty = scene.Scene.isDirty,
                     wasLoaded = scene.Scene.isLoaded,
-                    lastCleanTime = DateTimeOffset.Now
+                    LastCleanTime = DateTimeOffset.Now
                 });
             }
             StoreEditorRecord();
@@ -136,12 +137,14 @@ namespace EZUtils.EditorEnhancements
 
         private void SceneSaved(Scene scene)
         {
+            if (string.IsNullOrEmpty(scene.path)) return;
             editorRecord.scenes.Single(sr => sr.path == scene.path).SetDirtiness(scene.isDirty);
             StoreEditorRecord();
         }
 
         private void SceneDirtied(Scene scene)
         {
+            if (string.IsNullOrEmpty(scene.path)) return;
             editorRecord.scenes.Single(sr => sr.path == scene.path).SetDirtiness(scene.isDirty);
             StoreEditorRecord();
         }
@@ -158,13 +161,18 @@ namespace EZUtils.EditorEnhancements
             if (!autoSaveScenes.ContainsKey(scene.path))
             {
                 HashSet<string> openedScenes = new HashSet<string>(GetScenes().Select(s => s.path));
-                targetScenePath = autoSaveScenes.Keys.Single(p => !openedScenes.Contains(p));
+                targetScenePath = autoSaveScenes.Keys.SingleOrDefault(p => !openedScenes.Contains(p));
+
+                //would happen if the scene is an untitled scene
+                if (targetScenePath == null) return;
             }
             else
             {
-                _ = autoSaveScenes.Remove(scene.path);
-                _ = editorRecord.scenes.RemoveAll(sr => sr.path == scene.path);
+                targetScenePath = scene.path;
             }
+
+            _ = autoSaveScenes.Remove(targetScenePath);
+            _ = editorRecord.scenes.RemoveAll(sr => sr.path == targetScenePath);
 
             StoreEditorRecord();
         }
@@ -186,18 +194,22 @@ namespace EZUtils.EditorEnhancements
                 scene = SceneManager.GetSceneByPath(newPath);
             }
 
+
+            if (string.IsNullOrEmpty(scene.path)) return;
+
             autoSaveScenes.Add(scene.path, new AutoSaveScene(scene));
             editorRecord.scenes.Add(new EditorSceneRecord
             {
                 wasLoaded = mode != OpenSceneMode.AdditiveWithoutLoading,
                 path = scene.path,
-                lastCleanTime = DateTimeOffset.Now
+                LastCleanTime = DateTimeOffset.Now
             });
             StoreEditorRecord();
         }
 
         private void ActiveSceneChanged(Scene oldScene, Scene newScene)
         {
+            if (string.IsNullOrEmpty(newScene.path)) return;
             foreach (EditorSceneRecord sr in editorRecord.scenes)
             {
                 sr.wasActive = newScene.path == sr.path;
@@ -207,7 +219,7 @@ namespace EZUtils.EditorEnhancements
 
         private void StoreEditorRecord() => rawEditorRecord.Value = EditorJsonUtility.ToJson(editorRecord);
 
-        //which is to say both that an improper close happened, and there is something to recover to 
+        //which is to say both that an improper close happened, and there is something to recover to
         private static bool IsRecoveryNeeded(EditorSceneRecord sceneRecord)
         {
             Scene scene = SceneManager.GetSceneByPath(sceneRecord.path);
@@ -229,7 +241,7 @@ namespace EZUtils.EditorEnhancements
 
             bool sceneNoLongerOpened = !scene.IsValid();
             bool dirtySceneNoLongerDirty = sceneRecord.wasDirty && !scene.isDirty;
-            bool autoSaveNewerThanLastCleanTime = latestAutoSave.CreationTimeUtc > sceneRecord.lastCleanTime;
+            bool autoSaveNewerThanLastCleanTime = latestAutoSave.CreationTimeUtc > sceneRecord.LastCleanTime;
 
             bool isRecoveryNeeded = sceneNoLongerOpened || dirtySceneNoLongerDirty || autoSaveNewerThanLastCleanTime;
             return isRecoveryNeeded;
