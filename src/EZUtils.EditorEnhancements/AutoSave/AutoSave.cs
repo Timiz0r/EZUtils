@@ -3,15 +3,20 @@ namespace EZUtils.EditorEnhancements
     using System;
     using UnityEditor;
 
-    internal class AutoSave
+#pragma warning disable CA1001 //Type owns disposable field(s) but is not disposable; by design not a problem
+    public class AutoSave
+#pragma warning restore CA1001
     {
         internal static readonly TimeSpanEditorPreference Interval =
             new TimeSpanEditorPreference("EZUtils.EditorEnhancements.AutoSave.Interval", TimeSpan.FromMinutes(1));
         internal static readonly EditorPreference<bool> Enabled =
-            new EditorPreference<bool>("EZUtils.EditorEnhancements.AutoSave.Interval", true);
+            new EditorPreference<bool>("EZUtils.EditorEnhancements.AutoSave.Enabled", true);
 
         private DateTimeOffset lastAutoSaveTime = DateTimeOffset.Now;
-        private readonly SceneAutoSaver sceneAutoSaver = new SceneAutoSaver();
+        private readonly SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(new SceneStateRepository());
+
+        public static void Enable() => Enabled.Value = true;
+        public static void Disable() => Enabled.Value = false;
 
         //grabbing the on-load set of scenes doesnt work well without a delay call
         //also, on first start, only the splash screen is showing,
@@ -24,6 +29,7 @@ namespace EZUtils.EditorEnhancements
             autoSave.sceneAutoSaver.Load();
 
             EditorApplication.update += autoSave.EditorUpdate;
+            EditorApplication.quitting += autoSave.EditorQuitting;
         };
 
         private void EditorUpdate()
@@ -35,5 +41,7 @@ namespace EZUtils.EditorEnhancements
 
             lastAutoSaveTime = DateTimeOffset.Now;
         }
+
+        private void EditorQuitting() => sceneAutoSaver.Quit();
     }
 }

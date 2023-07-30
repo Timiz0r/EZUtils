@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZUtils.Localization.Extrac
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZUtils.VPMUnityPackage", "..\EZUtils.VPMUnityPackage\EZUtils.VPMUnityPackage.csproj", "{2C8184DE-1F89-417D-BB29-F4FB36CFEC05}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EZUtils.EditorEnhancements.Tests", "..\EZUtils.EditorEnhancements.Tests\EZUtils.EditorEnhancements.Tests.csproj", "{E75B8776-72D6-4954-9656-FD9346B35783}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -84,5 +86,9 @@ Global
 		{2C8184DE-1F89-417D-BB29-F4FB36CFEC05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2C8184DE-1F89-417D-BB29-F4FB36CFEC05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2C8184DE-1F89-417D-BB29-F4FB36CFEC05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E75B8776-72D6-4954-9656-FD9346B35783}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E75B8776-72D6-4954-9656-FD9346B35783}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E75B8776-72D6-4954-9656-FD9346B35783}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E75B8776-72D6-4954-9656-FD9346B35783}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -15,18 +15,18 @@ msgstr "自動保存のデータからシーン「{0}」を復元する"
 msgid "Copy GameObject"
 msgstr "GameObjectをコピー"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:48
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:46
 msgid "Scene auto-save"
 msgstr "シーン自動保存"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:49
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:47
 msgid "It does not appear that Unity was properly closed, but there is auto-save data available. Attempt to recover using auto-save data?"
 msgstr "Unityが適切に終了していないようですけど、自動保存データがあります。自動保存データで復元してみますか？"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:51
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:49
 msgid "Recover"
 msgstr "復元する"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:52
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:50
 msgid "Do not recover"
 msgstr "復元しない"

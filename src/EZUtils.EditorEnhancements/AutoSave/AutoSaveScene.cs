@@ -22,7 +22,7 @@ namespace EZUtils.EditorEnhancements
         {
             Scene = underlyingScene;
 
-            autoSaveFolderPath = GetAutoSavePath(Scene.path);
+            autoSaveFolderPath = SceneAutoSaver.GetAutoSavePath(Scene.path);
             autoSaveFolder = new DirectoryInfo(autoSaveFolderPath);
             sceneName = string.IsNullOrEmpty(Scene.name) ? "Untitled" : underlyingScene.name;
         }
@@ -82,19 +82,6 @@ namespace EZUtils.EditorEnhancements
                 _ = AssetDatabase.DeleteAsset(recoveryAssetPath);
             }
 
-        }
-
-        public static string GetAutoSavePath(string scenePath)
-        {
-            if (scenePath.Length == 0) return "Assets/.SceneAutoSave/Untitled";
-            string sceneName = Path.GetFileNameWithoutExtension(scenePath);
-            string result = string.Concat(
-                //a slight preference for unity-style paths means no Path class
-                scenePath.Substring(0, scenePath.Length - sceneName.Length - ".unity".Length),
-                //we use a hidden folder so unity wont do an import each time we create an autosave
-                ".SceneAutoSave/",
-                sceneName);
-            return result;
         }
     }
 }
