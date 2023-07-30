@@ -8,8 +8,6 @@ namespace EZUtils.EditorEnhancements
     using UnityEditor.SceneManagement;
     using UnityEngine.SceneManagement;
 
-    using static Localization;
-
     public class SceneAutoSaver : IDisposable
     {
         internal static readonly EditorPreference<int> SceneAutoSaveCopies =
@@ -17,11 +15,11 @@ namespace EZUtils.EditorEnhancements
 
         private readonly Dictionary<string, AutoSaveScene> autoSaveScenes = new Dictionary<string, AutoSaveScene>();
         private readonly List<EditorSceneRecord> sceneRecords = new List<EditorSceneRecord>();
-        private readonly ISceneStateRepository sceneStateRepository;
+        private readonly ISceneRecoveryRepository sceneRecoveryRepository;
 
-        public SceneAutoSaver(ISceneStateRepository sceneStateRepository)
+        public SceneAutoSaver(ISceneRecoveryRepository sceneRecoveryRepository)
         {
-            this.sceneStateRepository = sceneStateRepository;
+            this.sceneRecoveryRepository = sceneRecoveryRepository;
         }
 
         public void AutoSave()
@@ -34,7 +32,7 @@ namespace EZUtils.EditorEnhancements
 
         public void Load()
         {
-            IReadOnlyList<EditorSceneRecord> recoveredScenes = sceneStateRepository.RecoverScenes();
+            IReadOnlyList<EditorSceneRecord> recoveredScenes = sceneRecoveryRepository.RecoverScenes();
 
             //TODO: a quirk/bug is that not all scenes that were tracked necessarily have an auto-save
             //which would happen if a new scene was opened/created between auto-saves
@@ -42,13 +40,7 @@ namespace EZUtils.EditorEnhancements
             //furthermore, for untitled scenes, we should generate an auto-save as soon as a scene is created
             //or perhaps delay-called, because, if there's no auto-save to recover from, we at least want the initial
             //creation objects to be present
-            if (recoveredScenes.Any(sr => IsRecoveryNeeded(sr))
-                && EditorUtility.DisplayDialog(
-                    T("Scene auto-save"),
-                    T("It does not appear that Unity was properly closed, but there is auto-save data available. " +
-                        "Attempt to recover using auto-save data?"),
-                    T("Recover"),
-                    T("Do not recover")))
+            if (recoveredScenes.Any(sr => IsRecoveryNeeded(sr)) && sceneRecoveryRepository.MayPerformRecovery())
             {
                 foreach (EditorSceneRecord sceneRecord in recoveredScenes)
                 {
@@ -313,11 +305,11 @@ namespace EZUtils.EditorEnhancements
             bool dirtySceneNoLongerDirty = sceneRecord.wasDirty && !scene.isDirty;
             bool autoSaveNewerThanLastCleanTime = latestAutoSave.CreationTimeUtc > sceneRecord.LastCleanTime;
 
-            bool isRecoveryNeeded = sceneNoLongerOpened || dirtySceneNoLongerDirty || autoSaveNewerThanLastCleanTime;
+            bool isRecoveryNeeded = sceneNoLongerOpened || (dirtySceneNoLongerDirty && autoSaveNewerThanLastCleanTime);
             return isRecoveryNeeded;
         }
 
-        private void UpdateSceneRepository() => sceneStateRepository.UpdateScenes(sceneRecords);
+        private void UpdateSceneRepository() => sceneRecoveryRepository.UpdateScenes(sceneRecords);
 
         private static IEnumerable<Scene> GetScenes() => Enumerable
             .Range(0, SceneManager.sceneCount)

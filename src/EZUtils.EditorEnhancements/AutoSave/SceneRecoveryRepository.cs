@@ -5,12 +5,15 @@ namespace EZUtils.EditorEnhancements
     using System.Linq;
     using UnityEditor;
 
-    public interface ISceneStateRepository
+    using static Localization;
+
+    public interface ISceneRecoveryRepository
     {
         void UpdateScenes(IEnumerable<EditorSceneRecord> sceneRecords);
         IReadOnlyList<EditorSceneRecord> RecoverScenes();
+        bool MayPerformRecovery();
     }
-    public class SceneStateRepository : ISceneStateRepository
+    public class SceneRecoveryRepository : ISceneRecoveryRepository
     {
         private readonly EditorPreference<string> rawEditorRecord = new EditorPreference<string>(
             "EZUtils.EditorEnhancements.AutoSave.Scene.EditorRecord", null);
@@ -28,6 +31,13 @@ namespace EZUtils.EditorEnhancements
 
             return previousEditorRecord.scenes;
         }
+
+        public bool MayPerformRecovery() => EditorUtility.DisplayDialog(
+            T("Scene auto-save"),
+            T("It does not appear that Unity was properly closed, but there is auto-save data available. " +
+                "Attempt to recover using auto-save data?"),
+            T("Recover"),
+            T("Do not recover"));
 
         [Serializable]
         private class EditorRecord

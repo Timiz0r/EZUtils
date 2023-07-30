@@ -13,7 +13,7 @@ namespace EZUtils.EditorEnhancements
             new EditorPreference<bool>("EZUtils.EditorEnhancements.AutoSave.Enabled", true);
 
         private DateTimeOffset lastAutoSaveTime = DateTimeOffset.Now;
-        private readonly SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(new SceneStateRepository());
+        private readonly SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(new SceneRecoveryRepository());
 
         public static void Enable() => Enabled.Value = true;
         public static void Disable() => Enabled.Value = false;
