@@ -38,6 +38,12 @@ namespace EZUtils.EditorEnhancements
                 EditorJsonUtility.FromJsonOverwrite(r, previousEditorRecord);
             }
 
+            //TODO: a quirk/bug is that not all scenes that were tracked necessarily have an auto-save
+            //which would happen if a new scene was opened/created between auto-saves
+            //we should theoretically make sure recover only recovers using the latest file past the checkpoint
+            //furthermore, for untitled scenes, we should generate an auto-save as soon as a scene is created
+            //or perhaps delay-called, because, if there's no auto-save to recover from, we at least want the initial
+            //creation objects to be present
             if (previousEditorRecord.scenes.Any(sr => IsRecoveryNeeded(sr))
                 && EditorUtility.DisplayDialog(
                     T("Scene auto-save"),
@@ -48,7 +54,9 @@ namespace EZUtils.EditorEnhancements
             {
                 foreach (EditorSceneRecord sceneRecord in previousEditorRecord.scenes)
                 {
-                    Scene scene = SceneManager.GetSceneByPath(sceneRecord.path);
+                    Scene scene = sceneRecord.path.Length == 0
+                        ? EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive)
+                        : SceneManager.GetSceneByPath(sceneRecord.path);
                     if (!scene.IsValid())
                     {
                         scene = EditorSceneManager.OpenScene(sceneRecord.path, OpenSceneMode.Additive);
@@ -85,25 +93,21 @@ namespace EZUtils.EditorEnhancements
             }
             else
             {
-                IEnumerable<Scene> initialScenes = Enumerable
-                    .Range(0, SceneManager.sceneCount)
-                    .Select(i => SceneManager.GetSceneAt(i));
-                foreach (Scene scene in initialScenes)
+                foreach (Scene scene in GetScenes())
                 {
-                    if (string.IsNullOrEmpty(scene.path)) continue;
                     autoSaveScenes.Add(scene.path, new AutoSaveScene(scene));
                 }
             }
 
             Scene activeScene = SceneManager.GetActiveScene();
-            foreach (AutoSaveScene scene in autoSaveScenes.Values)
+            foreach (Scene scene in GetScenes())
             {
                 editorRecord.scenes.Add(new EditorSceneRecord()
                 {
-                    path = scene.Path,
-                    wasActive = scene.Path == activeScene.path,
-                    wasDirty = scene.Scene.isDirty,
-                    wasLoaded = scene.Scene.isLoaded,
+                    path = scene.path,
+                    wasActive = scene.path == activeScene.path,
+                    wasDirty = scene.isDirty,
+                    wasLoaded = scene.isLoaded,
                     LastCleanTime = DateTimeOffset.Now
                 });
             }
@@ -114,8 +118,21 @@ namespace EZUtils.EditorEnhancements
             EditorSceneManager.sceneClosed += SceneClosed;
             EditorSceneManager.sceneDirtied += SceneDirtied;
             EditorSceneManager.sceneSaved += SceneSaved;
+            EditorSceneManager.newSceneCreated += SceneCreated;
             Undo.undoRedoPerformed += UndoRedo;
             EditorApplication.quitting += EditorQuitting;
+        }
+
+        private void SceneCreated(Scene scene, NewSceneSetup setup, NewSceneMode mode)
+        {
+            autoSaveScenes.Add(scene.path, new AutoSaveScene(scene));
+            editorRecord.scenes.Add(new EditorSceneRecord
+            {
+                wasLoaded = mode != NewSceneMode.Additive,
+                path = scene.path, //will be empty, incidentally
+                LastCleanTime = DateTimeOffset.Now
+            });
+            StoreEditorRecord();
         }
 
         private void EditorQuitting()
@@ -130,21 +147,29 @@ namespace EZUtils.EditorEnhancements
         {
             foreach (AutoSaveScene scene in autoSaveScenes.Values)
             {
-                editorRecord.scenes.Single(sr => sr.path == scene.Path).SetDirtiness(scene.Scene.isDirty);
+                editorRecord.scenes.Single(sr => sr.path == scene.Scene.path).SetDirtiness(scene.Scene.isDirty);
             }
             StoreEditorRecord();
         }
 
         private void SceneSaved(Scene scene)
         {
-            if (string.IsNullOrEmpty(scene.path)) return;
-            editorRecord.scenes.Single(sr => sr.path == scene.path).SetDirtiness(scene.isDirty);
+            EditorSceneRecord newSceneRecord = editorRecord.scenes.SingleOrDefault(sr => sr.path.Length == 0);
+            if (newSceneRecord != null && scene.path != null)
+            {
+                newSceneRecord.path = scene.path;
+                newSceneRecord.SetDirtiness(scene.isDirty);
+            }
+            else
+            {
+                editorRecord.scenes.Single(sr => sr.path == scene.path).SetDirtiness(scene.isDirty);
+            }
+
             StoreEditorRecord();
         }
 
         private void SceneDirtied(Scene scene)
         {
-            if (string.IsNullOrEmpty(scene.path)) return;
             editorRecord.scenes.Single(sr => sr.path == scene.path).SetDirtiness(scene.isDirty);
             StoreEditorRecord();
         }
@@ -162,9 +187,6 @@ namespace EZUtils.EditorEnhancements
             {
                 HashSet<string> openedScenes = new HashSet<string>(GetScenes().Select(s => s.path));
                 targetScenePath = autoSaveScenes.Keys.SingleOrDefault(p => !openedScenes.Contains(p));
-
-                //would happen if the scene is an untitled scene
-                if (targetScenePath == null) return;
             }
             else
             {
@@ -193,9 +215,6 @@ namespace EZUtils.EditorEnhancements
 
                 scene = SceneManager.GetSceneByPath(newPath);
             }
-
-
-            if (string.IsNullOrEmpty(scene.path)) return;
 
             autoSaveScenes.Add(scene.path, new AutoSaveScene(scene));
             editorRecord.scenes.Add(new EditorSceneRecord
@@ -230,7 +249,10 @@ namespace EZUtils.EditorEnhancements
 
             //could also go modified time
             //but since these are never intended to be modified, creation time is the best match
-            FileInfo latestAutoSave = new DirectoryInfo(AutoSaveScene.GetAutoSavePath(sceneRecord.path))
+            DirectoryInfo autoSavePath = new DirectoryInfo(AutoSaveScene.GetAutoSavePath(sceneRecord.path));
+            if (!autoSavePath.Exists) return false;
+
+            FileInfo latestAutoSave = autoSavePath
                 .GetFiles("*.unity")
                 .OrderByDescending(f => f.CreationTimeUtc)
                 .FirstOrDefault();

@@ -10,22 +10,21 @@ namespace EZUtils.EditorEnhancements
 
     using static Localization;
 
-    //NOTE: we dont store a scene because there are code paths where there is no associated scene,
-    //particularly if unity crashed and the initial scenes are different from what was open at the time.
     internal class AutoSaveScene
     {
         private readonly string autoSaveFolderPath;
         private readonly DirectoryInfo autoSaveFolder;
+        private readonly string sceneName;
 
         public Scene Scene { get; }
-
-        public string Path => Scene.path;
 
         public AutoSaveScene(Scene underlyingScene)
         {
             Scene = underlyingScene;
-            autoSaveFolderPath = GetAutoSavePath(Path);
+
+            autoSaveFolderPath = GetAutoSavePath(Scene.path);
             autoSaveFolder = new DirectoryInfo(autoSaveFolderPath);
+            sceneName = string.IsNullOrEmpty(Scene.name) ? "Untitled" : underlyingScene.name;
         }
 
         public void AutoSave()
@@ -37,7 +36,7 @@ namespace EZUtils.EditorEnhancements
             //this indeed works even in hidden folders outside the scope of AssetDatabase
             _ = EditorSceneManager.SaveScene(
                 Scene,
-                $"{autoSaveFolderPath}/{Scene.name}-AutoSave-{DateTimeOffset.Now:yyyy'-'MM'-'dd'T'HHmmss}.unity",
+                $"{autoSaveFolderPath}/{sceneName}-AutoSave-{DateTimeOffset.Now:yyyy'-'MM'-'dd'T'HHmmss}.unity",
                 saveAsCopy: true);
 
             FileInfo[] autoSaveFiles = autoSaveFolder.GetFiles("*.unity");
@@ -68,7 +67,7 @@ namespace EZUtils.EditorEnhancements
                     UnityEngine.Object.DestroyImmediate(root);
                 }
 
-                using (UndoGroup undoGroup = new UndoGroup(T($"Recover scene '{Scene.name}' from auto-save")))
+                using (UndoGroup undoGroup = new UndoGroup(T($"Recover scene '{sceneName}' from auto-save")))
                 {
                     foreach (GameObject root in backupScene.GetRootGameObjects())
                     {
@@ -87,7 +86,8 @@ namespace EZUtils.EditorEnhancements
 
         public static string GetAutoSavePath(string scenePath)
         {
-            string sceneName = System.IO.Path.GetFileNameWithoutExtension(scenePath);
+            if (scenePath.Length == 0) return "Assets/.SceneAutoSave/Untitled";
+            string sceneName = Path.GetFileNameWithoutExtension(scenePath);
             string result = string.Concat(
                 //a slight preference for unity-style paths means no Path class
                 scenePath.Substring(0, scenePath.Length - sceneName.Length - ".unity".Length),
