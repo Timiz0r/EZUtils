@@ -7,6 +7,7 @@ namespace EZUtils.EditorEnhancements.Tests
     using NUnit.Framework;
     using UnityEditor;
     using UnityEditor.SceneManagement;
+    using UnityEngine;
     using UnityEngine.SceneManagement;
     using Object = UnityEngine.Object;
 
@@ -22,14 +23,31 @@ namespace EZUtils.EditorEnhancements.Tests
         public void AutoSave_DoesNotSave_WhenSceneNotDirty()
         {
             using (TestSceneStateRepository sceneRepository = new TestSceneStateRepository())
-            using (TestScene testScene = new TestScene("testscene"))
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
+            using (TestScene testScene = new TestScene("testscene"))
             {
                 sceneAutoSaver.Load();
 
                 sceneAutoSaver.AutoSave();
 
-                Assert.That(sceneRepository.AutoSavedScenes.Any(), Is.False);
+                Assert.That(sceneRepository.GetAutoSaveCount(testScene.Scene), Is.EqualTo(0));
+            }
+        }
+
+        [Test]
+        public void AutoSave_Saves_WhenSceneDirty()
+        {
+            using (TestSceneStateRepository sceneRepository = new TestSceneStateRepository())
+            using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
+            using (TestScene testScene = new TestScene("testscene"))
+            {
+                sceneAutoSaver.Load();
+
+                _ = new GameObject("test");
+                testScene.MarkDirty();
+                sceneAutoSaver.AutoSave();
+
+                Assert.That(sceneRepository.GetAutoSaveCount(testScene.Scene), Is.EqualTo(1));
             }
         }
     }
@@ -62,6 +80,7 @@ namespace EZUtils.EditorEnhancements.Tests
         public Scene Scene { get; }
 
         public void MarkForDeletion() => delete = true;
+        public void MarkDirty() => EditorSceneManager.MarkSceneDirty(Scene);
 
         public void Dispose()
         {
@@ -83,11 +102,11 @@ namespace EZUtils.EditorEnhancements.Tests
 
         public IReadOnlyList<EditorSceneRecord> Scenes { get; private set; } = new List<EditorSceneRecord>();
 
-        public IReadOnlyList<AutoSavedSceneRecord> AutoSavedScenes => autoSavedScenes;
-
         public IReadOnlyList<EditorSceneRecord> RecoverScenes() => Scenes;
 
         public void UpdateScenes(IEnumerable<EditorSceneRecord> sceneRecords) => Scenes = sceneRecords.ToArray();
+
+        public int GetAutoSaveCount(Scene scene) => autoSavedScenes.Count(a => a.OriginalPath == scene.path);
 
         private void SceneSaved(Scene scene)
         {
@@ -102,16 +121,24 @@ namespace EZUtils.EditorEnhancements.Tests
 
             int previousAutoSaves = autoSavedScenes.Count(s => s.OriginalPath == scene.path);
             FileInfo[] autoSaves = autoSaveFolder.GetFiles("*.unity");
-            Assert.That(
-                autoSaves,
-                Has.Count.EqualTo(previousAutoSaves + 1),
-                $"Scene '{scene.name}' has '{previousAutoSaves}' previous auto saves, and this hasn't gone up despite another auto save.");
-
             FileInfo newestAutoSave = autoSaves.OrderByDescending(f => f.CreationTime).First();
             autoSavedScenes.Add(new AutoSavedSceneRecord(scene.path, $"{autoSavePath}/{newestAutoSave.Name}"));
+
+            Assert.That(
+                autoSaves,
+                Has.Length.EqualTo(previousAutoSaves + 1),
+                $"Scene '{scene.name}' has '{previousAutoSaves}' previous auto saves, and this hasn't gone up despite another auto save.");
         }
 
-        public void Dispose() => EditorSceneManager.sceneSaved -= SceneSaved;
+        public void Dispose()
+        {
+            EditorSceneManager.sceneSaved -= SceneSaved;
+
+            foreach (string folder in autoSavedScenes.Select(a => Path.GetDirectoryName(a.AutoSavePath)).Distinct())
+            {
+                _ = AssetDatabase.DeleteAsset(folder);
+            }
+        }
     }
 
     public class AutoSavedSceneRecord
