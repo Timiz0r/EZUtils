@@ -117,17 +117,19 @@ namespace EZUtils.EditorEnhancements
             EditorSceneManager.sceneSaved += SceneSaved;
             EditorSceneManager.newSceneCreated += SceneCreated;
             Undo.undoRedoPerformed += UndoRedo;
+            EditorApplication.update += EditorUpdate;
         }
 
         public void Dispose()
         {
-            EditorSceneManager.newSceneCreated -= SceneCreated;
+            EditorSceneManager.activeSceneChangedInEditMode -= ActiveSceneChanged;
             EditorSceneManager.sceneOpened -= SceneOpened;
             EditorSceneManager.sceneClosed -= SceneClosed;
-            EditorSceneManager.sceneSaved -= SceneSaved;
             EditorSceneManager.sceneDirtied -= SceneDirtied;
-            EditorSceneManager.activeSceneChangedInEditMode -= ActiveSceneChanged;
+            EditorSceneManager.sceneSaved -= SceneSaved;
+            EditorSceneManager.newSceneCreated -= SceneCreated;
             Undo.undoRedoPerformed -= UndoRedo;
+            EditorApplication.update -= EditorUpdate;
         }
 
         public void Quit()
@@ -256,6 +258,31 @@ namespace EZUtils.EditorEnhancements
             {
                 sceneRecords.Single(sr => sr.path == scene.Scene.path).SetDirtiness(scene.Scene.isDirty);
             }
+            UpdateSceneRepository();
+        }
+
+        //this is a workaround for what is likely a unity 2019 bug
+        //when unit tests are over, the previously open scenes are put back in place, but no event is triggered
+        //this is likely why future unity versions have sceneManagerSetupRestored
+        private void EditorUpdate()
+        {
+            //after a scene is closed, there should be no time for this to trigger before the replacement is opened
+            if (autoSaveScenes.Count > 0) return;
+
+            Scene activeScene = SceneManager.GetActiveScene();
+            foreach (Scene scene in GetScenes())
+            {
+                autoSaveScenes.Add(scene.path, new AutoSaveScene(scene));
+                sceneRecords.Add(new EditorSceneRecord()
+                {
+                    path = scene.path,
+                    wasActive = scene.path == activeScene.path,
+                    wasDirty = scene.isDirty,
+                    wasLoaded = scene.isLoaded,
+                    LastCleanTime = DateTimeOffset.Now
+                });
+            }
+
             UpdateSceneRepository();
         }
 
