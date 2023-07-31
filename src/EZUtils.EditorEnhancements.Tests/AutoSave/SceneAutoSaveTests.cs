@@ -35,7 +35,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_DoesNotSave_WhenSceneNotDirty()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
             using (TestScene testScene = new TestScene("testscene"))
             {
@@ -50,7 +50,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_Saves_WhenSceneDirty()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
             using (TestScene testScene = new TestScene("testscene"))
             {
@@ -67,7 +67,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_RecoversFromAutoSave_WhenSceneAlreadyOpenOnRestartFromCrash()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             using (TestScene testScene = new TestScene("testscene"))
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
             {
@@ -95,7 +95,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_RecoversFromAutoSave_WhenDifferentSceneOpenOnRestartFromCrash()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             using (TestScene testScene = new TestScene("testscene"))
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
             {
@@ -127,7 +127,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_DoesNotAttemptRecovery_WhenUnityClosedNormally()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             using (TestScene testScene = new TestScene("testscene"))
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
             {
@@ -155,7 +155,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_DoesNotAttemptRecovery_WhenUnityCrashesBeforeAutoSave()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             using (TestScene testScene = new TestScene("testscene"))
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
             {
@@ -182,7 +182,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_DoesNotAttemptRecovery_WhenSceneSavedProperly()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             using (TestScene testScene = new TestScene("testscene"))
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
             {
@@ -213,7 +213,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_DoesNotAttemptRecovery_WhenAutoSaveIsOlderThanCleanTime()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             using (TestScene testScene = new TestScene("testscene"))
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
             {
@@ -252,7 +252,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_AttemptsMultiSceneRecovery_WhenOnlyOneSceneNeedsRecoveryAndOtherHasExpiredAutoSave()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             using (TestScene testScene = new TestScene("testscene"))
             using (TestScene testScene2 = new TestScene("testscene2", additive: true))
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
@@ -297,7 +297,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_AttemptsMultiSceneRecovery_WhenAllScenesAlreadyOpen()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             using (TestScene testScene = new TestScene("testscene"))
             using (TestScene testScene2 = new TestScene("testscene2", additive: true))
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
@@ -336,7 +336,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_AttemptsMultiSceneRecovery_WhenOneSceneIsNotOpen()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             using (TestScene testScene = new TestScene("testscene"))
             using (TestScene testScene2 = new TestScene("testscene2", additive: true))
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
@@ -380,7 +380,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_AttemptsMultiSceneRecovery_WhenOneSceneNotLoaded()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             using (TestScene testScene = new TestScene("testscene"))
             using (TestScene testScene2 = new TestScene("testscene2", additive: true))
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
@@ -421,7 +421,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_RecoversFromAutoSave_WhenSceneUntitled()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
             {
                 sceneAutoSaver.Load();
@@ -449,7 +449,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_RecoversFromAutoSave_WhenSceneAssetDeleted()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             string originalScenePath;
 
             using (TestScene testScene = new TestScene("testscene"))
@@ -491,9 +491,9 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         [Test]
         public void AutoSave_ChangesAutoSaveLocation_WhenSceneMoved()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
-            using (TestScene testScene = new TestScene("testscene-AutoSave_ChangesAutoSaveLocation_WhenSceneMoved"))
+            using (TestScene testScene = new TestScene($"testscene-{nameof(AutoSave_ChangesAutoSaveLocation_WhenSceneMoved)}"))
             {
                 sceneAutoSaver.Load();
 
@@ -501,7 +501,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
                 testScene.MarkDirty();
                 sceneAutoSaver.AutoSave();
 
-                testScene.Move($"{TestScene.TestSceneRootPath}/testscene2-AutoSave_ChangesAutoSaveLocation_WhenSceneMoved.unity");
+                testScene.Move($"{TestScene.TestSceneRootPath}/testscene2-{nameof(AutoSave_ChangesAutoSaveLocation_WhenSceneMoved)}.unity");
                 Assert.That(sceneRepository.GetAvailableAutoSaveCount(testScene.Scene), Is.EqualTo(1));
 
                 sceneAutoSaver.AutoSave();
@@ -510,10 +510,38 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         }
 
         [Test]
+        public void AutoSave_MergesAutoSaveFolders_WhenSceneMoved()
+        {
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
+            using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
+            using (TestScene testScene = new TestScene($"testscene-{nameof(AutoSave_MergesAutoSaveFolders_WhenSceneMoved)}"))
+            {
+                sceneAutoSaver.Load();
+
+                _ = new GameObject("test");
+                testScene.MarkDirty();
+                sceneAutoSaver.AutoSave();
+
+                using (TestScene testScene2 = new TestScene(
+                    $"testscene2-{nameof(AutoSave_MergesAutoSaveFolders_WhenSceneMoved)}", additive: true))
+                {
+                    testScene2.MakeActive();
+                    _ = new GameObject("test");
+                    testScene2.MarkDirty();
+                    sceneAutoSaver.AutoSave();
+                    _ = AssetDatabase.DeleteAsset(testScene2.Scene.path);
+                }
+
+                testScene.Move($"{TestScene.TestSceneRootPath}/testscene2-{nameof(AutoSave_MergesAutoSaveFolders_WhenSceneMoved)}.unity");
+                Assert.That(sceneRepository.GetAvailableAutoSaveCount(testScene.Scene), Is.EqualTo(2));
+            }
+        }
+
+        [Test]
         public void AutoSave_RecoversFromAutoSave_WhenSceneMoved()
         {
-            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
-            using (TestScene testScene = new TestScene("testscene-AutoSave_RecoversFromAutoSave_WhenSceneMoved"))
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();
+            using (TestScene testScene = new TestScene($"testscene-{nameof(AutoSave_RecoversFromAutoSave_WhenSceneMoved)}"))
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
             {
                 sceneAutoSaver.Load();
@@ -522,12 +550,12 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
                 testScene.MarkDirty();
                 sceneAutoSaver.AutoSave();
 
-                testScene.Move($"{TestScene.TestSceneRootPath}/testscene2-AutoSave_RecoversFromAutoSave_WhenSceneMoved.unity");
+                testScene.Move($"{TestScene.TestSceneRootPath}/testscene2-{nameof(AutoSave_RecoversFromAutoSave_WhenSceneMoved)}.unity");
 
                 sceneRepository.SimulateUnityCrash();
             }
 
-            using (TestScene testScene = new TestScene("testscene2-AutoSave_RecoversFromAutoSave_WhenSceneMoved"))
+            using (TestScene testScene = new TestScene($"testscene2-{nameof(AutoSave_RecoversFromAutoSave_WhenSceneMoved)}"))
             using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
             {
                 Assert.That(testScene.Scene.rootCount, Is.EqualTo(0));

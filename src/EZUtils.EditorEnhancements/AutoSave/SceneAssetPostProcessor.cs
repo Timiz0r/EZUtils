@@ -27,10 +27,13 @@ namespace EZUtils.EditorEnhancements.AutoSave
                 DirectoryInfo fromAutoSaveFolder = new DirectoryInfo(SceneAutoSaver.GetAutoSavePath(fromPath));
                 if (!fromAutoSaveFolder.Exists) continue;
 
-                string toAutoSavePath = SceneAutoSaver.GetAutoSavePath(toPath);
-                string toAutoSaveSubFolderPath = Path.Combine(toAutoSavePath, "..");
-                _ = Directory.CreateDirectory(toAutoSaveSubFolderPath);
-                fromAutoSaveFolder.MoveTo(toAutoSavePath);
+                DirectoryInfo toAutoSaveFolder = new DirectoryInfo(SceneAutoSaver.GetAutoSavePath(toPath));
+                toAutoSaveFolder.Create();
+                foreach (FileInfo autoSave in fromAutoSaveFolder.EnumerateFiles("*.unity"))
+                {
+                    autoSave.MoveTo(Path.Combine(toAutoSaveFolder.FullName, autoSave.Name));
+                }
+                fromAutoSaveFolder.Delete();
 
                 foreach (SceneAssetMovedDelegate subscriber in SceneAssetMoved.GetInvocationList().Cast<SceneAssetMovedDelegate>())
                 {

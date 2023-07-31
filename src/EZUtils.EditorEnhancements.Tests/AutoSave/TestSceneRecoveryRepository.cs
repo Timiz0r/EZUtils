@@ -7,11 +7,13 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
     using NUnit.Framework;
     using UnityEngine.SceneManagement;
 
-    public class TestSceneStateRepository : ISceneRecoveryRepository
+    public class TestSceneRecoveryRepository : ISceneRecoveryRepository
     {
         private IReadOnlyList<EditorSceneRecord> sceneRecords = Array.Empty<EditorSceneRecord>();
         private bool performUnityCrashSimulation = false;
         private bool blockSceneRecordUpdates = false;
+
+        public int AutoSaveFileLimit => 5;
 
         public IReadOnlyList<EditorSceneRecord> RecoverScenes()
         {
