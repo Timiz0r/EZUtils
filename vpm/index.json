@@ -117,6 +117,29 @@
           },
           "zipSHA256": "8c33d49936ee9706cbff47bb204fabd4271fc83ed173eb3ee1aa29507e847ec0",
           "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.editorenhancements-1.1.1/com.timiz0r.ezutils.editorenhancements-1.1.1.zip"
+        },
+        "1.1.2": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.editorenhancements",
+          "version": "1.1.2",
+          "description": "Improves the editor experience.",
+          "displayName": "EZUtils Editor Enhancements",
+          "unity": "2019.4",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.common": "^1.0.8",
+            "com.timiz0r.ezutils.localization": "^1.0.8"
+          },
+          "zipSHA256": "64aea7352623bd1243972e00796864082238f583275250248e713bc20ffa6110",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.editorenhancements-1.1.2/com.timiz0r.ezutils.editorenhancements-1.1.2.zip"
         }
       }
     },
