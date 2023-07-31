@@ -15,6 +15,10 @@ msgstr "自動保存のデータからシーン「{0}」を復元する"
 msgid "Copy GameObject"
 msgstr "GameObjectをコピー"
 
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:340
+msgid "Create manual auto-save"
+msgstr "手動的に自動保存を生成する"
+
 #: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:342
 msgid "Revert to latest auto-save"
 msgstr "最新の自動保存に復元する"

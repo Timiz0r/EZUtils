@@ -338,7 +338,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
             AutoSaveScene autoSaveScene = autoSaveScenes[scene.path];
 
             menu.AddSeparator(string.Empty);
-            menu.AddItem(new GUIContent("Create manual auto-save"), on: false, () => autoSaveScene.AutoSave());
+            menu.AddItem(new GUIContent(T("Create manual auto-save")), on: false, () => autoSaveScene.AutoSave());
 
             GUIContent revertLatestContent = new GUIContent(T("Revert to latest auto-save"));
             if (latestAutoSave != null && sceneRecord.LastCleanTime < latestAutoSave.CreationTimeUtc)
