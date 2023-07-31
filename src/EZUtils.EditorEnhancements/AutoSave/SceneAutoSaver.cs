@@ -6,7 +6,10 @@ namespace EZUtils.EditorEnhancements.AutoSave
     using System.Linq;
     using UnityEditor;
     using UnityEditor.SceneManagement;
+    using UnityEngine;
     using UnityEngine.SceneManagement;
+
+    using static Localization;
 
     public class SceneAutoSaver : IDisposable
     {
@@ -23,6 +26,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
         {
             foreach (AutoSaveScene scene in autoSaveScenes.Values)
             {
+                if (!scene.Scene.isDirty) return;
                 scene.AutoSave();
             }
         }
@@ -123,6 +127,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
             Undo.undoRedoPerformed += UndoRedo;
             EditorApplication.update += EditorUpdate;
             SceneAssetPostProcessor.SceneAssetMoved += SceneAssetMoved;
+            SceneHierarchyHooks.addItemsToSceneHeaderContextMenu += AddSceneHeaderContextMenuItem;
         }
 
         public void Dispose()
@@ -136,6 +141,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
             Undo.undoRedoPerformed -= UndoRedo;
             EditorApplication.update -= EditorUpdate;
             SceneAssetPostProcessor.SceneAssetMoved -= SceneAssetMoved;
+            SceneHierarchyHooks.addItemsToSceneHeaderContextMenu -= AddSceneHeaderContextMenuItem;
         }
 
         public void Quit()
@@ -325,6 +331,36 @@ namespace EZUtils.EditorEnhancements.AutoSave
             sceneRecords.Single(sr => sr.path == fromPath).path = toPath;
         }
 
+        private void AddSceneHeaderContextMenuItem(GenericMenu menu, Scene scene)
+        {
+            EditorSceneRecord sceneRecord = sceneRecords.Single(sr => sr.path == scene.path);
+            FileInfo latestAutoSave = GetLatestAutoSave(sceneRecord);
+            AutoSaveScene autoSaveScene = autoSaveScenes[scene.path];
+
+            menu.AddSeparator(string.Empty);
+            menu.AddItem(new GUIContent("Create manual auto-save"), on: false, () => autoSaveScene.AutoSave());
+
+            GUIContent revertLatestContent = new GUIContent(T("Revert to latest auto-save"));
+            if (sceneRecord.LastCleanTime < latestAutoSave.CreationTimeUtc)
+            {
+                menu.AddItem(revertLatestContent, on: false, () => autoSaveScene.Recover(sceneRecord.LastCleanTime));
+            }
+            else
+            {
+                menu.AddDisabledItem(revertLatestContent);
+            }
+
+            foreach (FileInfo autoSave in GetAvailableAutoSaves(sceneRecord).OrderByDescending(f => f.CreationTimeUtc))
+            {
+                //NOTE: we use F formatter because, afaik, unity doesnt support escaping the path separator
+                //and even if it did, we have no way of doing it at the moment,
+                //since the EZLocalization locale isn't currently accessible outside of the T call
+                //still, there are perhaps locales where F still produces path separators, so this isn't an ideal fix
+                GUIContent revertContent = new GUIContent(T($"Revert to auto-save/{autoSave.CreationTime:F}"));
+                menu.AddItem(revertContent, on: false, () => autoSaveScene.ForceRecoverSpecific(autoSave));
+            }
+        }
+
         //which is to say both that an improper close happened, and there is something to recover to
         private static bool IsRecoveryNeeded(EditorSceneRecord sceneRecord)
         {
@@ -334,15 +370,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
             //so nothing has been lost, and nothing needs to be recovered
             if (scene.IsValid() && scene.isDirty) return false;
 
-            //could also go modified time
-            //but since these are never intended to be modified, creation time is the best match
-            DirectoryInfo autoSavePath = new DirectoryInfo(GetAutoSavePath(sceneRecord.path));
-            if (!autoSavePath.Exists) return false;
-
-            FileInfo latestAutoSave = autoSavePath
-                .GetFiles("*.unity")
-                .OrderByDescending(f => f.CreationTimeUtc)
-                .FirstOrDefault();
+            FileInfo latestAutoSave = GetLatestAutoSave(sceneRecord);
             if (latestAutoSave == null)
             {
                 return false;
@@ -356,6 +384,25 @@ namespace EZUtils.EditorEnhancements.AutoSave
                 || (!sceneRecord.wasLoaded && scene.isLoaded)
                 || (dirtySceneNoLongerDirty && autoSaveNewerThanLastCleanTime);
             return isRecoveryNeeded;
+        }
+
+        private static FileInfo GetLatestAutoSave(EditorSceneRecord sceneRecord)
+        {
+            IReadOnlyList<FileInfo> availableAutoSaves = GetAvailableAutoSaves(sceneRecord);
+            FileInfo latestAutoSave = availableAutoSaves
+                //could also go modified time
+                //but since these are never intended to be modified, creation time is the best match
+                .OrderByDescending(f => f.CreationTimeUtc)
+                .FirstOrDefault();
+            return latestAutoSave;
+        }
+
+        private static IReadOnlyList<FileInfo> GetAvailableAutoSaves(EditorSceneRecord sceneRecord)
+        {
+            DirectoryInfo autoSavePath = new DirectoryInfo(GetAutoSavePath(sceneRecord.path));
+            return !autoSavePath.Exists
+                ? Array.Empty<FileInfo>()
+                : autoSavePath.GetFiles("*.unity");
         }
 
         private void UpdateSceneRepository() => sceneRecoveryRepository.UpdateScenes(sceneRecords);

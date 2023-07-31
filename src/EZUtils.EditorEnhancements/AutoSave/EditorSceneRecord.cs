@@ -26,8 +26,6 @@ namespace EZUtils.EditorEnhancements.AutoSave
 
         public void SetDirtiness(bool isDirty)
         {
-            if (isDirty == wasDirty) return;
-
             wasDirty = isDirty;
             if (!isDirty)
             {

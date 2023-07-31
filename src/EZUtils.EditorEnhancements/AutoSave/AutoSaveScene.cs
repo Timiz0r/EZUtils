@@ -25,8 +25,6 @@ namespace EZUtils.EditorEnhancements.AutoSave
 
         public void AutoSave()
         {
-            if (!Scene.isDirty) return;
-
             string autoSaveFolderPath = SceneAutoSaver.GetAutoSavePath(Scene.path);
             DirectoryInfo autoSaveFolder = new DirectoryInfo(autoSaveFolderPath);
             string sceneName = string.IsNullOrEmpty(Scene.name) ? "Untitled" : Scene.name;
@@ -41,35 +39,18 @@ namespace EZUtils.EditorEnhancements.AutoSave
 
             IEnumerable<FileInfo> oldAutoSaves = autoSaveFolder
                 .GetFiles("*.unity")
-                .OrderBy(f => f.CreationTimeUtc)
+                .OrderByDescending(f => f.CreationTimeUtc)
                 .Skip(sceneRecoveryRepository.AutoSaveFileLimit);
             foreach (FileInfo autoSaveFile in oldAutoSaves)
             {
                 autoSaveFile.Delete();
             }
         }
-        public void Recover(DateTimeOffset lastCleanTime)
+
+        public void ForceRecoverSpecific(FileInfo autoSaveFile)
         {
-            string autoSaveFolderPath = SceneAutoSaver.GetAutoSavePath(Scene.path);
-            DirectoryInfo autoSaveFolder = new DirectoryInfo(autoSaveFolderPath);
-            string sceneName = string.IsNullOrEmpty(Scene.name) ? "Untitled" : Scene.name;
-
-            //NOTE: an important implementation details is that we assume all scenes in the folder
-            //are viable auto saves, regardless of the name
-            //for scene renames, we only move the folder and dont change the file names
-            //we leave the files names as potential information to the user as to the history of the scene
-            FileInfo latestAutoSaveFile = !autoSaveFolder.Exists
-                ? null
-                : autoSaveFolder
-                    .GetFiles("*.unity")
-                    .Where(f => f.CreationTimeUtc > lastCleanTime)
-                    .OrderByDescending(f => f.CreationTimeUtc)
-                    .FirstOrDefault();
-            //so we recovered towards the set of open scenes (via caller), but we can't load an autosave
-            if (latestAutoSaveFile == null) return;
-
             const string recoveryAssetPath = "Assets/AutoSaveRecoveryTemp.unity";
-            _ = latestAutoSaveFile.CopyTo(recoveryAssetPath);
+            _ = autoSaveFile.CopyTo(recoveryAssetPath);
             AssetDatabase.ImportAsset(recoveryAssetPath, ImportAssetOptions.ForceSynchronousImport);
             Scene backupScene = EditorSceneManager.OpenScene(recoveryAssetPath, OpenSceneMode.Additive);
             try
@@ -79,6 +60,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
                     UnityEngine.Object.DestroyImmediate(root);
                 }
 
+                string sceneName = string.IsNullOrEmpty(Scene.name) ? "Untitled" : Scene.name;
                 using (UndoGroup undoGroup = new UndoGroup(T($"Recover scene '{sceneName}' from auto-save")))
                 {
                     HashSet<GameObject> addedGameObjects = new HashSet<GameObject>();
@@ -100,6 +82,28 @@ namespace EZUtils.EditorEnhancements.AutoSave
                 _ = AssetDatabase.DeleteAsset(recoveryAssetPath);
             }
 
+        }
+
+        public void Recover(DateTimeOffset lastCleanTime)
+        {
+            string autoSaveFolderPath = SceneAutoSaver.GetAutoSavePath(Scene.path);
+            DirectoryInfo autoSaveFolder = new DirectoryInfo(autoSaveFolderPath);
+
+            //NOTE: an important implementation details is that we assume all scenes in the folder
+            //are viable auto saves, regardless of the name
+            //for scene renames, we only move the folder and dont change the file names
+            //we leave the files names as potential information to the user as to the history of the scene
+            FileInfo latestAutoSaveFile = !autoSaveFolder.Exists
+                ? null
+                : autoSaveFolder
+                    .GetFiles("*.unity")
+                    .Where(f => f.CreationTimeUtc > lastCleanTime)
+                    .OrderByDescending(f => f.CreationTimeUtc)
+                    .FirstOrDefault();
+            //so we recovered towards the set of open scenes (via caller), but we can't load an autosave
+            if (latestAutoSaveFile == null) return;
+
+            ForceRecoverSpecific(latestAutoSaveFile);
         }
     }
 }

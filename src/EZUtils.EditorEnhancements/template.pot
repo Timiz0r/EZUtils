@@ -6,13 +6,22 @@ msgstr "Language: en\n"
 "Plural-Forms: nplurals=1; 0;\n"
 "X-PluralRules-Other: \n"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:81
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:63
 # id format: Recover scene '{Scene.name}' from auto-save
 msgid "Recover scene '{0}' from auto-save"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:86
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:69
 msgid "Copy GameObject"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:342
+msgid "Revert to latest auto-save"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:358
+# id format: Revert to auto-save/{autoSave.CreationTime:F}
+msgid "Revert to auto-save/{0:F}"
 msgstr ""
 
 #: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:40
@@ -29,4 +38,12 @@ msgstr ""
 
 #: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:44
 msgid "Do not recover"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.cs:14
+msgid "EZUtils/Editor Enhancements"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.cs:25
+msgid "Editor Enhancements"
 msgstr ""
