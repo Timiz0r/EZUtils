@@ -81,10 +81,16 @@ namespace EZUtils.EditorEnhancements.AutoSave
 
                 using (UndoGroup undoGroup = new UndoGroup(T($"Recover scene '{sceneName}' from auto-save")))
                 {
+                    HashSet<GameObject> addedGameObjects = new HashSet<GameObject>();
                     foreach (GameObject root in backupScene.GetRootGameObjects())
                     {
                         //since we wont save the other scene, moving is perfectly fine and becomes effectively a copy
                         Undo.MoveGameObjectToScene(root, Scene, T("Copy GameObject"));
+                        GameObject addedGameObject = Scene
+                            .GetRootGameObjects()
+                            .Single(go => !addedGameObjects.Contains(go));
+                        addedGameObject.transform.SetAsLastSibling();
+                        _ = addedGameObjects.Add(addedGameObject);
                     }
                 }
             }
