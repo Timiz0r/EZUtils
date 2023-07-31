@@ -2,5 +2,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="$(SrcRoot)\EZUtils.Common\EZUtils.Common.csproj" />
+    <ProjectReference Include="$(SrcRoot)\EZUtils.Localization\EZUtils.Localization.csproj" />
   </ItemGroup>
 </Project>

@@ -48,8 +48,9 @@ namespace EZUtils.Localization
             if (catalogReference != null) return;
 
             catalogReference = new CatalogReference(root, nativeLocale);
-            synchronizer.Register(catalogReference);
+            //for order of initialization reasons, this must come after synchronizer registration
             catalogReference.Initialize();
+            synchronizer.Register(catalogReference);
             catalogReference.TrackRetranslatable(localizedMenuContainer);
         }
 

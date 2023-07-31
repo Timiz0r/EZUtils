@@ -1,0 +1,77 @@
+﻿msgid ""
+msgstr "Language: ja\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; 0;\n"
+"X-PluralRules-Other:  @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\n"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:63
+# id format: Recover scene '{Scene.name}' from auto-save
+msgid "Recover scene '{0}' from auto-save"
+msgstr "自動保存のデータからシーン「{0}」を復元する"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:69
+msgid "Copy GameObject"
+msgstr "GameObjectをコピー"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:342
+msgid "Revert to latest auto-save"
+msgstr "最新の自動保存に復元する"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneAutoSaver.cs:358
+# id format: Revert to auto-save/{autoSave.CreationTime:F}
+msgid "Revert to auto-save/{0:F}"
+msgstr "自動保存に復元する/{0:F}"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:40
+msgid "Scene auto-save"
+msgstr "シーン自動保存"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:41
+msgid "It does not appear that Unity was properly closed, but there is auto-save data available. Attempt to recover using auto-save data?"
+msgstr "Unityが適切に終了していないようですけど、自動保存データがあります。自動保存データで復元してみますか？"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:43
+msgid "Recover"
+msgstr "復元する"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:44
+msgid "Do not recover"
+msgstr "復元しない"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.cs:16
+msgid "EZUtils/Editor Enhancements"
+msgstr "EZUtils/エディター強化"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.cs:27
+msgid "Editor Enhancements"
+msgstr "エディター強化"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:15
+msgid "General"
+msgstr "一般"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:16
+msgid "Project window file extensions"
+msgstr "プロジェクトウインドウのファイル拡張子"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:17
+msgid "Show scene window when play mode entered"
+msgstr "再生モードに入ったらシーンウインドウを開く"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:21
+msgid "Auto-save"
+msgstr "自動保存"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:22
+msgid "Enabled"
+msgstr "有効"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:23
+msgid "Auto-save interval (minutes)"
+msgstr "自動保存の期間（分）"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:24
+msgid "Scene auto-save limit"
+msgstr "シーン自動保存の制限"

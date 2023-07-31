@@ -20,7 +20,7 @@ namespace EZUtils.VPMUnityPackage
             window.Show();
         }
 
-        public async void CreateGUI()
+        public void CreateGUI()
         {
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 "Packages/com.timiz0r.ezutils.vpmunitypackage/VPMPackageCreatorEditorWindow.uxml");
