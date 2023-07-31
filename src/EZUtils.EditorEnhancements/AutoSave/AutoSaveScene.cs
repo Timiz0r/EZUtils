@@ -55,22 +55,24 @@ namespace EZUtils.EditorEnhancements.AutoSave
             Scene backupScene = EditorSceneManager.OpenScene(recoveryAssetPath, OpenSceneMode.Additive);
             try
             {
-                foreach (GameObject root in Scene.GetRootGameObjects())
-                {
-                    UnityEngine.Object.DestroyImmediate(root);
-                }
-
                 string sceneName = string.IsNullOrEmpty(Scene.name) ? "Untitled" : Scene.name;
                 using (UndoGroup undoGroup = new UndoGroup(T($"Recover scene '{sceneName}' from auto-save")))
                 {
+                    foreach (GameObject root in Scene.GetRootGameObjects())
+                    {
+                        Undo.DestroyObjectImmediate(root);
+                    }
+
                     HashSet<GameObject> addedGameObjects = new HashSet<GameObject>();
                     foreach (GameObject root in backupScene.GetRootGameObjects())
                     {
                         //since we wont save the other scene, moving is perfectly fine and becomes effectively a copy
-                        Undo.MoveGameObjectToScene(root, Scene, T("Copy GameObject"));
+                        SceneManager.MoveGameObjectToScene(root, Scene);
                         GameObject addedGameObject = Scene
                             .GetRootGameObjects()
                             .Single(go => !addedGameObjects.Contains(go));
+                        //the scene-related undo doesnt really seem to work, so we register one of these as well
+                        Undo.RegisterCreatedObjectUndo(addedGameObject, T("Copy GameObject"));
                         addedGameObject.transform.SetAsLastSibling();
                         _ = addedGameObjects.Add(addedGameObject);
                     }
