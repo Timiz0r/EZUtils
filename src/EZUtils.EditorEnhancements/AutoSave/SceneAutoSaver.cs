@@ -341,7 +341,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
             menu.AddItem(new GUIContent("Create manual auto-save"), on: false, () => autoSaveScene.AutoSave());
 
             GUIContent revertLatestContent = new GUIContent(T("Revert to latest auto-save"));
-            if (sceneRecord.LastCleanTime < latestAutoSave.CreationTimeUtc)
+            if (latestAutoSave != null && sceneRecord.LastCleanTime < latestAutoSave.CreationTimeUtc)
             {
                 menu.AddItem(revertLatestContent, on: false, () => autoSaveScene.Recover(sceneRecord.LastCleanTime));
             }
