@@ -5,6 +5,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
     using System.IO;
     using System.Linq;
     using NUnit.Framework;
+    using UnityEditor;
     using UnityEditor.SceneManagement;
     using UnityEngine.SceneManagement;
 
@@ -56,6 +57,11 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         public void MakeActive() => SceneManager.SetActiveScene(Scene);
         public void Load() => EditorSceneManager.OpenScene(Scene.path, OpenSceneMode.Additive);
         public void Unload() => EditorSceneManager.CloseScene(Scene, removeScene: false);
+        public void Move(string newPath)
+        {
+            string oldPath = Scene.path;
+            _ = AssetDatabase.MoveAsset(Scene.path, newPath);
+        }
 
         public void Dispose()
         {

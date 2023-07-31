@@ -125,6 +125,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
             EditorSceneManager.newSceneCreated += SceneCreated;
             Undo.undoRedoPerformed += UndoRedo;
             EditorApplication.update += EditorUpdate;
+            SceneAssetPostProcessor.SceneAssetMoved += SceneAssetMoved;
         }
 
         public void Dispose()
@@ -137,6 +138,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
             EditorSceneManager.newSceneCreated -= SceneCreated;
             Undo.undoRedoPerformed -= UndoRedo;
             EditorApplication.update -= EditorUpdate;
+            SceneAssetPostProcessor.SceneAssetMoved -= SceneAssetMoved;
         }
 
         public void Quit()
@@ -314,6 +316,16 @@ namespace EZUtils.EditorEnhancements.AutoSave
             }
 
             UpdateSceneRepository();
+        }
+
+        private void SceneAssetMoved(string fromPath, string toPath)
+        {
+            if (!autoSaveScenes.TryGetValue(fromPath, out AutoSaveScene fromScene)) return;
+
+            autoSaveScenes.Add(toPath, fromScene);
+            _ = autoSaveScenes.Remove(fromPath);
+
+            sceneRecords.Single(sr => sr.path == fromPath).path = toPath;
         }
 
         //which is to say both that an improper close happened, and there is something to recover to

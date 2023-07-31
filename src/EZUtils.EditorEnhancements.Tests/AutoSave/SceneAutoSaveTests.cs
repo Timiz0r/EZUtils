@@ -1,5 +1,6 @@
 namespace EZUtils.EditorEnhancements.AutoSave.Tests
 {
+    using System.IO;
     using NUnit.Framework;
     using UnityEditor;
     using UnityEditor.SceneManagement;
@@ -479,8 +480,62 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
                     Assert.That(testScene.Scene.rootCount, Is.EqualTo(1));
                     Assert.That(testScene.Scene.isDirty, Is.EqualTo(true));
                     Assert.That(testScene.Scene.path, Is.EqualTo(originalScenePath));
-                    Assert.That(System.IO.File.Exists(testScene.Scene.path), Is.False);
+                    Assert.That(File.Exists(testScene.Scene.path), Is.False);
                 }
+            }
+        }
+
+        //there appears to be a unity bug where moving a scene asset causes future attempts to open a scene of the same path
+        //to either use some now-invalid cached version, or simply have no root objects
+        //as such, for move-related tests, we make sure to use very unique scene names
+        [Test]
+        public void AutoSave_ChangesAutoSaveLocation_WhenSceneMoved()
+        {
+            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
+            using (TestScene testScene = new TestScene("testscene-AutoSave_ChangesAutoSaveLocation_WhenSceneMoved"))
+            {
+                sceneAutoSaver.Load();
+
+                _ = new GameObject("test");
+                testScene.MarkDirty();
+                sceneAutoSaver.AutoSave();
+
+                testScene.Move($"{TestScene.TestSceneRootPath}/testscene2-AutoSave_ChangesAutoSaveLocation_WhenSceneMoved.unity");
+                Assert.That(sceneRepository.GetAvailableAutoSaveCount(testScene.Scene), Is.EqualTo(1));
+
+                sceneAutoSaver.AutoSave();
+                Assert.That(sceneRepository.GetAvailableAutoSaveCount(testScene.Scene), Is.EqualTo(2));
+            }
+        }
+
+        [Test]
+        public void AutoSave_RecoversFromAutoSave_WhenSceneMoved()
+        {
+            TestSceneStateRepository sceneRepository = new TestSceneStateRepository();
+            using (TestScene testScene = new TestScene("testscene-AutoSave_RecoversFromAutoSave_WhenSceneMoved"))
+            using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
+            {
+                sceneAutoSaver.Load();
+
+                _ = new GameObject("test");
+                testScene.MarkDirty();
+                sceneAutoSaver.AutoSave();
+
+                testScene.Move($"{TestScene.TestSceneRootPath}/testscene2-AutoSave_RecoversFromAutoSave_WhenSceneMoved.unity");
+
+                sceneRepository.SimulateUnityCrash();
+            }
+
+            using (TestScene testScene = new TestScene("testscene2-AutoSave_RecoversFromAutoSave_WhenSceneMoved"))
+            using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
+            {
+                Assert.That(testScene.Scene.rootCount, Is.EqualTo(0));
+
+                sceneAutoSaver.Load();
+
+                Assert.That(testScene.Scene.rootCount, Is.EqualTo(1));
+                Assert.That(testScene.Scene.isDirty, Is.EqualTo(true));
             }
         }
     }

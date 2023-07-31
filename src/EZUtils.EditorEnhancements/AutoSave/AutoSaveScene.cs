@@ -12,24 +12,20 @@ namespace EZUtils.EditorEnhancements.AutoSave
 
     internal class AutoSaveScene
     {
-        private readonly string autoSaveFolderPath;
-        private readonly DirectoryInfo autoSaveFolder;
-        private readonly string sceneName;
-
         public Scene Scene { get; }
 
         public AutoSaveScene(Scene underlyingScene)
         {
             Scene = underlyingScene;
-
-            autoSaveFolderPath = SceneAutoSaver.GetAutoSavePath(Scene.path);
-            autoSaveFolder = new DirectoryInfo(autoSaveFolderPath);
-            sceneName = string.IsNullOrEmpty(Scene.name) ? "Untitled" : underlyingScene.name;
         }
 
         public void AutoSave()
         {
             if (!Scene.isDirty) return;
+
+            string autoSaveFolderPath = SceneAutoSaver.GetAutoSavePath(Scene.path);
+            DirectoryInfo autoSaveFolder = new DirectoryInfo(autoSaveFolderPath);
+            string sceneName = string.IsNullOrEmpty(Scene.name) ? "Untitled" : Scene.name;
 
             if (!autoSaveFolder.Exists) autoSaveFolder.Create();
 
@@ -47,6 +43,14 @@ namespace EZUtils.EditorEnhancements.AutoSave
         }
         public void Recover(DateTimeOffset lastCleanTime)
         {
+            string autoSaveFolderPath = SceneAutoSaver.GetAutoSavePath(Scene.path);
+            DirectoryInfo autoSaveFolder = new DirectoryInfo(autoSaveFolderPath);
+            string sceneName = string.IsNullOrEmpty(Scene.name) ? "Untitled" : Scene.name;
+
+            //NOTE: an important implementation details is that we assume all scenes in the folder
+            //are viable auto saves, regardless of the name
+            //for scene renames, we only move the folder and dont change the file names
+            //we leave the files names as potential information to the user as to the history of the scene
             FileInfo latestAutoSaveFile = !autoSaveFolder.Exists
                 ? null
                 : autoSaveFolder
