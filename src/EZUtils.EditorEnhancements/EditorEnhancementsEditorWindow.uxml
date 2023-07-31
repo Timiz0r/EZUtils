@@ -16,6 +16,14 @@
       <Toggle name="projectWindowFileExtensions" label="loc:Project window file extensions" />
       <Toggle name="showSceneWindowOnPlay" label="loc:Show scene window when play mode entered" />
     </VisualElement>
+
+    <VisualElement class="section">
+      <Label class="section-title" text="loc:Auto-save" />
+      <Toggle name="autoSaveEnabled" label="loc:Enabled" />
+      <editor:IntegerField name="autoSaveInterval" label="loc:Auto-save interval (minutes)" />
+      <editor:IntegerField name="sceneAutoSaveLimit" label="loc:Scene auto-save limit" />
+    </VisualElement>
+
     <VisualElement class="section">
       <Label class="section-title" text="Unity Editor Language" />
       <VisualElement class="section-unityeditorlanguage" />

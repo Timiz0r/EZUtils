@@ -40,11 +40,11 @@ msgstr "復元する"
 msgid "Do not recover"
 msgstr "復元しない"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.cs:14
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.cs:16
 msgid "EZUtils/Editor Enhancements"
 msgstr "EZUtils/エディター強化"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.cs:25
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.cs:27
 msgid "Editor Enhancements"
 msgstr "エディター強化"
 
@@ -59,3 +59,19 @@ msgstr "プロジェクトウインドウのファイル拡張子"
 #: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:17
 msgid "Show scene window when play mode entered"
 msgstr "再生モードに入ったらシーンウインドウを開く"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:21
+msgid "Auto-save"
+msgstr "自動保存"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:22
+msgid "Enabled"
+msgstr "有効"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:23
+msgid "Auto-save interval (minutes)"
+msgstr "自動保存の期間（分）"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:24
+msgid "Scene auto-save limit"
+msgstr "シーン自動保存の制限"

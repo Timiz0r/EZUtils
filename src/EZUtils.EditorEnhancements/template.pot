@@ -40,11 +40,11 @@ msgstr ""
 msgid "Do not recover"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.cs:14
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.cs:16
 msgid "EZUtils/Editor Enhancements"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.cs:25
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.cs:27
 msgid "Editor Enhancements"
 msgstr ""
 
@@ -62,4 +62,20 @@ msgstr ""
 
 #: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:17
 msgid "Show scene window when play mode entered"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:21
+msgid "Auto-save"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:22
+msgid "Enabled"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:23
+msgid "Auto-save interval (minutes)"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:24
+msgid "Scene auto-save limit"
 msgstr ""

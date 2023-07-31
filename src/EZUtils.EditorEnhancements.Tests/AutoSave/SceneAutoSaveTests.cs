@@ -19,11 +19,11 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
             //a small consequence of the integration testness is that we'll delete untitled autosaves, even if legit
             //luckily for this repo, we dont expect to work in them, so it's not a problem
             _ = AssetDatabase.DeleteAsset(SceneAutoSaver.GetAutoSavePath(string.Empty));
-            AutoSave.Disable();
+            AutoSaver.Disable();
         }
 
         [OneTimeTearDown]
-        public void OneTimeTeardown() => AutoSave.Enable();
+        public void OneTimeTeardown() => AutoSaver.Enable();
 
         [TearDown]
         public void Teardown()

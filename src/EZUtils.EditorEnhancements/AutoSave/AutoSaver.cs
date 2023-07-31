@@ -4,7 +4,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
     using UnityEditor;
 
 #pragma warning disable CA1001 //Type owns disposable field(s) but is not disposable; by design not a problem
-    public class AutoSave
+    public class AutoSaver
 #pragma warning restore CA1001
     {
         internal static readonly TimeSpanEditorPreference Interval =
@@ -24,7 +24,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
         [InitializeOnLoadMethod]
         private static void UnityInitialize() => EditorApplication.delayCall += () =>
         {
-            AutoSave autoSave = new AutoSave();
+            AutoSaver autoSave = new AutoSaver();
 
             autoSave.sceneAutoSaver.Load();
 
