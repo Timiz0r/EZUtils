@@ -1,4 +1,4 @@
-namespace EZUtils.EditorEnhancements
+namespace EZUtils.EditorEnhancements.AutoSave
 {
     using System;
     using UnityEditor;

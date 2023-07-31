@@ -1,4 +1,4 @@
-namespace EZUtils.EditorEnhancements.Tests
+namespace EZUtils.EditorEnhancements.AutoSave.Tests
 {
     using System;
     using System.Collections.Generic;

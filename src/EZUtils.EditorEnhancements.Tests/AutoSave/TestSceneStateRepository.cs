@@ -1,25 +1,17 @@
-namespace EZUtils.EditorEnhancements.Tests
+namespace EZUtils.EditorEnhancements.AutoSave.Tests
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using NUnit.Framework;
-    using UnityEditor;
-    using UnityEditor.SceneManagement;
     using UnityEngine.SceneManagement;
 
-    public class TestSceneStateRepository : ISceneRecoveryRepository, IDisposable
+    public class TestSceneStateRepository : ISceneRecoveryRepository
     {
         private IReadOnlyList<EditorSceneRecord> sceneRecords = Array.Empty<EditorSceneRecord>();
-        private readonly List<AutoSavedSceneRecord> autoSavedScenes = new List<AutoSavedSceneRecord>();
         private bool performUnityCrashSimulation = false;
         private bool blockSceneRecordUpdates = false;
-
-        public TestSceneStateRepository()
-        {
-            EditorSceneManager.sceneSaved += SceneSaved;
-        }
 
         public IReadOnlyList<EditorSceneRecord> RecoverScenes()
         {
@@ -46,7 +38,13 @@ namespace EZUtils.EditorEnhancements.Tests
             return true;
         }
 
-        public int GetAutoSaveCount(Scene scene) => autoSavedScenes.Count(a => a.OriginalPath == scene.path);
+        public int GetAvailableAutoSaveCount(Scene scene)
+        {
+            DirectoryInfo autoSaveFolder = new DirectoryInfo(SceneAutoSaver.GetAutoSavePath(scene.path));
+            return !autoSaveFolder.Exists
+                ? 0
+                : autoSaveFolder.GetFiles("*.unity").Length;
+        }
 
         public void SimulateUnityClose()
         {
@@ -59,38 +57,6 @@ namespace EZUtils.EditorEnhancements.Tests
         {
             performUnityCrashSimulation = true;
             blockSceneRecordUpdates = true;
-        }
-
-        public void Dispose()
-        {
-            EditorSceneManager.sceneSaved -= SceneSaved;
-
-            foreach (string folder in autoSavedScenes.Select(a => Path.GetDirectoryName(a.AutoSavePath)).Distinct())
-            {
-                _ = AssetDatabase.DeleteAsset(folder);
-            }
-        }
-
-        private void SceneSaved(Scene scene)
-        {
-            //since, for these unit tests, we wont be doing any other scene saving, this logic works fine
-            //no need to differentiate other code or user-based save-asing
-            //when auto-saving, we only save when dirty, and, since it's a save-as, it remains dirty
-            if (!scene.isDirty) return;
-
-            string autoSavePath = SceneAutoSaver.GetAutoSavePath(scene.path);
-            DirectoryInfo autoSaveFolder = new DirectoryInfo(autoSavePath);
-            Assert.That(autoSaveFolder.Exists, Is.True, $"Auto save folder '{autoSavePath}' does not exist.");
-
-            int previousAutoSaves = autoSavedScenes.Count(s => s.OriginalPath == scene.path);
-            FileInfo[] autoSaves = autoSaveFolder.GetFiles("*.unity");
-            FileInfo newestAutoSave = autoSaves.OrderByDescending(f => f.CreationTime).First();
-            autoSavedScenes.Add(new AutoSavedSceneRecord(scene.path, $"{autoSavePath}/{newestAutoSave.Name}"));
-
-            Assert.That(
-                autoSaves,
-                Has.Length.EqualTo(previousAutoSaves + 1),
-                $"Scene '{scene.name}' has '{previousAutoSaves}' previous auto saves, and this hasn't gone up despite another auto save.");
         }
     }
 }
