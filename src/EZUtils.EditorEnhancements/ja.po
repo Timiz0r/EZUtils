@@ -6,27 +6,27 @@ msgstr "Language: ja\n"
 "Plural-Forms: nplurals=1; 0;\n"
 "X-PluralRules-Other:  @integer 0~15, 100, 1000, 10000, 100000, 1000000, … @decimal 0.0~1.5, 10.0, 100.0, 1000.0, 10000.0, 100000.0, 1000000.0, …\n"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:74
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:81
 # id format: Recover scene '{Scene.name}' from auto-save
 msgid "Recover scene '{0}' from auto-save"
 msgstr "自動保存のデータからシーン「{0}」を復元する"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:79
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:86
 msgid "Copy GameObject"
 msgstr "GameObjectをコピー"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:35
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:40
 msgid "Scene auto-save"
 msgstr "シーン自動保存"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:36
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:41
 msgid "It does not appear that Unity was properly closed, but there is auto-save data available. Attempt to recover using auto-save data?"
 msgstr "Unityが適切に終了していないようですけど、自動保存データがあります。自動保存データで復元してみますか？"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:38
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:43
 msgid "Recover"
 msgstr "復元する"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:39
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:44
 msgid "Do not recover"
 msgstr "復元しない"

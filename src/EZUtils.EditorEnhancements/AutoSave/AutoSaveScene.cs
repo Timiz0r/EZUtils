@@ -1,6 +1,7 @@
 namespace EZUtils.EditorEnhancements.AutoSave
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using UnityEditor;
@@ -12,11 +13,14 @@ namespace EZUtils.EditorEnhancements.AutoSave
 
     internal class AutoSaveScene
     {
+        private readonly ISceneRecoveryRepository sceneRecoveryRepository;
+
         public Scene Scene { get; }
 
-        public AutoSaveScene(Scene underlyingScene)
+        public AutoSaveScene(Scene underlyingScene, ISceneRecoveryRepository sceneRecoveryRepository)
         {
             Scene = underlyingScene;
+            this.sceneRecoveryRepository = sceneRecoveryRepository;
         }
 
         public void AutoSave()
@@ -35,10 +39,13 @@ namespace EZUtils.EditorEnhancements.AutoSave
                 $"{autoSaveFolderPath}/{sceneName}-AutoSave-{DateTimeOffset.Now:yyyy'-'MM'-'dd'T'HHmmss}.unity",
                 saveAsCopy: true);
 
-            FileInfo[] autoSaveFiles = autoSaveFolder.GetFiles("*.unity");
-            if (autoSaveFiles.Length > SceneAutoSaver.SceneAutoSaveCopies.Value)
+            IEnumerable<FileInfo> oldAutoSaves = autoSaveFolder
+                .GetFiles("*.unity")
+                .OrderBy(f => f.CreationTimeUtc)
+                .Skip(sceneRecoveryRepository.AutoSaveFileLimit);
+            foreach (FileInfo autoSaveFile in oldAutoSaves)
             {
-                autoSaveFiles.OrderBy(f => f.CreationTimeUtc).First().Delete();
+                autoSaveFile.Delete();
             }
         }
         public void Recover(DateTimeOffset lastCleanTime)

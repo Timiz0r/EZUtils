@@ -13,7 +13,7 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         private bool performUnityCrashSimulation = false;
         private bool blockSceneRecordUpdates = false;
 
-        public int AutoSaveFileLimit => 5;
+        public int AutoSaveFileLimit { get; set; } = 5;
 
         public IReadOnlyList<EditorSceneRecord> RecoverScenes()
         {

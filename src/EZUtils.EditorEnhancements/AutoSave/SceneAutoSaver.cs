@@ -10,9 +10,6 @@ namespace EZUtils.EditorEnhancements.AutoSave
 
     public class SceneAutoSaver : IDisposable
     {
-        internal static readonly EditorPreference<int> SceneAutoSaveCopies =
-            new EditorPreference<int>("EZUtils.EditorEnhancements.AutoSave.Scene.Copies", 5);
-
         private readonly Dictionary<string, AutoSaveScene> autoSaveScenes = new Dictionary<string, AutoSaveScene>();
         private readonly List<EditorSceneRecord> sceneRecords = new List<EditorSceneRecord>();
         private readonly ISceneRecoveryRepository sceneRecoveryRepository;
@@ -62,7 +59,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
                         }
                     }
 
-                    AutoSaveScene autoSaveScene = new AutoSaveScene(scene);
+                    AutoSaveScene autoSaveScene = new AutoSaveScene(scene, sceneRecoveryRepository);
                     autoSaveScenes.Add(sceneRecord.path, autoSaveScene);
 
                     if (sceneRecord.wasActive)
@@ -99,7 +96,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
             {
                 foreach (Scene scene in GetScenes())
                 {
-                    autoSaveScenes.Add(scene.path, new AutoSaveScene(scene));
+                    autoSaveScenes.Add(scene.path, new AutoSaveScene(scene, sceneRecoveryRepository));
                 }
             }
 
@@ -163,7 +160,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
 
         private void SceneCreated(Scene scene, NewSceneSetup setup, NewSceneMode mode)
         {
-            AutoSaveScene autoSaveScene = new AutoSaveScene(scene);
+            AutoSaveScene autoSaveScene = new AutoSaveScene(scene, sceneRecoveryRepository);
             autoSaveScenes.Add(scene.path, autoSaveScene);
 
             sceneRecords.Add(new EditorSceneRecord
@@ -201,7 +198,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
             }
             else
             {
-                autoSaveScenes.Add(scene.path, new AutoSaveScene(scene));
+                autoSaveScenes.Add(scene.path, new AutoSaveScene(scene, sceneRecoveryRepository));
                 sceneRecords.Add(new EditorSceneRecord
                 {
                     wasLoaded = mode != OpenSceneMode.AdditiveWithoutLoading,
@@ -304,7 +301,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
             Scene activeScene = SceneManager.GetActiveScene();
             foreach (Scene scene in GetScenes())
             {
-                autoSaveScenes.Add(scene.path, new AutoSaveScene(scene));
+                autoSaveScenes.Add(scene.path, new AutoSaveScene(scene, sceneRecoveryRepository));
                 sceneRecords.Add(new EditorSceneRecord()
                 {
                     path = scene.path,

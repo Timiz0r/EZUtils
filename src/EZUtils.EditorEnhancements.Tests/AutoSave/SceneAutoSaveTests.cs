@@ -65,6 +65,32 @@ namespace EZUtils.EditorEnhancements.AutoSave.Tests
         }
 
         [Test]
+        public void AutoSave_PrunesSaves_WhenOverLimit()
+        {
+            TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository()
+            {
+                AutoSaveFileLimit = 2
+            };
+            using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
+            using (TestScene testScene = new TestScene("testscene"))
+            {
+                sceneAutoSaver.Load();
+
+                _ = new GameObject("test");
+                testScene.MarkDirty();
+                sceneAutoSaver.AutoSave();
+                //the files only go to second resolution
+                System.Threading.Thread.Sleep(1000);
+                sceneAutoSaver.AutoSave();
+                System.Threading.Thread.Sleep(1000);
+                sceneAutoSaver.AutoSave();
+                System.Threading.Thread.Sleep(1000);
+
+                Assert.That(sceneRepository.GetAvailableAutoSaveCount(testScene.Scene), Is.EqualTo(2));
+            }
+        }
+
+        [Test]
         public void AutoSave_RecoversFromAutoSave_WhenSceneAlreadyOpenOnRestartFromCrash()
         {
             TestSceneRecoveryRepository sceneRepository = new TestSceneRecoveryRepository();

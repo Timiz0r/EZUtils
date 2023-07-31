@@ -6,27 +6,27 @@ msgstr "Language: en\n"
 "Plural-Forms: nplurals=1; 0;\n"
 "X-PluralRules-Other: \n"
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:74
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:81
 # id format: Recover scene '{Scene.name}' from auto-save
 msgid "Recover scene '{0}' from auto-save"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:79
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/AutoSaveScene.cs:86
 msgid "Copy GameObject"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:35
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:40
 msgid "Scene auto-save"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:36
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:41
 msgid "It does not appear that Unity was properly closed, but there is auto-save data available. Attempt to recover using auto-save data?"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:38
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:43
 msgid "Recover"
 msgstr ""
 
-#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:39
+#: Packages/com.timiz0r.ezutils.editorenhancements/AutoSave/SceneRecoveryRepository.cs:44
 msgid "Do not recover"
 msgstr ""

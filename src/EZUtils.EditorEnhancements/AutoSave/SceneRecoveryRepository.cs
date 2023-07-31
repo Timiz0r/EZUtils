@@ -12,11 +12,16 @@ namespace EZUtils.EditorEnhancements.AutoSave
         void UpdateScenes(IEnumerable<EditorSceneRecord> sceneRecords);
         IReadOnlyList<EditorSceneRecord> RecoverScenes();
         bool MayPerformRecovery();
+        int AutoSaveFileLimit { get; }
     }
-    public class SceneRecoveryRepository : ISceneRecoveryRepository
+    internal class SceneRecoveryRepository : ISceneRecoveryRepository
     {
         private readonly EditorPreference<string> rawEditorRecord = new EditorPreference<string>(
             "EZUtils.EditorEnhancements.AutoSave.Scene.EditorRecord", null);
+        internal static readonly EditorPreference<int> SceneAutoSaveCopies =
+            new EditorPreference<int>("EZUtils.EditorEnhancements.AutoSave.Scene.Copies", 5);
+
+        public int AutoSaveFileLimit => SceneAutoSaveCopies.Value;
 
         public void UpdateScenes(IEnumerable<EditorSceneRecord> sceneRecords)
             => rawEditorRecord.Value = EditorJsonUtility.ToJson(new EditorRecord() { scenes = sceneRecords.ToList() });
