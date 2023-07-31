@@ -1,7 +1,7 @@
 {
     "$schema": "../emptyschema.json",
     "name": "com.timiz0r.ezutils.mmdavatartools",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "Contains tools for validating if VRChat avatars are MMD world-compatible.",
     "displayName": "EZUtils MMD Avatar Tools",
     "unity": "2019.4",
