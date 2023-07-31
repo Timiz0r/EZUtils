@@ -49,18 +49,23 @@ namespace EZUtils.EditorEnhancements
                     }
 
                     AutoSaveScene autoSaveScene = new AutoSaveScene(scene);
-                    autoSaveScene.Recover(sceneRecord.LastCleanTime);
+                    autoSaveScenes.Add(sceneRecord.path, autoSaveScene);
 
                     if (sceneRecord.wasActive)
                     {
                         _ = SceneManager.SetActiveScene(scene);
                     }
-                    if (!sceneRecord.wasLoaded)
+
+                    if (sceneRecord.wasLoaded)
+                    {
+                        //unloading a scene requires saving or discarding as decided by user
+                        //so if a scene is unloaded, there's ultimately nothing to recover
+                        autoSaveScene.Recover(sceneRecord.LastCleanTime);
+                    }
+                    else
                     {
                         _ = EditorSceneManager.CloseScene(scene, removeScene: false);
                     }
-
-                    autoSaveScenes.Add(sceneRecord.path, autoSaveScene);
                 }
 
                 //reverse since closing scenes changes the counts and indices
@@ -100,7 +105,7 @@ namespace EZUtils.EditorEnhancements
 
             EditorSceneManager.activeSceneChangedInEditMode += ActiveSceneChanged;
             EditorSceneManager.sceneOpened += SceneOpened;
-            EditorSceneManager.sceneClosed += SceneClosed;
+            EditorSceneManager.sceneClosing += SceneClosing;
             EditorSceneManager.sceneDirtied += SceneDirtied;
             EditorSceneManager.sceneSaved += SceneSaved;
             EditorSceneManager.newSceneCreated += SceneCreated;
@@ -112,7 +117,7 @@ namespace EZUtils.EditorEnhancements
         {
             EditorSceneManager.activeSceneChangedInEditMode -= ActiveSceneChanged;
             EditorSceneManager.sceneOpened -= SceneOpened;
-            EditorSceneManager.sceneClosed -= SceneClosed;
+            EditorSceneManager.sceneClosing -= SceneClosing;
             EditorSceneManager.sceneDirtied -= SceneDirtied;
             EditorSceneManager.sceneSaved -= SceneSaved;
             EditorSceneManager.newSceneCreated -= SceneCreated;
@@ -172,13 +177,23 @@ namespace EZUtils.EditorEnhancements
                 scene = SceneManager.GetSceneByPath(newPath);
             }
 
-            autoSaveScenes.Add(scene.path, new AutoSaveScene(scene));
-            sceneRecords.Add(new EditorSceneRecord
+            EditorSceneRecord existingRecord = sceneRecords.SingleOrDefault(sr => sr.path == scene.path);
+            if (existingRecord != null)
             {
-                wasLoaded = mode != OpenSceneMode.AdditiveWithoutLoading,
-                path = scene.path,
-                LastCleanTime = DateTimeOffset.Now
-            });
+                //the opened event is what's triggered when an unloaded scene is loaded
+                existingRecord.wasLoaded = scene.isLoaded;
+            }
+            else
+            {
+                autoSaveScenes.Add(scene.path, new AutoSaveScene(scene));
+                sceneRecords.Add(new EditorSceneRecord
+                {
+                    wasLoaded = mode != OpenSceneMode.AdditiveWithoutLoading,
+                    path = scene.path,
+                    LastCleanTime = DateTimeOffset.Now
+                });
+            }
+
             UpdateSceneRepository();
         }
 
@@ -186,9 +201,17 @@ namespace EZUtils.EditorEnhancements
         //GetScenes has two copies of the new name and none of the old name
         //except if there are multiple scenes open, then there's only one of the new name
         //scene is for the new name
-        private void SceneClosed(Scene scene)
+        private void SceneClosing(Scene scene, bool removingScene)
         {
             string targetScenePath;
+            if (!removingScene)
+            {
+                EditorSceneRecord sceneRecord = sceneRecords.Single(sr => sr.path == scene.path);
+                sceneRecord.wasLoaded = false;
+                sceneRecord.SetDirtiness(false);
+                UpdateSceneRepository();
+                return;
+            }
 
             //rename
             if (!autoSaveScenes.ContainsKey(scene.path))
@@ -306,7 +329,9 @@ namespace EZUtils.EditorEnhancements
             bool dirtySceneNoLongerDirty = sceneRecord.wasDirty && !scene.isDirty;
             bool autoSaveNewerThanLastCleanTime = latestAutoSave.CreationTimeUtc > sceneRecord.LastCleanTime;
 
-            bool isRecoveryNeeded = sceneNoLongerOpened || (dirtySceneNoLongerDirty && autoSaveNewerThanLastCleanTime);
+            bool isRecoveryNeeded = sceneNoLongerOpened
+                || (!sceneRecord.wasLoaded && scene.isLoaded)
+                || (dirtySceneNoLongerDirty && autoSaveNewerThanLastCleanTime);
             return isRecoveryNeeded;
         }
 
