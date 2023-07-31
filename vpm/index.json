@@ -196,6 +196,29 @@
           },
           "zipSHA256": "fb49dd75f78e1b5e8e4f41839f4eadfe15fdb15757561f80ecca94bcf64eb3e7",
           "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.mmdavatartools-1.0.3/com.timiz0r.ezutils.mmdavatartools-1.0.3.zip"
+        },
+        "1.0.4": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.mmdavatartools",
+          "version": "1.0.4",
+          "description": "Contains tools for validating if VRChat avatars are MMD world-compatible.",
+          "displayName": "EZUtils MMD Avatar Tools",
+          "unity": "2019.4",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.common": "^1.0.8",
+            "com.timiz0r.ezutils.localization": "^1.0.8"
+          },
+          "zipSHA256": "2192317a4dfaea84be3eab1a31cf6f9f1ea1e3e09458fde15f7557f4b29f96ab",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.mmdavatartools-1.0.4/com.timiz0r.ezutils.mmdavatartools-1.0.4.zip"
         }
       }
     },
