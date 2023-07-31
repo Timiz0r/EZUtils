@@ -41,11 +41,25 @@ namespace EZUtils.EditorEnhancements
                     Scene scene = SceneManager.GetSceneByPath(sceneRecord.path);
                     if (!scene.IsValid())
                     {
-                        scene = sceneRecord.path.Length == 0
-                            //note that new scenes cannot be created additively if there's already and untitled scene
-                            //this cannot be the case here because we GetSceneByPath first
-                            ? EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive)
-                            : EditorSceneManager.OpenScene(sceneRecord.path, OpenSceneMode.Additive);
+                        if (sceneRecord.path.Length == 0)
+                        {
+                            scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+                        }
+                        else if (File.Exists(sceneRecord.path))
+                        {
+                            scene = EditorSceneManager.OpenScene(sceneRecord.path, OpenSceneMode.Additive);
+                        }
+                        else
+                        {
+                            //when unity crashed, the scene asset was deleted,
+                            //which leaves a dirty scene with existing path up
+                            //the only way to get back to this state is to save a new scene, then delete it
+                            scene = EditorSceneManager.NewScene(
+                                NewSceneSetup.EmptyScene, NewSceneMode.Additive);
+                            _ = EditorSceneManager.SaveScene(scene, sceneRecord.path);
+                            _ = AssetDatabase.DeleteAsset(sceneRecord.path);
+
+                        }
                     }
 
                     AutoSaveScene autoSaveScene = new AutoSaveScene(scene);

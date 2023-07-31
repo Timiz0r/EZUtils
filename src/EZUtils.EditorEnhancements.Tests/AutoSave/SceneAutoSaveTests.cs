@@ -1,9 +1,5 @@
 namespace EZUtils.EditorEnhancements.Tests
 {
-    using System;
-    using System.Collections.Generic;
-    using System.IO;
-    using System.Linq;
     using NUnit.Framework;
     using UnityEditor;
     using UnityEditor.SceneManagement;
@@ -470,169 +466,46 @@ namespace EZUtils.EditorEnhancements.Tests
                 }
             }
         }
-    }
 
-    public class TestScene : IDisposable
-    {
-        public static readonly string TestSceneRootPath = "Assets/SceneAutoSaveTests";
-
-        private readonly string scenePath;
-
-        public TestScene(
-            string sceneName,
-            bool mustAlreadyBeOpen = false,
-            bool additive = false,
-            bool createWithDefaultObjects = false)
+        [Test]
+        public void AutoSave_RecoversFromAutoSave_WhenSceneAssetDeleted()
         {
-            scenePath = $"{TestSceneRootPath}/{sceneName}.unity";
-
-            Scene = GetScenes().SingleOrDefault(s => s.path == scenePath);
-
-            if (!Scene.IsValid())
+            using (TestSceneStateRepository sceneRepository = new TestSceneStateRepository())
             {
-                Assert.That(
-                    mustAlreadyBeOpen,
-                    Is.False,
-                    $"Test scene '{sceneName}' was expected to already be open but was not.");
+                string originalScenePath;
 
-                if (File.Exists(scenePath))
+                using (TestScene testScene = new TestScene("testscene"))
+                using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
                 {
-                    Scene = EditorSceneManager.OpenScene(
-                        scenePath,
-                        additive ? OpenSceneMode.Additive : OpenSceneMode.Single);
+                    originalScenePath = testScene.Scene.path;
+                    sceneAutoSaver.Load();
+
+                    _ = new GameObject("test");
+                    testScene.MarkDirty();
+                    sceneAutoSaver.AutoSave();
+
+                    _ = AssetDatabase.DeleteAsset(testScene.Scene.path);
+
+                    sceneRepository.SimulateUnityCrash();
                 }
-                else
+
+                using (TestScene testScene2 = new TestScene("testscene2"))
+                using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
                 {
-                    Scene = EditorSceneManager.NewScene(
-                        createWithDefaultObjects ? NewSceneSetup.DefaultGameObjects : NewSceneSetup.EmptyScene,
-                        additive ? NewSceneMode.Additive : NewSceneMode.Single);
-                    _ = Directory.CreateDirectory(TestSceneRootPath);
-                    _ = EditorSceneManager.SaveScene(Scene, scenePath);
+                    Assert.That(testScene2.Scene.rootCount, Is.EqualTo(0));
+
+                    sceneAutoSaver.Load();
+                    Assert.That(testScene2.IsOpen, Is.False);
+
+                    using (TestScene testScene = new TestScene("testscene", mustAlreadyBeOpen: true))
+                    {
+                        Assert.That(testScene.Scene.rootCount, Is.EqualTo(1));
+                        Assert.That(testScene.Scene.isDirty, Is.EqualTo(true));
+                        Assert.That(testScene.Scene.path, Is.EqualTo(originalScenePath));
+                        Assert.That(System.IO.File.Exists(testScene.Scene.path), Is.False);
+                    }
                 }
             }
         }
-
-        public Scene Scene { get; private set; }
-        public bool IsOpen => GetScenes().Any(s => s.path == Scene.path);
-
-        public void MarkDirty() => EditorSceneManager.MarkSceneDirty(Scene);
-        public void Save() => EditorSceneManager.SaveScene(Scene);
-        public void MakeActive() => SceneManager.SetActiveScene(Scene);
-        public void Load() => EditorSceneManager.OpenScene(Scene.path, OpenSceneMode.Additive);
-        public void Unload() => EditorSceneManager.CloseScene(Scene, removeScene: false);
-
-        public void Dispose()
-        {
-            if (GetScenes().Count() > 1)
-            {
-                _ = EditorSceneManager.CloseScene(Scene, removeScene: true);
-            }
-            //since we opened it single, we need another scene in order to close
-            else
-            {
-                _ = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene);
-            }
-        }
-
-        private static IEnumerable<Scene> GetScenes() => Enumerable
-            .Range(0, SceneManager.sceneCount)
-            .Select(i => SceneManager.GetSceneAt(i));
-    }
-
-    public class TestSceneStateRepository : ISceneRecoveryRepository, IDisposable
-    {
-        private IReadOnlyList<EditorSceneRecord> sceneRecords = Array.Empty<EditorSceneRecord>();
-        private readonly List<AutoSavedSceneRecord> autoSavedScenes = new List<AutoSavedSceneRecord>();
-        private bool performUnityCrashSimulation = false;
-        private bool blockSceneRecordUpdates = false;
-
-        public TestSceneStateRepository()
-        {
-            EditorSceneManager.sceneSaved += SceneSaved;
-        }
-
-        public IReadOnlyList<EditorSceneRecord> RecoverScenes()
-        {
-            //midCrashScenes exists because,
-            blockSceneRecordUpdates = false;
-            return sceneRecords;
-        }
-
-        public void UpdateScenes(IEnumerable<EditorSceneRecord> sceneRecords)
-        {
-            //when we simulate closing, the test will create/load a new scene, to imitate how unity starts with a clean scene
-            //this will get picked up by SceneAutoSaver and cause scene records here to get updated, which we don't want,
-            //since the way unity works in practice is that there are no events for the initial loaded scene
-            //so, up until the next call to RecoverScenes, we'll throw away any updates
-            if (blockSceneRecordUpdates) return;
-
-            this.sceneRecords = sceneRecords.ToArray();
-        }
-
-        public bool MayPerformRecovery()
-        {
-            Assert.That(performUnityCrashSimulation, Is.True, "Some scene unexpectedly needs recovery.");
-            performUnityCrashSimulation = false;
-            return true;
-        }
-
-        public int GetAutoSaveCount(Scene scene) => autoSavedScenes.Count(a => a.OriginalPath == scene.path);
-
-        public void SimulateUnityClose()
-        {
-            UpdateScenes(Enumerable.Empty<EditorSceneRecord>());
-            performUnityCrashSimulation = false;
-            blockSceneRecordUpdates = true;
-        }
-
-        public void SimulateUnityCrash()
-        {
-            performUnityCrashSimulation = true;
-            blockSceneRecordUpdates = true;
-        }
-
-        public void Dispose()
-        {
-            EditorSceneManager.sceneSaved -= SceneSaved;
-
-            foreach (string folder in autoSavedScenes.Select(a => Path.GetDirectoryName(a.AutoSavePath)).Distinct())
-            {
-                _ = AssetDatabase.DeleteAsset(folder);
-            }
-        }
-
-        private void SceneSaved(Scene scene)
-        {
-            //since, for these unit tests, we wont be doing any other scene saving, this logic works fine
-            //no need to differentiate other code or user-based save-asing
-            //when auto-saving, we only save when dirty, and, since it's a save-as, it remains dirty
-            if (!scene.isDirty) return;
-
-            string autoSavePath = SceneAutoSaver.GetAutoSavePath(scene.path);
-            DirectoryInfo autoSaveFolder = new DirectoryInfo(autoSavePath);
-            Assert.That(autoSaveFolder.Exists, Is.True, $"Auto save folder '{autoSavePath}' does not exist.");
-
-            int previousAutoSaves = autoSavedScenes.Count(s => s.OriginalPath == scene.path);
-            FileInfo[] autoSaves = autoSaveFolder.GetFiles("*.unity");
-            FileInfo newestAutoSave = autoSaves.OrderByDescending(f => f.CreationTime).First();
-            autoSavedScenes.Add(new AutoSavedSceneRecord(scene.path, $"{autoSavePath}/{newestAutoSave.Name}"));
-
-            Assert.That(
-                autoSaves,
-                Has.Length.EqualTo(previousAutoSaves + 1),
-                $"Scene '{scene.name}' has '{previousAutoSaves}' previous auto saves, and this hasn't gone up despite another auto save.");
-        }
-    }
-
-    public class AutoSavedSceneRecord
-    {
-        public AutoSavedSceneRecord(string originalPath, string autoSavePath)
-        {
-            OriginalPath = originalPath;
-            AutoSavePath = autoSavePath;
-        }
-
-        public string OriginalPath { get; }
-        public string AutoSavePath { get; }
     }
 }
