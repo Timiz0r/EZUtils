@@ -45,15 +45,16 @@ namespace EZUtils.EditorEnhancements
                 autoSaveFiles.OrderBy(f => f.CreationTimeUtc).First().Delete();
             }
         }
-        public void Recover()
+        public void Recover(DateTimeOffset lastCleanTime)
         {
             FileInfo latestAutoSaveFile = !autoSaveFolder.Exists
                 ? null
                 : autoSaveFolder
                     .GetFiles("*.unity")
+                    .Where(f => f.CreationTimeUtc > lastCleanTime)
                     .OrderByDescending(f => f.CreationTimeUtc)
                     .FirstOrDefault();
-            //so we recovered towards the set of open scenes, but we can't load an autosave
+            //so we recovered towards the set of open scenes (via caller), but we can't load an autosave
             if (latestAutoSaveFile == null) return;
 
             const string recoveryAssetPath = "Assets/AutoSaveRecoveryTemp.unity";

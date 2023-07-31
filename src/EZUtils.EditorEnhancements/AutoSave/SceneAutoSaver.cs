@@ -34,26 +34,22 @@ namespace EZUtils.EditorEnhancements
         {
             IReadOnlyList<EditorSceneRecord> recoveredScenes = sceneRecoveryRepository.RecoverScenes();
 
-            //TODO: a quirk/bug is that not all scenes that were tracked necessarily have an auto-save
-            //which would happen if a new scene was opened/created between auto-saves
-            //we should theoretically make sure recover only recovers using the latest file past the checkpoint
-            //furthermore, for untitled scenes, we should generate an auto-save as soon as a scene is created
-            //or perhaps delay-called, because, if there's no auto-save to recover from, we at least want the initial
-            //creation objects to be present
             if (recoveredScenes.Any(sr => IsRecoveryNeeded(sr)) && sceneRecoveryRepository.MayPerformRecovery())
             {
                 foreach (EditorSceneRecord sceneRecord in recoveredScenes)
                 {
-                    Scene scene = sceneRecord.path.Length == 0
-                        ? EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive)
-                        : SceneManager.GetSceneByPath(sceneRecord.path);
+                    Scene scene = SceneManager.GetSceneByPath(sceneRecord.path);
                     if (!scene.IsValid())
                     {
-                        scene = EditorSceneManager.OpenScene(sceneRecord.path, OpenSceneMode.Additive);
+                        scene = sceneRecord.path.Length == 0
+                            //note that new scenes cannot be created additively if there's already and untitled scene
+                            //this cannot be the case here because we GetSceneByPath first
+                            ? EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Additive)
+                            : EditorSceneManager.OpenScene(sceneRecord.path, OpenSceneMode.Additive);
                     }
 
                     AutoSaveScene autoSaveScene = new AutoSaveScene(scene);
-                    autoSaveScene.Recover();
+                    autoSaveScene.Recover(sceneRecord.LastCleanTime);
 
                     if (sceneRecord.wasActive)
                     {
@@ -146,12 +142,15 @@ namespace EZUtils.EditorEnhancements
 
         private void SceneCreated(Scene scene, NewSceneSetup setup, NewSceneMode mode)
         {
-            autoSaveScenes.Add(scene.path, new AutoSaveScene(scene));
+            AutoSaveScene autoSaveScene = new AutoSaveScene(scene);
+            autoSaveScenes.Add(scene.path, autoSaveScene);
+
             sceneRecords.Add(new EditorSceneRecord
             {
-                wasLoaded = mode != NewSceneMode.Additive,
+                wasLoaded = true,
                 path = scene.path, //will be empty, incidentally
-                LastCleanTime = DateTimeOffset.Now
+                LastCleanTime = DateTimeOffset.Now,
+                wasActive = scene.path == SceneManager.GetActiveScene().path
             });
             UpdateSceneRepository();
         }
@@ -211,9 +210,11 @@ namespace EZUtils.EditorEnhancements
         private void SceneSaved(Scene scene)
         {
             EditorSceneRecord newSceneRecord = sceneRecords.SingleOrDefault(sr => sr.path.Length == 0);
-            if (newSceneRecord != null && scene.path != null)
+            if (newSceneRecord != null && scene.path.Length > 0)
             {
                 newSceneRecord.path = scene.path;
+                //for SceneSaved, we look at scene.isDirty because a save-as won't change the dirtiness
+                //so we can't simply assume saving always means a scene becoming clean
                 newSceneRecord.SetDirtiness(scene.isDirty);
 
                 autoSaveScenes[scene.path] = autoSaveScenes[string.Empty];

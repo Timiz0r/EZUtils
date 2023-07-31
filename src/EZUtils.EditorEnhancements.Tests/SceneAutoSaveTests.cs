@@ -9,7 +9,6 @@ namespace EZUtils.EditorEnhancements.Tests
     using UnityEditor.SceneManagement;
     using UnityEngine;
     using UnityEngine.SceneManagement;
-    using Object = UnityEngine.Object;
 
     //these are technically integration tests since they are stongly coupled to certain unity things like scenes, assets
     //but we make the tests and the design as unit-testy as possible
@@ -18,18 +17,22 @@ namespace EZUtils.EditorEnhancements.Tests
     public class SceneAutoSaveTests
     {
         [OneTimeSetUp]
-        public static void OneTimeSetup() => AutoSave.Disable();
+        public static void OneTimeSetup()
+        {
+            //a small consequence of the integration testness is that we'll delete untitled autosaves, even if legit
+            //luckily for this repo, we dont expect to work in them, so it's not a problem
+            _ = AssetDatabase.DeleteAsset(SceneAutoSaver.GetAutoSavePath(string.Empty));
+            AutoSave.Disable();
+        }
 
         [OneTimeTearDown]
-        public void OneTimeTeardown()
-        {
-            AutoSave.Enable();
-        }
+        public void OneTimeTeardown() => AutoSave.Enable();
 
         [TearDown]
         public void Teardown()
         {
             _ = AssetDatabase.DeleteAsset(TestScene.TestSceneRootPath);
+            _ = AssetDatabase.DeleteAsset(SceneAutoSaver.GetAutoSavePath(string.Empty));
         }
 
         [Test]
@@ -260,6 +263,124 @@ namespace EZUtils.EditorEnhancements.Tests
                 }
             }
         }
+
+        [Test]
+        public void AutoSave_AttemptsMultiSceneRecovery_WhenOnlyOneSceneNeedsRecoveryAndOtherHasExpiredAutoSave()
+        {
+            using (TestSceneStateRepository sceneRepository = new TestSceneStateRepository())
+            {
+                using (TestScene testScene = new TestScene("testscene"))
+                using (TestScene testScene2 = new TestScene("testscene2", additive: true))
+                using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
+                {
+                    sceneAutoSaver.Load();
+
+                    testScene.MakeActive();
+                    _ = new GameObject("test");
+                    testScene.MarkDirty();
+
+                    testScene2.MakeActive();
+                    _ = new GameObject("test");
+                    testScene2.MarkDirty();
+
+                    sceneAutoSaver.AutoSave();
+
+                    _ = new GameObject("test2");
+                    testScene2.Save();
+
+                    sceneRepository.SimulateUnityCrash();
+                }
+
+                //so testscene has an autosave and is still dirty when crash happens
+                //and testscene2 has old autosave but is clean when crash happens
+
+                using (TestScene testScene = new TestScene("testscene"))
+                using (TestScene testScene2 = new TestScene("testscene2", additive: true))
+                using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
+                {
+                    Assert.That(testScene.Scene.rootCount, Is.EqualTo(0));
+                    Assert.That(testScene2.Scene.rootCount, Is.EqualTo(2));
+
+                    sceneAutoSaver.Load();
+
+                    Assert.That(testScene.Scene.rootCount, Is.EqualTo(1));
+                    Assert.That(testScene.Scene.isDirty, Is.EqualTo(true));
+                    Assert.That(testScene2.Scene.rootCount, Is.EqualTo(2));
+                    Assert.That(testScene2.Scene.isDirty, Is.EqualTo(false));
+                }
+            }
+        }
+
+        [Test]
+        public void AutoSave_AttemptsMultiSceneRecovery_WhenAllScenesAlreadyOpen()
+        {
+            using (TestSceneStateRepository sceneRepository = new TestSceneStateRepository())
+            {
+                using (TestScene testScene = new TestScene("testscene"))
+                using (TestScene testScene2 = new TestScene("testscene2", additive: true))
+                using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
+                {
+                    sceneAutoSaver.Load();
+
+                    testScene.MakeActive();
+                    _ = new GameObject("test");
+                    testScene.MarkDirty();
+
+                    testScene2.MakeActive();
+                    _ = new GameObject("test");
+                    testScene2.MarkDirty();
+
+                    sceneAutoSaver.AutoSave();
+
+                    sceneRepository.SimulateUnityCrash();
+                }
+
+                using (TestScene testScene = new TestScene("testscene"))
+                using (TestScene testScene2 = new TestScene("testscene2", additive: true))
+                using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
+                {
+                    Assert.That(testScene.Scene.rootCount, Is.EqualTo(0));
+                    Assert.That(testScene2.Scene.rootCount, Is.EqualTo(0));
+
+                    sceneAutoSaver.Load();
+
+                    Assert.That(testScene.Scene.rootCount, Is.EqualTo(1));
+                    Assert.That(testScene.Scene.isDirty, Is.EqualTo(true));
+                    Assert.That(testScene2.Scene.rootCount, Is.EqualTo(1));
+                    Assert.That(testScene2.Scene.isDirty, Is.EqualTo(true));
+                }
+            }
+        }
+
+        [Test]
+        public void AutoSave_RecoversFromAutoSave_WhenSceneUntitled()
+        {
+            using (TestSceneStateRepository sceneRepository = new TestSceneStateRepository())
+            {
+                using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
+                {
+                    sceneAutoSaver.Load();
+
+                    Scene untitledScene = EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
+
+                    _ = new GameObject("test");
+                    _ = EditorSceneManager.MarkSceneDirty(untitledScene);
+
+                    sceneAutoSaver.AutoSave();
+
+                    sceneRepository.SimulateUnityCrash();
+                }
+
+                Scene restartUntitledScene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+                using (SceneAutoSaver sceneAutoSaver = new SceneAutoSaver(sceneRepository))
+                {
+                    sceneAutoSaver.Load();
+
+                    Assert.That(restartUntitledScene.rootCount, Is.EqualTo(3));
+                    Assert.That(restartUntitledScene.isDirty, Is.EqualTo(true));
+                }
+            }
+        }
     }
 
     public class TestScene : IDisposable
@@ -268,7 +389,11 @@ namespace EZUtils.EditorEnhancements.Tests
 
         private readonly string scenePath;
 
-        public TestScene(string sceneName, bool mustAlreadyBeOpen = false)
+        public TestScene(
+            string sceneName,
+            bool mustAlreadyBeOpen = false,
+            bool additive = false,
+            bool createWithDefaultObjects = false)
         {
             scenePath = $"{TestSceneRootPath}/{sceneName}.unity";
 
@@ -283,11 +408,15 @@ namespace EZUtils.EditorEnhancements.Tests
 
                 if (File.Exists(scenePath))
                 {
-                    Scene = EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                    Scene = EditorSceneManager.OpenScene(
+                        scenePath,
+                        additive ? OpenSceneMode.Additive : OpenSceneMode.Single);
                 }
                 else
                 {
-                    Scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+                    Scene = EditorSceneManager.NewScene(
+                        createWithDefaultObjects ? NewSceneSetup.DefaultGameObjects : NewSceneSetup.EmptyScene,
+                        additive ? NewSceneMode.Additive : NewSceneMode.Single);
                     _ = Directory.CreateDirectory(TestSceneRootPath);
                     _ = EditorSceneManager.SaveScene(Scene, scenePath);
                 }
@@ -299,6 +428,7 @@ namespace EZUtils.EditorEnhancements.Tests
 
         public void MarkDirty() => EditorSceneManager.MarkSceneDirty(Scene);
         public void Save() => EditorSceneManager.SaveScene(Scene);
+        public void MakeActive() => SceneManager.SetActiveScene(Scene);
 
         public void Dispose() =>
             //_ = EditorSceneManager.CloseScene(Scene, removeScene: true);
@@ -312,31 +442,55 @@ namespace EZUtils.EditorEnhancements.Tests
 
     public class TestSceneStateRepository : ISceneRecoveryRepository, IDisposable
     {
+        private IReadOnlyList<EditorSceneRecord> sceneRecords = Array.Empty<EditorSceneRecord>();
         private readonly List<AutoSavedSceneRecord> autoSavedScenes = new List<AutoSavedSceneRecord>();
-        private bool mayPerformRecovery = false;
+        private bool performUnityCrashSimulation = false;
+        private bool blockSceneRecordUpdates = false;
 
         public TestSceneStateRepository()
         {
             EditorSceneManager.sceneSaved += SceneSaved;
         }
 
-        public IReadOnlyList<EditorSceneRecord> Scenes { get; private set; } = new List<EditorSceneRecord>();
+        public IReadOnlyList<EditorSceneRecord> RecoverScenes()
+        {
+            //midCrashScenes exists because,
+            blockSceneRecordUpdates = false;
+            return sceneRecords;
+        }
 
-        public IReadOnlyList<EditorSceneRecord> RecoverScenes() => Scenes;
+        public void UpdateScenes(IEnumerable<EditorSceneRecord> sceneRecords)
+        {
+            //when we simulate closing, the test will create/load a new scene, to imitate how unity starts with a clean scene
+            //this will get picked up by SceneAutoSaver and cause scene records here to get updated, which we don't want,
+            //since the way unity works in practice is that there are no events for the initial loaded scene
+            //so, up until the next call to RecoverScenes, we'll throw away any updates
+            if (blockSceneRecordUpdates) return;
 
-        public void UpdateScenes(IEnumerable<EditorSceneRecord> sceneRecords) => Scenes = sceneRecords.ToArray();
+            this.sceneRecords = sceneRecords.ToArray();
+        }
 
-        public bool MayPerformRecovery() => mayPerformRecovery;
+        public bool MayPerformRecovery()
+        {
+            bool result = performUnityCrashSimulation;
+            performUnityCrashSimulation = false;
+            return result;
+        }
 
         public int GetAutoSaveCount(Scene scene) => autoSavedScenes.Count(a => a.OriginalPath == scene.path);
 
         public void SimulateUnityClose()
         {
             UpdateScenes(Enumerable.Empty<EditorSceneRecord>());
-            mayPerformRecovery = false;
+            performUnityCrashSimulation = false;
+            blockSceneRecordUpdates = true;
         }
 
-        public void SimulateUnityCrash() => mayPerformRecovery = true;
+        public void SimulateUnityCrash()
+        {
+            performUnityCrashSimulation = true;
+            blockSceneRecordUpdates = true;
+        }
 
         public void Dispose()
         {
