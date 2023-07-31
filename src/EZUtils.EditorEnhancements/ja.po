@@ -47,3 +47,15 @@ msgstr "EZUtils/エディター強化"
 #: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.cs:25
 msgid "Editor Enhancements"
 msgstr "エディター強化"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:15
+msgid "General"
+msgstr "一般"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:16
+msgid "Project window file extensions"
+msgstr "プロジェクトウインドウのファイル拡張子"
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:17
+msgid "Show scene window when play mode entered"
+msgstr "再生モードに入ったらシーンウインドウを開く"

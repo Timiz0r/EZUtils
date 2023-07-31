@@ -1,11 +1,19 @@
 namespace EZUtils.EditorEnhancements
 {
     using System;
+    using EZUtils.Localization.UIElements;
     using UnityEditor;
+    using UnityEditor.UIElements;
     using UnityEngine.UIElements;
+
+    using static Localization;
 
     public class EditorEnhancementsEditorWindow : EditorWindow
     {
+
+        [InitializeOnLoadMethod]
+        private static void UnityInitialize() => AddMenu("EZUtils/Editor Enhancements", priority: 0, ShowWindow);
+
         [MenuItem("EZUtils/Editor Enhancements", isValidateFunction: false, priority: 0)]
         public static void ShowWindow()
         {
@@ -15,9 +23,14 @@ namespace EZUtils.EditorEnhancements
 
         public void CreateGUI()
         {
+            TranslateWindowTitle(this, "Editor Enhancements");
+
             VisualTreeAsset visualTree = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(
                 "Packages/com.timiz0r.EZUtils.EditorEnhancements/EditorEnhancementsEditorWindow.uxml");
             visualTree.CommonUIClone(rootVisualElement);
+            TranslateElementTree(rootVisualElement);
+
+            rootVisualElement.Q<Toolbar>().AddLocaleSelector();
 
             _ = rootVisualElement.Q<Toggle>(name: "projectWindowFileExtensions")
                 .ForPref(ProjectWindowFileExtensions.PrefName, true)

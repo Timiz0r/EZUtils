@@ -47,3 +47,19 @@ msgstr ""
 #: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.cs:25
 msgid "Editor Enhancements"
 msgstr ""
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:15
+msgid "General"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:16
+#~ msgid "Project"
+#~ msgstr ""
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:16
+msgid "Project window file extensions"
+msgstr ""
+
+#: Packages/com.timiz0r.ezutils.editorenhancements/EditorEnhancementsEditorWindow.uxml:17
+msgid "Show scene window when play mode entered"
+msgstr ""
