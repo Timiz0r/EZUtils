@@ -1,10 +1,10 @@
 {
     "$schema": "../emptyschema.json",
     "name": "com.timiz0r.ezutils.repackprefab",
-    "version": "1.0.2",
+    "version": "1.1.0",
     "description": "A tool that takes an unpacked prefab that has been modified, plus a reference prefab, and produces a variant prefab.",
     "displayName": "EZUtils Repack Prefab",
-    "unity": "2019.4",
+    "unity": "2022.3",
     "author": {
         "displayName": "Timiz0r/まむ",
         "url": "https://github.com/Timiz0r/EZUtils"
@@ -15,6 +15,6 @@
         "url": "https://github.com/Timiz0r/EZUtils.git"
     },
     "vpmDependencies": {
-      "com.timiz0r.ezutils.common": "^1.0.8"
+      "com.timiz0r.ezutils.common": "^1.1.0"
     }
 }
