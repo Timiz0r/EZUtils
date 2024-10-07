@@ -11,6 +11,7 @@ namespace EZUtils.Localization
             1e20m, 1e21m, 1e22m, 1e23m, 1e24m, 1e25m, 1e26m, 1e27m, 1e28m
         };
 
+        //TODO: probably more correct to always be positive
         public readonly decimal n; //abs(number)
         public readonly decimal i; //integer part of number
         //decimal digit counts are decimal type for use in expressions, though would ideally otherwise be int, since we index arrays with them

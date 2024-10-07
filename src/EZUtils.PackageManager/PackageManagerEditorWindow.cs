@@ -42,7 +42,7 @@ namespace EZUtils.PackageManager
                     IReadOnlyList<PackageInformation> packages = await packageRepository.ListAsync(showPreReleasePackages);
 
                     listView.itemsSource = packages.ToArray();
-                    listView.Refresh();
+                    listView.Rebuild();
 
                     rootVisualElement.Q<Label>(name: "status").text = string.Empty;
                 }

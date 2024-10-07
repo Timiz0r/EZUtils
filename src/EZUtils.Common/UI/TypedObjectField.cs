@@ -9,7 +9,7 @@ namespace EZUtils
     //kinda an experiment that will be moved to a more common area later
     //want to avoid exposing the underlying object if not too tedious
     //or just expose it
-    public class TypedObjectField<T> : CallbackEventHandler, INotifyValueChanged<T> where T : Object
+    public class TypedObjectField<T> : VisualElement, INotifyValueChanged<T> where T : Object
     {
         private readonly ObjectField underlyingObjectField;
 
@@ -26,8 +26,6 @@ namespace EZUtils
             get => (T)underlyingObjectField.value;
             set => underlyingObjectField.value = value;
         }
-
-        public override void SendEvent(EventBase e) => throw new System.NotImplementedException();
 
         public void SetValueWithoutNotify(T newValue) => underlyingObjectField.SetValueWithoutNotify(newValue);
 
@@ -58,9 +56,10 @@ namespace EZUtils
                 {
                     fieldInfo.SetValue(newEvent, fieldInfo.GetValue(evt));
                 }
-                HandleEvent(newEvent);
+                ExecuteDefaultAction(newEvent);
             }
         }
+
         private static readonly string[] fieldsToCopy = new string[]
         {
             "m_target",

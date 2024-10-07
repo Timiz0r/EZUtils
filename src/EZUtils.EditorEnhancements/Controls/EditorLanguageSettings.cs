@@ -34,7 +34,7 @@ namespace EZUtils.EditorEnhancements
             {
                 IReadOnlyList<UnityEditorLanguagePack> languagePacks = await UnityEditorLanguagePack.GetAvailable();
                 listView.itemsSource = languagePacks.ToArray();
-                listView.Refresh();
+                listView.Rebuild();
             }
         }
     }
