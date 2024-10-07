@@ -65,6 +65,26 @@
           "vpmDependencies": {},
           "zipSHA256": "82b39a662b5d529f5cc4ab6d9e6a98f91aa8d84807aa80591a53cc116ddb7f04",
           "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.common-1.1.0/com.timiz0r.ezutils.common-1.1.0.zip"
+        },
+        "1.1.1": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.common",
+          "version": "1.1.1",
+          "description": "Contains code for EZUtils.",
+          "displayName": "EZUtils Common",
+          "unity": "2022.3",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {},
+          "zipSHA256": "5bbf6cbf2401cbc80f5cbd95eb1c02f6049611a2d9d869702d8e6ed62ed16adb",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.common-1.1.1/com.timiz0r.ezutils.common-1.1.1.zip"
         }
       }
     },
@@ -206,6 +226,29 @@
           },
           "zipSHA256": "6b4f206e879129368a419c61586a6eeea9c8ab5eac254238299f5f480d4b2ccb",
           "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.editorenhancements-1.2.0/com.timiz0r.ezutils.editorenhancements-1.2.0.zip"
+        },
+        "1.2.1": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.editorenhancements",
+          "version": "1.2.1",
+          "description": "Improves the editor experience.",
+          "displayName": "EZUtils Editor Enhancements",
+          "unity": "2022.3",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.common": "^1.1.1",
+            "com.timiz0r.ezutils.localization": "^1.1.0"
+          },
+          "zipSHA256": "1447cd911615d03e34b24967c6458fa3cdacf310a8e027af68348cd1f726e82f",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.editorenhancements-1.2.1/com.timiz0r.ezutils.editorenhancements-1.2.1.zip"
         }
       }
     },
@@ -276,6 +319,28 @@
           },
           "zipSHA256": "66f5b98c85c3474756ec08c2f6a0c5fa9cb79d23661f59e2d1d32e5b21c21b50",
           "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.localization-1.1.0/com.timiz0r.ezutils.localization-1.1.0.zip"
+        },
+        "1.1.1": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.localization",
+          "version": "1.1.1",
+          "description": "Tools for helping with localization of EZUtils packages.",
+          "displayName": "EZUtils Localization Tools",
+          "unity": "2022.3",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.common": "^1.1.1"
+          },
+          "zipSHA256": "54b8428a251085e64199be3f9b083835499b2701c0f59df55490180633fe1f77",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.localization-1.1.1/com.timiz0r.ezutils.localization-1.1.1.zip"
         }
       }
     },
@@ -326,6 +391,29 @@
           },
           "zipSHA256": "04867c9a1abf1c3fcd5a39eba9e394915ad6c1b09daa7c4339b946a35cb58252",
           "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.localization.extraction-1.1.0/com.timiz0r.ezutils.localization.extraction-1.1.0.zip"
+        },
+        "1.1.1": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.localization.extraction",
+          "version": "1.1.1",
+          "description": "Extracts localization calls from code and uxml",
+          "displayName": "EZUtils Localization Extraction",
+          "unity": "2022.3",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.localization": "^1.1.0",
+            "com.timiz0r.ezutils.common": "^1.1.1"
+          },
+          "zipSHA256": "6fecae3d0eeca96a79f26b5969868a6be007a10fd949191acbaee40b4ee5a7e5",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.localization.extraction-1.1.1/com.timiz0r.ezutils.localization.extraction-1.1.1.zip"
         }
       }
     },
@@ -399,6 +487,29 @@
           },
           "zipSHA256": "309795349e28df95de652aa2585e332330de4dfca1f799ad52f14e53d8fa97f3",
           "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.mmdavatartools-1.1.0/com.timiz0r.ezutils.mmdavatartools-1.1.0.zip"
+        },
+        "1.1.1": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.mmdavatartools",
+          "version": "1.1.1",
+          "description": "Contains tools for validating if VRChat avatars are MMD world-compatible.",
+          "displayName": "EZUtils MMD Avatar Tools",
+          "unity": "2022.3",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.common": "^1.1.1",
+            "com.timiz0r.ezutils.localization": "^1.1.0"
+          },
+          "zipSHA256": "1959253dd558bd614fd1f3f286fb1f705622e217aacdfcd3313bf7dd15cbac16",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.mmdavatartools-1.1.1/com.timiz0r.ezutils.mmdavatartools-1.1.1.zip"
         }
       }
     },
@@ -469,6 +580,28 @@
           },
           "zipSHA256": "e7c46ece4783ae2b4e47e11edc48546caf850886249436c194aff6c796c1f57d",
           "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.repackprefab-1.1.0/com.timiz0r.ezutils.repackprefab-1.1.0.zip"
+        },
+        "1.1.1": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.repackprefab",
+          "version": "1.1.1",
+          "description": "A tool that takes an unpacked prefab that has been modified, plus a reference prefab, and produces a variant prefab.",
+          "displayName": "EZUtils Repack Prefab",
+          "unity": "2022.3",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.common": "^1.1.1"
+          },
+          "zipSHA256": "ca0ce8980d8e12810cb1fa9b8e621b2c46247f439cfd654a1c6b0085fc5523eb",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.repackprefab-1.1.1/com.timiz0r.ezutils.repackprefab-1.1.1.zip"
         }
       }
     },
