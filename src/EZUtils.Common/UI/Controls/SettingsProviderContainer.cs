@@ -23,9 +23,14 @@ namespace EZUtils.UIElements
 
                 string settingsPath = settingsPathAttribute.GetValueFromBag(bag, cc);
                 SettingsProvider settingsProvider = GetSettingsProviders()
-                    .SingleOrDefault(sp => sp.settingsPath.Equals(settingsPath, StringComparison.OrdinalIgnoreCase))
-                        ?? throw new ArgumentOutOfRangeException(
-                            "settingsPath", $"Settings path '{settingsPath}' does not exist.");
+                    .SingleOrDefault(sp => sp.settingsPath.Equals(settingsPath, StringComparison.OrdinalIgnoreCase));
+
+                if (settingsProvider != null)
+                {
+                    ve.Add(new Label($"Settings path '{settingsPath}' does not exist."));
+                    Debug.LogError($"Unable to loead SettingsProviderContainer: Settings path '{settingsPath}' does not exist.");
+                    return;
+                }
 
                 settingsProvider.OnActivate(string.Empty, ve);
                 ve.Add(new IMGUIContainer(() =>
@@ -48,7 +53,9 @@ namespace EZUtils.UIElements
         private static SettingsProvider[] GetSettingsProviders()
         {
             SettingsProvider[] settingsProviders = (SettingsProvider[])typeof(SettingsService)
-                .GetMethod("FetchSettingsProviders", BindingFlags.Static | BindingFlags.NonPublic)
+                .GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
+                .Where(m => m.Name == "FetchSettingsProviders" && m.GetParameters().Length == 0)
+                .Single()
                 .Invoke(null, Array.Empty<object>());
 
             return settingsProviders;
