@@ -21,7 +21,7 @@
     "com.unity.ide.visualstudio": "2.0.22",
     "com.unity.ide.vscode": "https://github.com/Timiz0r/com.unity.ide.vscode.git?path=/Packages/com.unity.ide.vscode#aca83a6ba054d4a97d3848f1937c28846fe6d018",
     "com.unity.nuget.newtonsoft-json": "3.2.1",
-    "com.unity.test-framework": "2.0.1-exp.1",
+    "com.unity.test-framework": "2.0.1-pre.18",
     "com.unity.textmeshpro": "3.0.6",
     "com.unity.timeline": "1.7.6",
     "com.unity.ugui": "1.0.0",
@@ -65,5 +65,6 @@
         "com.timiz0r.ezutils"
       ]
     }
-  ]
+  ],
+  "testables": ["com.timiz0r.ezutils.editorenhancements.tests", "com.timiz0r.ezutils.localization.tests", "com.timiz0r.ezutils.mmdavatartools.tests", "com.timiz0r.ezutils.repackprefab.tests"]
 }

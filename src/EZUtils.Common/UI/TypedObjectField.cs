@@ -56,7 +56,10 @@ namespace EZUtils
                 {
                     fieldInfo.SetValue(newEvent, fieldInfo.GetValue(evt));
                 }
-                ExecuteDefaultAction(newEvent);
+
+                //not sure how legal this is, since the normal HandleEvent is deprecated and to be removed "eventually"
+                //if it does, we'll just cross that road when we get to it
+                ((IEventHandler)this).HandleEvent(newEvent);
             }
         }
 

@@ -1,7 +1,7 @@
 {
     "$schema": "../emptyschema.json",
     "name": "com.timiz0r.ezutils.editorenhancements",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "Improves the editor experience.",
     "displayName": "EZUtils Editor Enhancements",
     "unity": "2022.3",
@@ -15,7 +15,7 @@
         "url": "https://github.com/Timiz0r/EZUtils.git"
     },
     "vpmDependencies": {
-      "com.timiz0r.ezutils.common":"^1.1.0",
-      "com.timiz0r.ezutils.localization":"^1.1.0"
+      "com.timiz0r.ezutils.common": "^1.1.1",
+      "com.timiz0r.ezutils.localization": "^1.1.0"
     }
 }

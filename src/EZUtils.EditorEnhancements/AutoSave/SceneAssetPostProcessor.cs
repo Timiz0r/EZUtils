@@ -29,7 +29,7 @@ namespace EZUtils.EditorEnhancements.AutoSave
 
                 DirectoryInfo toAutoSaveFolder = new DirectoryInfo(SceneAutoSaver.GetAutoSavePath(toPath));
                 toAutoSaveFolder.Create();
-                foreach (FileInfo autoSave in fromAutoSaveFolder.EnumerateFiles("*.unity"))
+                foreach (FileInfo autoSave in fromAutoSaveFolder.EnumerateFiles("*.unity").Concat(fromAutoSaveFolder.EnumerateFiles("*.unity.meta")))
                 {
                     autoSave.MoveTo(Path.Combine(toAutoSaveFolder.FullName, autoSave.Name));
                 }
