@@ -249,6 +249,29 @@
           },
           "zipSHA256": "1447cd911615d03e34b24967c6458fa3cdacf310a8e027af68348cd1f726e82f",
           "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.editorenhancements-1.2.1/com.timiz0r.ezutils.editorenhancements-1.2.1.zip"
+        },
+        "1.2.2": {
+          "$schema": "../emptyschema.json",
+          "name": "com.timiz0r.ezutils.editorenhancements",
+          "version": "1.2.2",
+          "description": "Improves the editor experience.",
+          "displayName": "EZUtils Editor Enhancements",
+          "unity": "2022.3",
+          "author": {
+            "displayName": "Timiz0r/まむ",
+            "url": "https://github.com/Timiz0r/EZUtils"
+          },
+          "license": "MIT",
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/Timiz0r/EZUtils.git"
+          },
+          "vpmDependencies": {
+            "com.timiz0r.ezutils.common": "^1.1.1",
+            "com.timiz0r.ezutils.localization": "^1.1.0"
+          },
+          "zipSHA256": "8e5f2e8af29283848300d3ca55a041b73ba7ab1ef0be26ffa672ab296e1bc71b",
+          "url": "https://github.com/Timiz0r/EZUtils/releases/download/com.timiz0r.ezutils.editorenhancements-1.2.2/com.timiz0r.ezutils.editorenhancements-1.2.2.zip"
         }
       }
     },
