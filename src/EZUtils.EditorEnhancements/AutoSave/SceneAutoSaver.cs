@@ -244,27 +244,50 @@ namespace EZUtils.EditorEnhancements.AutoSave
             }
 
             _ = autoSaveScenes.Remove(targetScenePath);
-            _ = sceneRecords.RemoveAll(sr => sr.path == targetScenePath);
+            _ = sceneRecords.RemoveAll(sr => sr.path == targetScenePath); // RemoveAll used for predicate. cannot be multiple.
 
             UpdateSceneRepository();
         }
 
         private void SceneSaved(Scene scene)
         {
-            EditorSceneRecord newSceneRecord = sceneRecords.SingleOrDefault(sr => sr.path.Length == 0);
-            if (newSceneRecord != null && scene.path.Length > 0)
+            EditorSceneRecord untitledSceneRecord = sceneRecords.SingleOrDefault(sr => sr.path.Length == 0);
+            if (untitledSceneRecord != null && scene.path.Length > 0)
             {
-                newSceneRecord.path = scene.path;
-                //for SceneSaved, we look at scene.isDirty because a save-as won't change the dirtiness
-                //so we can't simply assume saving always means a scene becoming clean
-                newSceneRecord.SetDirtiness(scene.isDirty);
+                // in this case, and untitled/new scene is being saved
+                untitledSceneRecord.path = scene.path;
+                untitledSceneRecord.SetDirtiness(false);
 
                 autoSaveScenes[scene.path] = autoSaveScenes[string.Empty];
                 _ = autoSaveScenes.Remove(string.Empty);
             }
+            else if (sceneRecords.SingleOrDefault(sr => sr.path == scene.path) is EditorSceneRecord savedScene)
+            {
+                savedScene.SetDirtiness(false);
+            }
             else
             {
-                sceneRecords.Single(sr => sr.path == scene.path).SetDirtiness(scene.isDirty);
+                // if we're unable to find a record that matches the scene, a save-as is being performed.
+                // this is basically the same behavior as removing the "original" scene and adding the "new" one
+                // the Scene object itself has no indication what the "original" scene is, so we need to check all scenes
+                HashSet<string> existingScenePaths = new(GetScenes().Select(s => s.path));
+                EditorSceneRecord originalScene = sceneRecords.Single(s => !existingScenePaths.Contains(s.path));
+                _ = sceneRecords.Remove(originalScene);
+
+                EditorSceneRecord newScene = new()
+                {
+                    wasLoaded = true,
+                    path = scene.path,
+                    LastCleanTime = DateTimeOffset.Now,
+                    wasActive = scene.path == SceneManager.GetActiveScene().path
+                };
+                sceneRecords.Add(newScene);
+
+                // one quirk is that the "original" scene object actually becomes the "new" scene object,
+                // so the Scene stored in the AutoSaveScene actually reflects the "new" scene.
+                // all we need to do is update the path mapping
+                autoSaveScenes[newScene.path] = autoSaveScenes[originalScene.path];
+                _ = autoSaveScenes.Remove(originalScene.path);
             }
 
             UpdateSceneRepository();
