@@ -63,7 +63,7 @@ runs:
         echo "manifest-url=$manifest_url" >> $GITHUB_OUTPUT
     - name: Add package manifest artifact
       if: "!fromJson(steps.package-info.outputs.version-exists)"
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Manifest-${{ env.tag_name }}
         path: ${{ steps.prepare-package-manifest.outputs.fullpath }}

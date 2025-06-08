@@ -61,7 +61,7 @@ jobs:
         with:
           lfs: 'true'
       - name: Get manifests
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: vpm
       - uses: ./.github/actions/update-index-json
